@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 
-from core import Problem
+from aga import Problem
 
 
 def square_wrong(x: int) -> int:

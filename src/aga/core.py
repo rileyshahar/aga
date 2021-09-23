@@ -1,4 +1,4 @@
-"""Aga grades assignments: a library for easily producing autograders for code."""
+"""The core library functionality."""
 
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite

@@ -2,7 +2,7 @@
 
 from pytest import raises
 
-from core import Problem
+from aga import Problem
 
 
 def test_square(square: Problem):
