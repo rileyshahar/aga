@@ -15,14 +15,14 @@ def square_right(x: int) -> int:
     return x ** 2
 
 
-def test_square_wrong(square: Problem):
+def test_square_wrong(square: Problem[int]) -> None:
     """Test that the tests fail for the incorrect implementation."""
     suite = square.generate_test_suite(square_wrong)
     result = suite.run(TestCase().defaultTestResult())
     assert not result.wasSuccessful()
 
 
-def test_square_right(square: Problem):
+def test_square_right(square: Problem[int]) -> None:
     """Test that the tests succeed for the correct implementation."""
     suite = square.generate_test_suite(square_right)
     result = suite.run(TestCase().defaultTestResult())

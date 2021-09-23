@@ -1,4 +1,9 @@
-"""The core library functionality."""
+"""The core library functionality.
+
+There are mypy "type: ignore" comments scattered throughout this file. This is because
+typing *args and **kwargs is quite difficult. There might be a way to do this, but I'm
+not sure how, and it seemed much easier to just ignore them.
+"""
 
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
@@ -22,7 +27,7 @@ class _AutograderTestCase(TestCase):
 
     # pylint: disable=invalid-name
     # this name is required by unittest
-    def runTest(self):
+    def runTest(self) -> None:
         """Run the test case."""
         self._test_input.check(self._golden, self._under_test)
 
@@ -34,10 +39,10 @@ class _TestInputs(TestCase):
     outputs will be compared, and a unittest failure raised if they differ.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore
         super().__init__()
-        self._args: tuple = args
-        self._kwargs: dict = kwargs
+        self._args: tuple = args  # type: ignore
+        self._kwargs: dict = kwargs  # type: ignore
 
     def _eval(self, func: Callable[..., Output]) -> Output:
         """Evaluate func on the arguments."""
@@ -69,7 +74,7 @@ class _GoldenTestInputs(_TestInputs, TestCase):
     testing the accuracy of the golden solution against known outputs.
     """
 
-    def __init__(self, output: Output, *args, **kwargs) -> None:
+    def __init__(self, output: Output, *args, **kwargs) -> None:  # type: ignore
         super().__init__(*args, **kwargs)
         self._output = output
 
@@ -138,7 +143,7 @@ def problem(func: Callable[..., Output]) -> Problem[Output]:
     return Problem(func)
 
 
-def test_case(
+def test_case(  # type: ignore
     *args, output: Optional[Any] = None, **kwargs
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     """Declare a specific test case for some problem.

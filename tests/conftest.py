@@ -6,7 +6,7 @@ from aga import Problem, problem, test_case
 
 
 @fixture(name="square")
-def fixture_square() -> Problem:
+def fixture_square() -> Problem[int]:
     """Generate a basic, correct implementation of a square problem."""
 
     @test_case(4)
@@ -21,7 +21,7 @@ def fixture_square() -> Problem:
 
 
 @fixture(name="diff")
-def fixture_diff() -> Problem:
+def fixture_diff() -> Problem[int]:
     """Generate a basic, correct implementation of a difference problem."""
 
     @test_case(17, 10)
@@ -36,13 +36,13 @@ def fixture_diff() -> Problem:
 
 
 @fixture(name="diff_bad_gt")
-def fixture_diff_bad_gt(diff) -> Problem:
+def fixture_diff_bad_gt(diff: Problem[int]) -> Problem[int]:
     """Generate an implementation of difference with an incorrect golden test."""
     return test_case(3, 1, output=1)(diff)
 
 
 @fixture(name="diff_bad_impl")
-def fixture_diff_bad_impl() -> Problem:
+def fixture_diff_bad_impl() -> Problem[int]:
     """Generate a difference problem with an incorrect implementation."""
 
     @test_case(17, 10)
