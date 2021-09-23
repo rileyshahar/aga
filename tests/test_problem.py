@@ -1,4 +1,4 @@
-"""Tests the for `problem` module."""
+"""Tests the for `Problem` class."""
 
 import pytest
 
