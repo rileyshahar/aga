@@ -5,11 +5,39 @@ description = "aga grades assignments"
 authors = ["Riley Shahar <riley.shahar@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 
 [tool.poetry.dev-dependencies]
+coverage = {extras = ["toml"], version = "^5.5"}
+flake8 = "^3.9.2"
+flake8-black = "^0.2.3"
+flake8-bugbear = "^21.9.1"
+flake8-isort = "^4.0.0"
+mypy = "^0.910"
+mypy-ls = "^0.5.1"
+nox = "^2021.6.12"
+nox-poetry = "^0.8.6"
+pydocstyle = "^6.1.1"
+pyls-flake8 = "^0.4.0"
+pyls-isort = "^0.2.2"
 pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
+python-lsp-black = "^1.0.0"
+python-lsp-server = {extras = ["mccabe", "pydocstyle", "flake8"], version = "^1.2.2"}
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["aga"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.mypy]
+mypy_path = "src"
+strict = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
