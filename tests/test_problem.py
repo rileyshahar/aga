@@ -1,42 +1,27 @@
 """Tests the for `Problem` class."""
 
-import pytest
+from pytest import raises
 
-from core import problem
-from core import test_case as case  # renamed so pytest doesn't run it as a test
+from core import Problem
 
 
-def test_square() -> None:
-    @case(4)
-    @case(2, output=4)
-    @case(-2, output=4)
-    @problem
-    def square(x: int) -> int:
-        """Square x."""
-        return x * x
-
+def test_square(square: Problem):
+    """Test golden tests for a working square implementation."""
     square.run_golden_tests()
 
 
-def test_diff() -> None:
-    @case(17, 10)
-    @case(2, 4, output=-2)
-    @case(3, 1, output=2)
-    @problem
-    def diff(x: int, y: int) -> int:
-        """Compute x - y."""
-        return x - y
-
+def test_diff(diff: Problem):
+    """Test golden tests for a working diff implementation."""
     diff.run_golden_tests()
 
 
-def test_failed_golden_test() -> None:
-    @case(2, 4, output=-2)
-    @case(3, 1, output=1)  # this is wrong, so the test should fail
-    @problem
-    def diff_should_fail(x: int, y: int) -> int:
-        """Compute x - y."""
-        return x - y
+def test_failed_golden_test(diff_bad_gt: Problem):
+    """Ensure incorrect golden tests fail for a working diff implementation."""
+    with raises(AssertionError):
+        diff_bad_gt.run_golden_tests()
 
-    with pytest.raises(AssertionError):
-        diff_should_fail.run_golden_tests()
+
+def test_bad_diff_impl(diff_bad_impl: Problem):
+    """Ensure golden tests fail for an incorrect diff implementation."""
+    with raises(AssertionError):
+        diff_bad_impl.run_golden_tests()

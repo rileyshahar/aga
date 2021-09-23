@@ -2,33 +2,28 @@
 
 from unittest import TestCase
 
-from core import problem
-from core import test_case as case  # renamed so pytest doesn't run it as a test
-
-
-@case(4)
-@case(2, output=4)
-@case(-2, output=4)
-@problem
-def square(x: int) -> int:
-    """Square x."""
-    return x * x
+from core import Problem
 
 
 def square_wrong(x: int) -> int:
+    """Square x, incorrectly."""
     return x + 1
 
 
 def square_right(x: int) -> int:
+    """Square x, correctly."""
     return x ** 2
 
 
-def test_square_wrong():
+def test_square_wrong(square: Problem):
+    """Test that the tests fail for the incorrect implementation."""
     suite = square.generate_test_suite(square_wrong)
     result = suite.run(TestCase().defaultTestResult())
     assert not result.wasSuccessful()
 
-def test_square_right():
+
+def test_square_right(square: Problem):
+    """Test that the tests succeed for the correct implementation."""
     suite = square.generate_test_suite(square_right)
     result = suite.run(TestCase().defaultTestResult())
     assert result.wasSuccessful()
