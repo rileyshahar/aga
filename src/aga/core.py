@@ -121,7 +121,24 @@ class Problem(Generic[Output]):
             case.check_one(self._golden)
 
     def generate_test_suite(self, under_test: Callable[..., Output]) -> TestSuite:
-        """Generate a `TestSuite` for the student submitted function."""
+        """Generate a `TestSuite` for the student submitted function.
+
+        Neither the generated test suite nor the body of this function will run golden
+        tests; instead, golden test cases are treated as equivalent to ordinary ones. To
+        test the golden function, `run_golden_tests` should be used instead.
+
+        Parameters
+        ----------
+        under_test : Callable[..., Output]
+            The student submitted function.
+
+        Returns
+        -------
+        TestSuite
+            A unittest test suite containing one test for each TestInput in this
+            problem, checking the result of the problem's golden solution against
+            `under_test`.
+        """
         suite = TestSuite([])
 
         for case in self._test_cases:
@@ -133,7 +150,7 @@ class Problem(Generic[Output]):
         return suite
 
     def name(self) -> str:
-        """Return the Problem's name."""
+        """Get the problem's name."""
         return self._name
 
 
@@ -146,6 +163,12 @@ def problem(
     outputs, which we refer to as the "golden solution". A number of decorators are
     available for both pre- and post-processing of the golden solution and the `Problem`
     created by this decorator.
+
+    Parameters
+    ----------
+    name : Optional[str]
+        The problem's name. If None (the default), the wrapped function's name will be
+        used.
     """
 
     def outer(func: Callable[..., Output]) -> Problem[Output]:
@@ -160,17 +183,24 @@ def test_case(  # type: ignore
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     """Declare a specific test case for some problem.
 
-    If `output` is None, the inputs will be tested against the wrapped function, the
-    "golden solution" to the problem. If `output` is specified, the inputs will double
-    as a test _of_ the golden solution; to successfully produce the problem grader, the
-    golden solution must return output from the given input.
-
     The autograder assumes all golden solutions are correct. A golden test case,
     declared by setting `output`, will _not_ be tested in the autograder itself;
     instead, it should be used for unit testing the golden solution in the dev
     environment. The `Problem` class provides a `run_golden_tests` method which asserts
     that the golden solution returns the correct output for each test case with a
     provided output.
+
+    Parameters
+    ----------
+    args :
+        The arguments to be passed to the functions under test.
+    output : Optional[Output]
+        If `output` is None, the inputs will be tested against the wrapped function, the
+        "golden solution" to the problem. If `output` is specified, the inputs will
+        double as a test _of_ the golden solution; to successfully produce the problem
+        grader, the golden solution must return output from the given input.
+    kwargs :
+        Keyword arguments to be passed to the functions under test.
     """
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
