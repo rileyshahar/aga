@@ -45,7 +45,10 @@ disable = ["no-else-return"]
 
 [tool.pylint.format]
 max-line-length = 88
-good-names= ["i", "j", "k", "s", "x", "y", "_"]
+good-names = ["i", "j", "k", "s", "x", "y", "_"]
+
+[tool.pydocstyle]
+convention = "numpy"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
