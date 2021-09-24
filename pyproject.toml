@@ -24,6 +24,7 @@ pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
 python-lsp-black = "^1.0.0"
 python-lsp-server = {extras = ["mccabe", "pydocstyle", "flake8"], version = "^1.2.2"}
+pytest-lazy-fixture = "^0.6.3"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]

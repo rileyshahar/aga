@@ -1,8 +1,15 @@
 """Contains various fixtures, especially pre-written problems."""
 
 from pytest import fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 from aga import Problem, problem, test_case
+
+
+@fixture(params=[lazy_fixture("square"), lazy_fixture("diff")])
+def valid_problem(request):  # type: ignore
+    """Generate a parameterized test over a number of guaranteed-valid Problems."""
+    return request.param
 
 
 @fixture(name="square")

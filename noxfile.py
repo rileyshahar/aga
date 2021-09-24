@@ -34,7 +34,7 @@ def test(session: Session) -> None:
     """Run pytest in the specified python environment."""
     args = session.posargs or ["--cov"]
     session.install(".")
-    session.install("pytest", "pytest-cov")
+    session.install("pytest", "pytest-cov", "pytest-lazy-fixture")
     session.run("pytest", *args)
 
 
@@ -43,7 +43,7 @@ def lint(session: Session) -> None:
     """Run static linters in the specified python environment."""
     args = session.posargs or locations
     session.install(".")
-    session.install("mypy", "pytest")
+    session.install("mypy", "pytest", "pytest-lazy-fixture")
     session.install(*linters)
     session.run("flake8", *args)
     session.run("pydocstyle", *args)

@@ -1,18 +1,17 @@
 """Tests the for `Problem` class."""
 
+from typing import TypeVar
+
 from pytest import raises
 
 from aga import Problem
 
-
-def test_square(square: Problem[int]) -> None:
-    """Test golden tests for a working square implementation."""
-    square.run_golden_tests()
+Output = TypeVar("Output")
 
 
-def test_diff(diff: Problem[int]) -> None:
-    """Test golden tests for a working diff implementation."""
-    diff.run_golden_tests()
+def test_valid_problem(valid_problem: Problem[Output]) -> None:
+    """Test that correctly-defined problems succeed their golden tests."""
+    valid_problem.run_golden_tests()
 
 
 def test_failed_golden_test(diff_bad_gt: Problem[int]) -> None:
