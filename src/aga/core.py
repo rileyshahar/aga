@@ -92,8 +92,9 @@ class Problem(Generic[Output]):
     to the `test_case` decorator.
     """
 
-    def __init__(self, golden: Callable[..., Output]) -> None:
+    def __init__(self, golden: Callable[..., Output], name: str) -> None:
         self._golden: Callable[..., Output] = golden
+        self._name = name
         self._test_cases: List[_TestInputs] = []
         self._golden_test_cases: List[_GoldenTestInputs] = []
 
@@ -131,6 +132,10 @@ class Problem(Generic[Output]):
 
         return suite
 
+    def name(self) -> str:
+        """Return the Problem's name."""
+        return self._name
+
 
 def problem(func: Callable[..., Output]) -> Problem[Output]:
     """Declare a function as the golden solution to a problem.
@@ -140,7 +145,7 @@ def problem(func: Callable[..., Output]) -> Problem[Output]:
     available for both pre- and post-processing of the golden solution and the `Problem`
     created by this decorator.
     """
-    return Problem(func)
+    return Problem(func, func.__name__)
 
 
 def test_case(  # type: ignore
