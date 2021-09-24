@@ -40,6 +40,13 @@ show_missing = true
 mypy_path = "src"
 strict = true
 
+[tool.pylint.MASTER]
+disable = ["no-else-return"]
+
+[tool.pylint.format]
+max-line-length = 88
+good-names= ["i", "j", "k", "s", "x", "y", "_"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
