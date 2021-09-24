@@ -24,6 +24,14 @@ def test_diff_metadata(diff: Problem[int]) -> None:
     assert diff.name() == "difference"
 
 
+def test_palindrome_metadata(palindrome: Problem[bool]) -> None:
+    """Test that `palindrome` has correct metadata.
+
+    Note that palindrome uses the problem decorator's "name" argument.
+    """
+    assert palindrome.name() == "palindrome"
+
+
 def test_failed_golden_test(diff_bad_gt: Problem[int]) -> None:
     """Ensure incorrect golden tests fail for a working diff implementation."""
     with raises(AssertionError):

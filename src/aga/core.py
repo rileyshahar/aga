@@ -137,7 +137,9 @@ class Problem(Generic[Output]):
         return self._name
 
 
-def problem(func: Callable[..., Output]) -> Problem[Output]:
+def problem(
+    name: Optional[str] = None,
+) -> Callable[[Callable[..., Output]], Problem[Output]]:
     """Declare a function as the golden solution to a problem.
 
     This method should decorate a function which is known to produce the correct
@@ -145,7 +147,12 @@ def problem(func: Callable[..., Output]) -> Problem[Output]:
     available for both pre- and post-processing of the golden solution and the `Problem`
     created by this decorator.
     """
-    return Problem(func, func.__name__)
+
+    def outer(func: Callable[..., Output]) -> Problem[Output]:
+        problem_name = name or func.__name__
+        return Problem(func, problem_name)
+
+    return outer
 
 
 def test_case(  # type: ignore
