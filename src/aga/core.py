@@ -5,7 +5,7 @@ typing *args and **kwargs is quite difficult. There might be a way to do this, b
 not sure how, and it seemed much easier to just ignore them.
 """
 
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
 from unittest import TestCase, TestSuite
 
 Output = TypeVar("Output")
@@ -41,8 +41,8 @@ class _TestInputs(TestCase):
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore
         super().__init__()
-        self._args: tuple = args  # type: ignore
-        self._kwargs: dict = kwargs  # type: ignore
+        self._args: Tuple = args  # type: ignore
+        self._kwargs: Dict = kwargs  # type: ignore
 
     def _eval(self, func: Callable[..., Output]) -> Output:
         """Evaluate func on the arguments."""
@@ -94,8 +94,8 @@ class Problem(Generic[Output]):
 
     def __init__(self, golden: Callable[..., Output]) -> None:
         self._golden: Callable[..., Output] = golden
-        self._test_cases: list[_TestInputs] = []
-        self._golden_test_cases: list[_GoldenTestInputs] = []
+        self._test_cases: List[_TestInputs] = []
+        self._golden_test_cases: List[_GoldenTestInputs] = []
 
     def add_test_case(self, case: _TestInputs) -> None:
         """Add a test case to the problem.
