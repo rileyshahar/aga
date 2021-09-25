@@ -173,6 +173,7 @@ def problem(
 
     def outer(func: Callable[..., Output]) -> Problem[Output]:
         problem_name = name or func.__name__
+
         return Problem(func, problem_name)
 
     return outer
@@ -206,10 +207,10 @@ def test_case(  # type: ignore
     def outer(prob: Problem[Output]) -> Problem[Output]:
         if output is not None:
             prob.add_golden_test_case(_GoldenTestInputs(output, *args, *kwargs))
-            return prob
 
         else:
             prob.add_test_case(_TestInputs(*args, **kwargs))
-            return prob
+
+        return prob
 
     return outer
