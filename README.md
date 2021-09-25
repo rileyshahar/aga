@@ -32,7 +32,6 @@ A number of static analysis tools are available in the development environment:
 - [pylint](https://pylint.org/), a general-purpose linter.
 - [flake8](https://flake8.pycqa.org/en/latest/), a highly modular linter.
   - [flake8-black](https://github.com/peterjc/flake8-black), a code formatting checker.
-  - [flake8-isort](https://github.com/gforcada/flake8-isort), an import ordering linter.
   - [flake8-bugbear](https://github.com/PyCQA/flake8-bugbear), which makes `flake8` stricter.
 - [pydocstyle](http://www.pydocstyle.org/en/stable/), a documentation linter.
 

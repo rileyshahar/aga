@@ -21,7 +21,6 @@ locations = ["src", "tests"]
 linters = (
     "flake8",
     "flake8-black",
-    "flake8-isort",
     "flake8-bugbear",
     "pydocstyle",
     "mypy",
