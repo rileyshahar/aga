@@ -4,12 +4,13 @@
 # pylint: disable=no-member
 
 import os
-from importlib.resources import open_text
+from io import TextIOWrapper
 from typing import Iterable, Tuple, TypeVar
-from zipfile import Path, ZipFile
+from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
+from importlib_resources import open_text
 
 from aga import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
@@ -63,9 +64,10 @@ def test_into_gradescope_zip_run_autograder(
     _, zip_path = gradescope_zip
 
     with ZipFile(zip_path) as zip_f:
-        path = Path(zip_f, file)
-        with open_text("aga.gradescope.resources", file) as src:
-            assert path.read_text() == src.read()
+        with zip_f.open(file, "r") as zip_byte_stream:
+            with TextIOWrapper(zip_byte_stream) as zipped_file:
+                with open_text("aga.gradescope.resources", file) as src:
+                    assert zipped_file.read() == src.read()
 
 
 def test_into_gradescope_zip_custom_path(valid_problem: Problem[Output]) -> None:

@@ -15,7 +15,7 @@ from nox_poetry import session as nox_session
 # default nox sessions (overridden with -s)
 nox.options.sessions = ("lint", "test")
 
-python_versions = ("3.9", "3.7")
+python_versions = ("3.9", "3.6")
 locations = ["src", "tests"]
 
 linters = (
