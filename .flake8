@@ -1,3 +1,6 @@
 [flake8]
 # black compatibility
 max-line-length = 88
+
+# typer uses function calls for argument defaults
+ignore=B008

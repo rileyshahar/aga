@@ -12,6 +12,7 @@ python = "^3.6.1"
 dill = "^0.3.4"
 gradescope-utils = "^0.4.0"
 importlib-resources = "^5.2.2"
+typer = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 coverage = {extras = ["toml"], version = "^5.5"}
@@ -30,6 +31,13 @@ pytest-cov = "^2.12.1"
 python-lsp-black = "^1.0.0"
 python-lsp-server = {extras = ["mccabe", "pydocstyle", "flake8"], version = "^1.2.2"}
 pytest-lazy-fixture = "^0.6.3"
+pytest-mock = "^3.6.1"
+
+[tool.poetry.scripts]
+aga = "aga.cli:app"
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore:'autocompletion' is renamed to 'shell_complete':DeprecationWarning"]
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]

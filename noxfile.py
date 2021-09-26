@@ -18,6 +18,7 @@ nox.options.sessions = ("lint", "test")
 python_versions = ("3.9", "3.6")
 locations = ["src", "tests"]
 
+test_deps = ("pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock")
 linters = (
     "flake8",
     "flake8-black",
@@ -33,7 +34,7 @@ def test(session: Session) -> None:
     """Run pytest in the specified python environment."""
     args = session.posargs or ["--cov"]
     session.install(".")
-    session.install("pytest", "pytest-cov", "pytest-lazy-fixture")
+    session.install(*test_deps)
     session.run("pytest", *args)
 
 
@@ -42,7 +43,7 @@ def lint(session: Session) -> None:
     """Run static linters in the specified python environment."""
     args = session.posargs or locations
     session.install(".")
-    session.install("mypy", "pytest", "pytest-lazy-fixture")
+    session.install(*test_deps)  # installed so they type check
     session.install(*linters)
     session.run("flake8", *args)
     session.run("pydocstyle", *args)
