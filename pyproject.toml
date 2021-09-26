@@ -3,6 +3,9 @@ name = "aga"
 version = "0.1.0"
 description = "aga grades assignments"
 authors = ["Riley Shahar <riley.shahar@gmail.com>"]
+readme = "README.md"
+homepage = "https://github.com/nihilistkitten/aga"
+repository = "https://github.com/nihilistkitten/aga"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
