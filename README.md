@@ -1,7 +1,6 @@
 **aga** (aga grades assignments) is a tool for automatically checking the correctness of python code against known-correct solutions.
 
 # Usage
-
 In `square.py` (or any file), write:
 
 ```python

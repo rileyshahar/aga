@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aga"
-version = "0.1.0"
+version = "0.2.0"
 description = "aga grades assignments"
 authors = ["Riley Shahar <riley.shahar@gmail.com>"]
 readme = "README.md"
