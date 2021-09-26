@@ -153,6 +153,10 @@ class Problem(Generic[Output]):
         """Get the problem's name."""
         return self._name
 
+    def expected_symbol(self) -> str:
+        """Get the name of the symbol that should be tested against."""
+        return self._golden.__name__
+
 
 def problem(
     name: Optional[str] = None,

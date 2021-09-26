@@ -1,14 +1,18 @@
 """Tests for the `loader` module."""
 
+from os.path import join as pathjoin
 from pathlib import Path
 from typing import Iterable
 
 import pytest
+from dill import dump  # type: ignore
 
+from aga import Problem
 from aga.loader import (
     NoMatchingSymbol,
     SubmissionSyntaxError,
     TooManyMatchingSymbols,
+    load_problem,
     load_symbol_from_dir,
     load_symbol_from_path,
 )
@@ -146,3 +150,14 @@ def test_load_symbol_from_dir_multiple_symble_errors(source_dir: str) -> None:
     """Test that load_symbol_from_dir errors on nonexistent symbols."""
     with pytest.raises(TooManyMatchingSymbols):
         load_symbol_from_dir(source_dir, "duplicate")
+
+
+def test_load_problem(tmp_path: str, square: Problem[int]) -> None:
+    """Test that load_problem loads square correctly."""
+
+    path = pathjoin(tmp_path, "problem.pckl")
+    with open(path, "wb") as file:
+        dump(square, file)
+
+    square_loaded: Problem[int] = load_problem(tmp_path, "problem.pckl")
+    square_loaded.run_golden_tests()  # pylint: disable=no-member

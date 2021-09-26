@@ -17,11 +17,13 @@ def test_valid_problem(valid_problem: Problem[Output]) -> None:
 def test_square_metadata(square: Problem[int]) -> None:
     """Test that `square` has correct metadata."""
     assert square.name() == "square"
+    assert square.expected_symbol() == "square"
 
 
 def test_diff_metadata(diff: Problem[int]) -> None:
     """Test that `diff` has correct metadata."""
     assert diff.name() == "difference"
+    assert diff.expected_symbol() == "difference"
 
 
 def test_palindrome_metadata(palindrome: Problem[bool]) -> None:
@@ -30,6 +32,7 @@ def test_palindrome_metadata(palindrome: Problem[bool]) -> None:
     Note that palindrome uses the problem decorator's "name" argument.
     """
     assert palindrome.name() == "palindrome"
+    assert palindrome.expected_symbol() == "strpal"
 
 
 def test_failed_golden_test(diff_bad_gt: Problem[int]) -> None:

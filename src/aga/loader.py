@@ -4,7 +4,13 @@ import importlib.util
 import os
 from os.path import join as pathjoin
 from types import ModuleType
-from typing import Any
+from typing import Any, TypeVar
+
+from dill import Unpickler  # type: ignore
+
+from aga import Problem
+
+Output = TypeVar("Output")
 
 
 class InvalidSubmissionError(BaseException):
@@ -78,3 +84,34 @@ def load_symbol_from_dir(path: str, symbol: str) -> Any:
     if len(matching_symbols) == 0:
         raise NoMatchingSymbol
     return matching_symbols[0]
+
+
+class _ProblemUnpickler(Unpickler):  # type: ignore
+    """A custom unpickler which will always get the `Problem` class from `aga`.
+
+    This is a hack-ish thing which is required because dill expects us to unpickle an
+    object in the some module it was pickled in, so it can then find the object's type
+    and use that for instantiation. We want to be able to unpickle the object in any
+    type, and we know that we always have a Problem pickled at `problem.pckl`, so we can
+    just assert that it's class should be Problem. This is _highly_ unsafe if we are
+    unsure of the safety of `problem.pckl`, but pickle/dill is not remotely safe anyway
+    with untrusted data.
+
+    This specific solution will break if dill, for some reason, wants to pickle some
+    *other* class named "Problem". In that case, I think the best solution will be to
+    look into a custom pickler which changes the module name on that end.
+    """
+
+    def find_class(self, module: str, name: str) -> Any:
+        if name == "Problem":
+            return Problem
+        if name == "__dict__":
+            return {}
+        return super().find_class(module, name)
+
+
+def load_problem(root: str, fname: str = "problem.pckl") -> Problem[Output]:
+    """Load a problem from the gradescope environment."""
+    with open(pathjoin(root, fname), "rb") as problem_pickled:
+        out: Problem[Output] = _ProblemUnpickler(problem_pickled).load()
+    return out

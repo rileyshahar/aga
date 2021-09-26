@@ -1,12 +1,28 @@
 """Contains various fixtures, especially pre-written problems."""
 
-from pytest import fixture
+from typing import List
+
+import pytest
+from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 from aga import Problem, problem, test_case
 
 
-@fixture(
+def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> None:
+    """Prevent pytest from running `slow` tests unless `-m "slow"` is passed."""
+    keywordexpr = config.option.keyword
+    markexpr = config.option.markexpr
+    if keywordexpr or markexpr:
+        return
+
+    skip_slow = pytest.mark.skip(reason="`-m slow` not selected")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
+
+
+@pytest.fixture(
     params=[  # type: ignore
         lazy_fixture("square"),
         lazy_fixture("diff"),
@@ -18,7 +34,7 @@ def valid_problem(request):
     return request.param
 
 
-@fixture(name="square")
+@pytest.fixture(name="square")
 def fixture_square() -> Problem[int]:
     """Generate a problem which tests a square function."""
 
@@ -33,7 +49,7 @@ def fixture_square() -> Problem[int]:
     return square
 
 
-@fixture(name="diff")
+@pytest.fixture(name="diff")
 def fixture_diff() -> Problem[int]:
     """Generate a problem which tests a difference function."""
 
@@ -48,7 +64,7 @@ def fixture_diff() -> Problem[int]:
     return difference
 
 
-@fixture(name="palindrome")
+@pytest.fixture(name="palindrome")
 def fixture_palindrome() -> Problem[bool]:
     """Generate a problem which tests a string palindrome function.
 
@@ -69,13 +85,13 @@ def fixture_palindrome() -> Problem[bool]:
     return strpal
 
 
-@fixture(name="diff_bad_gt")
+@pytest.fixture(name="diff_bad_gt")
 def fixture_diff_bad_gt(diff: Problem[int]) -> Problem[int]:
     """Generate an implementation of difference with an incorrect golden test."""
     return test_case(3, 1, output=1)(diff)
 
 
-@fixture(name="diff_bad_impl")
+@pytest.fixture(name="diff_bad_impl")
 def fixture_diff_bad_impl() -> Problem[int]:
     """Generate a difference problem with an incorrect implementation."""
 

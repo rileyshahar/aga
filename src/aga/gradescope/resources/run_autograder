@@ -1,1 +1,36 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+"""Runs the autograder.
+
+This file is not for use other than as the main script in the gradescope autograder
+environment. It should not be imported or used in any other situation.
+"""
+
+from os.path import join as pathjoin
+from typing import TypeVar
+
+from gradescope_utils.autograder_utils.json_test_runner import JSONTestRunner
+
+from aga.loader import load_problem, load_symbol_from_dir
+
+Output = TypeVar("Output")
+
+_AUTOGRADER_ROOT = "/autograder"
+_AUTOGRADER_SRC = pathjoin(_AUTOGRADER_ROOT, "source")
+_AUTOGRADER_SUBMISSION = pathjoin(_AUTOGRADER_ROOT, "submission")
+_OUTPUT_FILE = pathjoin(_AUTOGRADER_ROOT, "results/results.json")
+
+
+def _main() -> None:
+    problem = load_problem(_AUTOGRADER_SRC)  # type: ignore
+    under_test = load_symbol_from_dir(
+        _AUTOGRADER_SUBMISSION, problem.expected_symbol()  # pylint: disable=no-member
+    )
+
+    suite = problem.generate_test_suite(under_test)  # pylint: disable=no-member
+
+    with open(_OUTPUT_FILE, "w+") as file:
+        JSONTestRunner(stream=file).run(suite)
+
+
+if __name__ == "__main__":
+    _main()
