@@ -26,10 +26,22 @@ class _AutograderTestCase(TestCase):
         self._under_test = under_test
 
     # pylint: disable=invalid-name
-    # this name is required by unittest
+    # camelCase is required by unittest
     def runTest(self) -> None:
         """Run the test case."""
         self._test_input.check(self._golden, self._under_test)
+
+    runTest.__weight__ = 1  # type: ignore
+
+    # pylint: disable=invalid-name
+    # camelCase is required by unittest
+    def shortDescription(self) -> str:
+        """Dynamically generate the test name.
+
+        This method is called by unittest, and then in turn by gradescope_utils, to
+        determine what to name the test on gradescope.
+        """
+        return f"Test {repr(self._test_input)}"
 
 
 class _TestInputs(TestCase):
@@ -57,13 +69,26 @@ class _TestInputs(TestCase):
         if they differ. This means it can be plugged into any unittest TestCase as a
         helper method.
         """
-        self.assertEqual(self._eval(golden), self._eval(under_test))
+        golden_output = self._eval(golden)
+        under_test_output = self._eval(under_test)
+
+        self.assertEqual(
+            golden_output,
+            under_test_output,
+            msg=(
+                f"Checked with {repr(self)}. Expected {repr(golden_output)}. "
+                f"Got {repr(under_test_output)} instead."
+            ),
+        )
 
     def generate_test_case(
         self, golden: Callable[..., Output], under_test: Callable[..., Output]
     ) -> _AutograderTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
         return _AutograderTestCase(self, golden, under_test)
+
+    def __repr__(self) -> str:
+        return ",".join(repr(x) for x in self._args)
 
 
 class _GoldenTestInputs(_TestInputs, TestCase):
