@@ -1,5 +1,28 @@
 **aga** (aga grades assignments) is a tool for automatically checking the correctness of python code against known-correct solutions.
 
+# Usage
+
+In `square.py` (or any file), write:
+
+```python
+from aga import problem, test_case
+
+
+@test_case(-3)
+@test_case(100)
+@test_case(2, output=4)
+@test_case(-2, output=4)
+@problem()
+def square(x: int) -> int:
+    """Square x."""
+    return x * x
+```
+
+Then run `aga gen square` from the directory with `square.py`. This will generate a ZIP
+file suitable for upload to gradescope.
+
+More user-facing documentation is WIP.
+
 # Development
 
 ## Setup
