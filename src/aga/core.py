@@ -87,8 +87,24 @@ class _TestInputs(TestCase):
         """Generate a TestCase which tests `golden` against `under_test`."""
         return _AutograderTestCase(self, golden, under_test)
 
-    def __repr__(self) -> str:
+    def _args_repr(self) -> str:
         return ",".join(repr(x) for x in self._args)
+
+    def _kwargs_repr(self) -> str:
+        # we use k instead of repr(k) so we don't get quotes around it
+        return ",".join(k + "=" + repr(v) for k, v in self._kwargs.items())
+
+    @staticmethod
+    def _repr_sep(args_repr: str, kwargs_repr: str) -> str:
+        """Return ',' if both exist, '' otherwise."""
+        return args_repr and kwargs_repr and "," or ""
+
+    def __repr__(self) -> str:
+        args_repr = self._args_repr()
+        kwargs_repr = self._kwargs_repr()
+        sep = self._repr_sep(args_repr, kwargs_repr)
+
+        return args_repr + sep + kwargs_repr
 
 
 class _GoldenTestInputs(_TestInputs, TestCase):
@@ -208,34 +224,46 @@ def problem(
     return outer
 
 
+def _check_reserved_keyword(kwd: str) -> None:
+    """Raise an error if `kwd` is reserved."""
+    if kwd.startswith("aga_"):
+        raise ValueError(
+            f"invalid keyword arg to `test_case`: {kwd}: all keyword args"
+            "beginning `aga_` are reserved"
+        )
+
+
 def test_case(  # type: ignore
-    *args, output: Optional[Any] = None, **kwargs
+    *args, aga_output: Optional[Any] = None, **kwargs
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     """Declare a specific test case for some problem.
 
     The autograder assumes all golden solutions are correct. A golden test case,
-    declared by setting `output`, will _not_ be tested in the autograder itself;
+    declared by setting `aga_output`, will _not_ be tested in the autograder itself;
     instead, it should be used for unit testing the golden solution in the dev
     environment. The `Problem` class provides a `run_golden_tests` method which asserts
-    that the golden solution returns the correct output for each test case with a
-    provided output.
+    that the golden solution returns the correct aga_output for each test case with a
+    provided aga_output.
 
     Parameters
     ----------
     args :
         The arguments to be passed to the functions under test.
-    output : Optional[Output]
-        If `output` is None, the inputs will be tested against the wrapped function, the
-        "golden solution" to the problem. If `output` is specified, the inputs will
-        double as a test _of_ the golden solution; to successfully produce the problem
-        grader, the golden solution must return output from the given input.
+    aga_output : Optional[Output]
+        If `aga_output` is None, the inputs will be tested against the wrapped function,
+        the "golden solution" to the problem. If `aga_output` is specified, the inputs
+        will double as a test _of_ the golden solution; to successfully produce the
+        problem grader, the golden solution must return aga_output from the given input.
     kwargs :
-        Keyword arguments to be passed to the functions under test.
+        Keyword arguments to be passed to the functions under test. Any kwarg starting
+        with `aga_` is reserved.
     """
+    for kwd, _ in kwargs.items():
+        _check_reserved_keyword(kwd)
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
-        if output is not None:
-            prob.add_golden_test_case(_GoldenTestInputs(output, *args, *kwargs))
+        if aga_output is not None:
+            prob.add_golden_test_case(_GoldenTestInputs(aga_output, *args, **kwargs))
 
         else:
             prob.add_test_case(_TestInputs(*args, **kwargs))

@@ -29,6 +29,17 @@ def square_one_tc(x: int) -> int:
     return x * x
 
 
+@test_case(x=2)
+@problem()
+def square_one_tc_kwd(x: int = 0) -> int:
+    """Square x.
+
+    This problem has only one test case to make inspecting the specific error message
+    easier. It also uses a kewyork argument to allow testing that case.
+    """
+    return x * x
+
+
 @test_case(2, 1)
 @problem()
 def diff_one_tc(x: int, y: int) -> int:
@@ -36,6 +47,18 @@ def diff_one_tc(x: int, y: int) -> int:
 
     This problem has only one test case to make inspecting the specific error message
     easier.
+    """
+    return x - y
+
+
+@test_case(2, y=1)
+@problem()
+def diff_one_tc_kwd(x: int, y: int = 0) -> int:
+    """Compute x - y.
+
+    This problem has only one test case to make inspecting the specific error message
+    easier. It also uses a keyword argument to allow testing combining positional and
+    keyword args.
     """
     return x - y
 
@@ -121,3 +144,79 @@ def test_failure_description_multiple_args(
     """
     message = diff_failure[0][0].shortDescription()
     assert message == "Test 2,1"
+
+
+@pytest.fixture(name="square_kwd_failure")
+def fixture_square_kwd_failure() -> List[Tuple[TestCase, str]]:
+    """Generate a list of failures for the single tc square kwd problem."""
+    suite = square_one_tc_kwd.generate_test_suite(square_wrong)
+    result = suite.run(TestCase().defaultTestResult())
+
+    return result.failures
+
+
+def test_one_failure_square_kwd(square_kwd_failure: List[Tuple[TestCase, str]]) -> None:
+    """Test that the one-tc problem only has one failure."""
+    assert len(square_kwd_failure) == 1
+
+
+def test_failure_message_kwdargs(
+    square_kwd_failure: List[Tuple[TestCase, str]]
+) -> None:
+    """Test that the one-tc square_kwd problem's failure message is correct.
+
+    This test is interesting because square_kwd has a kewyord argument, and we do
+    formatting for kwdargs in `_TestInputs`.
+    """
+    message = square_kwd_failure[0][1]
+    assert "Checked with x=2. Expected 4. Got 3 instead." in message
+
+
+def test_failure_description_kwdargs(
+    square_kwd_failure: List[Tuple[TestCase, str]]
+) -> None:
+    """Test that the one-tc square_kwd problem's test case description is correct.
+
+    This test is interesting because square_kwd has a kewyord argument, and we do
+    formatting for kwdargs in `_TestInputs`.
+    """
+    message = square_kwd_failure[0][0].shortDescription()
+    assert message == "Test x=2"
+
+
+@pytest.fixture(name="diff_kwd_failure")
+def fixture_diff_kwd_failure() -> List[Tuple[TestCase, str]]:
+    """Generate a list of failures for the single tc diff kwd problem."""
+    suite = diff_one_tc_kwd.generate_test_suite(diff_wrong)
+    result = suite.run(TestCase().defaultTestResult())
+
+    return result.failures
+
+
+def test_one_failure_diff_kwd(diff_kwd_failure: List[Tuple[TestCase, str]]) -> None:
+    """Test that the one-tc problem only has one failure."""
+    assert len(diff_kwd_failure) == 1
+
+
+def test_failure_message_pos_and_kwdargs(
+    diff_kwd_failure: List[Tuple[TestCase, str]]
+) -> None:
+    """Test that the one-tc diff_kwd problem's failure message is correct.
+
+    This test is interesting because diff_kwd has a kewyord argument and a positional
+    argument.
+    """
+    message = diff_kwd_failure[0][1]
+    assert "Checked with 2,y=1. Expected 1. Got 3 instead." in message
+
+
+def test_failure_description_pos_and_kwdargs(
+    diff_kwd_failure: List[Tuple[TestCase, str]]
+) -> None:
+    """Test that the one-tc diff_kwd problem's test case description is correct.
+
+    This test is interesting because diff_kwd has a kewyord argument and a positional
+    argument.
+    """
+    message = diff_kwd_failure[0][0].shortDescription()
+    assert message == "Test 2,y=1"

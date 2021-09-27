@@ -4,7 +4,7 @@ from typing import TypeVar
 
 from pytest import raises
 
-from aga import Problem
+from aga import Problem, problem, test_case as case
 
 Output = TypeVar("Output")
 
@@ -45,3 +45,14 @@ def test_bad_diff_impl(diff_bad_impl: Problem[int]) -> None:
     """Ensure golden tests fail for an incorrect diff implementation."""
     with raises(AssertionError):
         diff_bad_impl.run_golden_tests()
+
+
+def test_reserved_kwdarg() -> None:
+    """Test that test_cases raises a value error if a reserved keyword is used."""
+    with raises(ValueError):
+
+        @case(aga_input="foo")
+        @problem()
+        def reserved_kwd(aga_input: str = "") -> str:
+            """For testing a reserved keyword argument to `test_case`."""
+            return aga_input
