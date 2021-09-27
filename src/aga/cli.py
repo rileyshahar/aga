@@ -1,6 +1,6 @@
 """Contains the command-line interface."""
 
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 import typer
 
@@ -25,9 +25,9 @@ def complete_frontend(incomplete: str) -> Iterable[Tuple[str, str]]:
             yield frontend
 
 
-def _gen_gradescope(problem: Problem[Output]) -> None:
+def _gen_gradescope(problem: Problem[Output], path: Optional[str] = None) -> None:
     """Generate a Gradescope autograder zip."""
-    zip_path = into_gradescope_zip(problem)
+    zip_path = into_gradescope_zip(problem, path=path)
     typer.echo(zip_path)
 
 
@@ -59,12 +59,15 @@ def _handle_invalid_frontend(frontend: str) -> None:
 def gen(
     problem_name: str,
     frontend: str = typer.Option("gradescope", autocompletion=complete_frontend),
+    dest: Optional[str] = typer.Option(
+        None, help="The path to place the output file(s)."
+    ),
 ) -> None:
     """Generate an autograder file for a problem."""
     problem = _load_problem(problem_name)  # type: ignore
 
     if frontend == "gradescope":
-        _gen_gradescope(problem)
+        _gen_gradescope(problem, dest)
     else:
         _handle_invalid_frontend(frontend)
 

@@ -1,12 +1,93 @@
 """Contains various fixtures, especially pre-written problems."""
 
-from typing import List
+from pathlib import Path
+from typing import Iterable, List
 
 import pytest
 from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 from aga import Problem, problem, test_case
+
+SOURCE_SQUARE = """
+def square(x: int) -> int:
+    return x * x
+"""
+
+SOURCE_DUPLICATE = """
+def duplicate(x: int):
+    return (x, x)
+"""
+
+SOURCE_CAR = """
+class Car:
+    def __init__(self):
+        self._distance = 0
+
+    def drive(self, distance: int):
+        self._distance += distance
+
+    def distance(self) -> int:
+        return self._distance
+"""
+
+SOURCE_INVALID = """
+This is not valid python code!
+"""
+
+
+def _write_source_to_file(path: Path, source: str) -> str:
+    """Write source code to a file, returning a string of its path."""
+    with open(path, "w", encoding="UTF-8") as file:
+        file.write(source)
+
+    return str(path)
+
+
+def _write_sources_to_files(
+    path: Path, sources: Iterable[str], filenames: Iterable[str]
+) -> str:
+    """Write a series of source files to files in path, returning the directory path."""
+    for source, file in zip(sources, filenames):
+        _write_source_to_file(path.joinpath(file), source)
+
+    return str(path)
+
+
+@pytest.fixture(name="source_square")
+def fixture_source_square(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SQUARE, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE)
+
+
+@pytest.fixture(name="source_car")
+def fixture_source_car(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_CAR, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_CAR)
+
+
+@pytest.fixture(name="source_invalid")
+def fixture_source_invalid(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_INVALID, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_INVALID)
+
+
+@pytest.fixture(name="source_dir")
+def fixture_source_dir(tmp_path: Path) -> str:
+    """Generate a directory containing numerous valid and invalid source files.
+
+    The directory contains:
+    - invalid.txt, an invalid python file.
+    - square.py, which contains a `square` function.
+    - car.py, which contains a `Car` class and may be tested by `car_tester`.
+    - duplicate-one.py, which contains a `duplicate` function.
+    - duplicate-two.py, which contains a `duplicate` function.
+    """
+    return _write_sources_to_files(
+        tmp_path,
+        (SOURCE_CAR, SOURCE_INVALID, SOURCE_SQUARE, SOURCE_DUPLICATE, SOURCE_DUPLICATE),
+        ("car.py", "invalid.txt", "square.py", "duplicate-one.py", "duplicate-two.py"),
+    )
 
 
 def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> None:

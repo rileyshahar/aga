@@ -32,12 +32,14 @@ python-lsp-black = "^1.0.0"
 python-lsp-server = {extras = ["mccabe", "pydocstyle", "flake8"], version = "^1.2.2"}
 pytest-lazy-fixture = "^0.6.3"
 pytest-mock = "^3.6.1"
+docker = "^5.0.2"
 
 [tool.poetry.scripts]
 aga = "aga.cli:app"
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore:'autocompletion' is renamed to 'shell_complete':DeprecationWarning"]
+markers = ["slow: marks tests as slow (ignored by default, select with `-m slow` CLI option)"]
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]

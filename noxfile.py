@@ -19,6 +19,7 @@ python_versions = ("3.9", "3.6")
 locations = ["src", "tests"]
 
 test_deps = ("pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock")
+slow_test_addl_deps = ("docker",)
 linters = (
     "flake8",
     "flake8-black",
@@ -35,6 +36,16 @@ def test(session: Session) -> None:
     args = session.posargs or ["--cov"]
     session.install(".")
     session.install(*test_deps)
+    session.run("pytest", *args)
+
+
+@nox_session(python=python_versions)
+def test_slow(session: Session) -> None:
+    """Run the slow python tests."""
+    args = session.posargs or ["-m slow"]
+    session.install(".")
+    session.install(*test_deps)
+    session.install(*slow_test_addl_deps)
     session.run("pytest", *args)
 
 
