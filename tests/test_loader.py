@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from dill import dump  # type: ignore
 
-from aga import Problem
+from aga.core import Problem
 from aga.loader import (
     NoMatchingSymbol,
     SubmissionSyntaxError,

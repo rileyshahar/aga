@@ -8,7 +8,7 @@ from typing import Any, TypeVar
 
 from dill import Unpickler  # type: ignore
 
-from aga import Problem
+from .core import Problem
 
 Output = TypeVar("Output")
 

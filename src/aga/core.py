@@ -125,13 +125,7 @@ class _GoldenTestInputs(_TestInputs, TestCase):
 
 
 class Problem(Generic[Output]):
-    """Stores tests for a single problem.
-
-    The problem has a notion of a "golden solution", which is the guaranteed-correct
-    implementation that the test cases rely on. It also provides facilities for testing
-    that solution, via golden test cases, constructed by passing the `output` argument
-    to the `test_case` decorator.
-    """
+    """Stores tests for a single problem."""
 
     def __init__(self, golden: Callable[..., Output], name: str) -> None:
         self._golden: Callable[..., Output] = golden
@@ -205,15 +199,20 @@ def problem(
     """Declare a function as the golden solution to a problem.
 
     This method should decorate a function which is known to produce the correct
-    outputs, which we refer to as the "golden solution". A number of decorators are
-    available for both pre- and post-processing of the golden solution and the `Problem`
-    created by this decorator.
+    outputs, which we refer to as the "golden solution". It also provides facilities
+    for testing that solution, via golden test cases, constructed by passing the
+    output argument to the test_case decorator.
 
     Parameters
     ----------
     name : Optional[str]
         The problem's name. If None (the default), the wrapped function's name will be
         used.
+
+    Returns
+    -------
+    Callable[[Callable[..., T]], Problem[T]]
+        A decorator which turns a golden solution into a problem.
     """
 
     def outer(func: Callable[..., Output]) -> Problem[Output]:
@@ -236,27 +235,25 @@ def _check_reserved_keyword(kwd: str) -> None:
 def test_case(  # type: ignore
     *args, aga_output: Optional[Any] = None, **kwargs
 ) -> Callable[[Problem[Output]], Problem[Output]]:
-    """Declare a specific test case for some problem.
-
-    The autograder assumes all golden solutions are correct. A golden test case,
-    declared by setting `aga_output`, will _not_ be tested in the autograder itself;
-    instead, it should be used for unit testing the golden solution in the dev
-    environment. The `Problem` class provides a `run_golden_tests` method which asserts
-    that the golden solution returns the correct aga_output for each test case with a
-    provided aga_output.
+    r"""Declare a specific test case for some problem.
 
     Parameters
     ----------
     args :
         The arguments to be passed to the functions under test.
-    aga_output : Optional[Output]
-        If `aga_output` is None, the inputs will be tested against the wrapped function,
-        the "golden solution" to the problem. If `aga_output` is specified, the inputs
+    aga_output : Optional[T]
+        If aga_output is None, the inputs will be tested against the wrapped function,
+        the "golden solution" to the problem. If aga_output is specified, the inputs
         will double as a test _of_ the golden solution; to successfully produce the
         problem grader, the golden solution must return aga_output from the given input.
     kwargs :
-        Keyword arguments to be passed to the functions under test. Any kwarg starting
-        with `aga_` is reserved.
+        Keyword arguments to be passed to the functions under test. Any keyword starting
+        with aga\_ is reserved.
+
+    Returns
+    -------
+    Callable[[Problem[T]], Problem[T]]
+        A decorator which adds the test case to a problem.
     """
     for kwd, _ in kwargs.items():
         _check_reserved_keyword(kwd)

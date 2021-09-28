@@ -7,7 +7,7 @@ from typing import Any, TypeVar
 import docker  # type: ignore
 import pytest
 
-from aga import Problem
+from aga.core import Problem
 
 # from aga.cli import app
 from aga.gradescope import into_gradescope_zip

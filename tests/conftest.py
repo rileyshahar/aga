@@ -7,7 +7,8 @@ import pytest
 from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
-from aga import Problem, problem, test_case
+from aga import  problem, test_case
+from aga.core import Problem
 
 SOURCE_SQUARE = """
 def square(x: int) -> int:
