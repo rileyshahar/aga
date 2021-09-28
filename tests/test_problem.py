@@ -4,7 +4,9 @@ from typing import TypeVar
 
 from pytest import raises
 
-from aga import Problem, problem, test_case as case
+from aga import problem
+from aga import test_case as case
+from aga.core import Problem
 
 Output = TypeVar("Output")
 

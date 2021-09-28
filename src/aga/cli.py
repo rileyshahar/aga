@@ -57,8 +57,14 @@ def _handle_invalid_frontend(frontend: str) -> None:
 
 @app.command()
 def gen(
-    problem_name: str,
-    frontend: str = typer.Option("gradescope", autocompletion=complete_frontend),
+    problem_name: str = typer.Argument(
+        ..., help='The problem to generate (see "problem discovery" in the CLI docs).'
+    ),
+    frontend: str = typer.Option(
+        "gradescope",
+        autocompletion=complete_frontend,
+        help="The frontend to use. Currently only gradescope is supported.",
+    ),
     dest: Optional[str] = typer.Option(
         None, help="The path to place the output file(s)."
     ),
@@ -74,9 +80,11 @@ def gen(
 
 @app.command()
 def check(
-    problem_name: str,
+    problem_name: str = typer.Argument(
+        ..., help='The problem to check (see "problem discovery" in the CLI docs).'
+    ),
 ) -> None:
-    """Generate an autograder file for a problem."""
+    """Check a problem against test cases with an `aga_output`."""
     problem = _load_problem(problem_name)  # type: ignore
 
     try:
@@ -87,3 +95,6 @@ def check(
     else:
         typer.echo(f"{problem.name()} passed golden tests.")
         raise typer.Exit()
+
+
+click_object = typer.main.get_command(app)  # exposed for documentation

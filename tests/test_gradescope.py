@@ -12,7 +12,7 @@ import pytest
 from dill import load  # type: ignore
 from importlib_resources import open_text
 
-from aga import Problem
+from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
 
 Output = TypeVar("Output")

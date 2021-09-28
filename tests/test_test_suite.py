@@ -5,7 +5,8 @@ from unittest import TestCase
 
 import pytest
 
-from aga import Problem, problem, test_case
+from aga import problem, test_case
+from aga.core import Problem
 
 
 def square_wrong(x: int) -> int:
