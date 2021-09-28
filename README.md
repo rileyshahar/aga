@@ -51,4 +51,4 @@ For CLI documentation, run `aga --help`, or access the docs [online](https://aga
 
 ## Contributing
 
-Bug reports, feature requests, and pull requests are all welcome. For details on our test suite, development environment, and more, see the [developer documentation](https://aga.readthedocs.io/end/stable/development.html).
+Bug reports, feature requests, and pull requests are all welcome. For details on our test suite, development environment, and more, see the [developer documentation](https://aga.readthedocs.io/en/stable/development.html).
