@@ -6,6 +6,7 @@
    :maxdepth: 1
 
    reference
+   cli
    development
 ```
 

@@ -47,6 +47,8 @@ The `test_case` decorator may optionally take a special keyword argument called 
 
 For complete documentation, including configuring problem and test case metadata, see the [API reference](https://aga.readthedocs.io/en/stable/reference.html).
 
+For CLI documentation, run `aga --help`, or access the docs [online](https://aga.readthedocs.io/en/stable/cli.html).
+
 ## Contributing
 
 Bug reports, feature requests, and pull requests are all welcome. For details on our test suite, development environment, and more, see the [developer documentation](https://aga.readthedocs.io/end/stable/development.html).
