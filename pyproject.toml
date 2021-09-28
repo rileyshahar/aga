@@ -6,6 +6,7 @@ authors = ["Riley Shahar <riley.shahar@gmail.com>"]
 readme = "README.md"
 homepage = "https://github.com/nihilistkitten/aga"
 repository = "https://github.com/nihilistkitten/aga"
+documentation = "https://aga.readthedocs.io"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"

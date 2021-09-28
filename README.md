@@ -1,4 +1,4 @@
-[![Tests](https://github.com/nihilistkitten/aga/workflows/Tests/badge.svg)](https://github.com/nihilistkitten/aga/actions?workflow=Tests) [![Codecov](https://codecov.io/gh/nihilistkitten/aga/branch/main/graph/badge.svg)](https://codecov.io/gh/nihilistkitten/aga) [![PyPI](https://img.shields.io/pypi/v/aga.svg)](https://pypi.org/project/aga/)
+[![Tests](https://github.com/nihilistkitten/aga/workflows/Tests/badge.svg)](https://github.com/nihilistkitten/aga/actions?workflow=Tests) [![Codecov](https://codecov.io/gh/nihilistkitten/aga/branch/main/graph/badge.svg)](https://codecov.io/gh/nihilistkitten/aga) [![PyPI](https://img.shields.io/pypi/v/aga.svg)](https://pypi.org/project/aga/) [![Read the Docs](https://readthedocs.org/projects/aga/badge/)](https://aga.readthedocs.io/)
 
 **aga** (aga grades assignments) is a tool for automatically checking the correctness of python code against known-correct solutions.
 
