@@ -8,6 +8,7 @@
    reference
    cli
    development
+   license
 ```
 
 ```{include} ../README.md
