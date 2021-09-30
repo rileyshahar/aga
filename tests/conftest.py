@@ -32,6 +32,11 @@ class Car:
         return self._distance
 """
 
+SOURCE_STR_LEN = """
+def str_len(s: str) -> int:
+    return len(s)
+"""
+
 SOURCE_INVALID = """
 This is not valid python code!
 """
@@ -65,6 +70,12 @@ def fixture_source_square(tmp_path: Path) -> str:
 def fixture_source_car(tmp_path: Path) -> str:
     """Generate a source file with SOURCE_CAR, returning its path."""
     return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_CAR)
+
+
+@pytest.fixture(name="source_str_len")
+def fixture_source_str_len(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_STR_LEN, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_STR_LEN)
 
 
 @pytest.fixture(name="source_invalid")
@@ -111,6 +122,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("palindrome"),
         lazy_fixture("kwd"),
         lazy_fixture("pos_and_kwd"),
+        lazy_fixture("str_len"),
     ]
 )
 def valid_problem(request):
@@ -146,6 +158,22 @@ def fixture_diff() -> Problem[int]:
         return x - y
 
     return difference
+
+
+@pytest.fixture(name="str_len")
+def fixture_str_len() -> Problem[int]:
+    """Generate a problem which tests a str length function."""
+
+    @test_case("hello, world")
+    @test_case("", aga_output=0)
+    @test_case("noether", aga_output=7)
+    @test_case("14", aga_output=2)
+    @problem()
+    def str_len(s: str) -> int:
+        """Find the length of s."""
+        return len(s)
+
+    return str_len
 
 
 @pytest.fixture(name="palindrome")
