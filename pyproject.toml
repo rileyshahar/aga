@@ -3,6 +3,7 @@ name = "aga"
 version = "0.3.2"
 description = "aga grades assignments"
 authors = ["Riley Shahar <riley.shahar@gmail.com>"]
+license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/nihilistkitten/aga"
 repository = "https://github.com/nihilistkitten/aga"
@@ -14,6 +15,7 @@ dill = "^0.3.4"
 gradescope-utils = "^0.4.0"
 importlib-resources = "^5.2.2"
 typer = "^0.4.0"
+importlib-metadata = "^4.8.1"
 
 [tool.poetry.dev-dependencies]
 codecov = "^2.1.12"
