@@ -3,6 +3,7 @@ name = "aga"
 version = "0.3.2"
 description = "aga grades assignments"
 authors = ["Riley Shahar <riley.shahar@gmail.com>"]
+license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/nihilistkitten/aga"
 repository = "https://github.com/nihilistkitten/aga"
