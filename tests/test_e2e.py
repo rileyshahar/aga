@@ -62,8 +62,8 @@ cat /autograder/results/results.json
 # We could fix this by writing our own tmp_path.
 
 
-@pytest.fixture(name="gs_json")
-def fixture_gs_json(
+@pytest.fixture(name="gs_json_square")
+def fixture_gs_json_square(
     docker_container: docker.DockerClient,
     square: Problem[int],
     source_square: str,
@@ -92,9 +92,9 @@ def fixture_gs_json(
 
 
 @pytest.mark.slow
-def test_json_test_name(gs_json: Any) -> None:
+def test_json_test_name_square(gs_json_square: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct test names."""
-    assert set(map(lambda x: x["name"], gs_json["tests"])) == {
+    assert set(map(lambda x: x["name"], gs_json_square["tests"])) == {
         "Test 4",
         "Test 2",
         "Test -2",
@@ -102,6 +102,41 @@ def test_json_test_name(gs_json: Any) -> None:
 
 
 @pytest.mark.slow
-def test_json_test_score(gs_json: Any) -> None:
+def test_json_test_score_square(gs_json_square: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct score."""
-    assert gs_json["score"] == 3
+    assert gs_json_square["score"] == 3
+
+
+@pytest.fixture(name="gs_json_str_len")
+def fixture_gs_json_str_len(
+    docker_container: docker.DockerClient,
+    str_len: Problem[int],
+    source_str_len: str,
+    tmp_path: Path,
+) -> Any:
+    """Test the gradescope functionality on str_len."""
+    problem = str_len.name()
+
+    # run the cli, putting the problem at a temporary path
+    # result =
+    #   runner.invoke(app, ["gen", problem, "--dest", f"{tmp_path}/{problem}.zip"])
+    # zip_loc = result.stdout
+    zip_loc = into_gradescope_zip(str_len, f"{tmp_path}/{problem}.zip")
+
+    container = docker_container.containers.run(
+        "gradescope/auto-builds",
+        f"bash -c '{BASH_COMMAND}'",
+        volumes=[
+            f"{zip_loc}:/tmp/autograder.zip",
+            f"{source_str_len}:/autograder/submission/{problem}.py",
+        ],
+        detach=True,
+    )
+    container.wait()
+    return json.loads(container.logs())
+
+
+@pytest.mark.slow
+def test_json_test_score_str_len(gs_json_str_len: Any) -> None:
+    """Test that the JSON file produced by gradescope has the correct score."""
+    assert gs_json_str_len["score"] == 4

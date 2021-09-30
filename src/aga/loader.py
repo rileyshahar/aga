@@ -105,8 +105,6 @@ class _ProblemUnpickler(Unpickler):  # type: ignore
     def find_class(self, module: str, name: str) -> Any:
         if name == "Problem":
             return Problem
-        if name == "__dict__":
-            return {}
         return super().find_class(module, name)
 
 
