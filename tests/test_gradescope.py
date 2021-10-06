@@ -3,17 +3,23 @@
 # this is raised whenever you access any member of the unpickled objects
 # pylint: disable=no-member
 
+import json
 import os
 from io import TextIOWrapper
-from typing import Iterable, Tuple, TypeVar
+from os.path import dirname
+from os.path import join as pathjoin
+from pathlib import Path
+from typing import Any, Iterable, Tuple, TypeVar
 from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
 from importlib_resources import open_text
+from pytest_mock import MockerFixture
 
 from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
+from aga.gradescope.main import gradescope_main
 
 Output = TypeVar("Output")
 
@@ -88,3 +94,42 @@ def test_into_gradescope_zip_incorrect_problem(diff_bad_impl: Problem[int]) -> N
 
         # should never be run if the test works, but if not, we want to clean up
         os.remove(zip_path)
+
+
+@pytest.fixture(name="gs_json_square")
+def fixture_gs_json_square(
+    square: Problem[int], source_square: str, mocker: MockerFixture, tmp_path: Path
+) -> Any:
+    """Generate the JSON output from the square problem."""
+    mocked_load_problem = mocker.patch("aga.gradescope.main.load_problem")
+    mocked_load_problem.return_value = square
+
+    output = pathjoin(tmp_path, "results.json")
+    gradescope_main(submission_dir=dirname(source_square), output_file=output)
+
+    with open(output, encoding="UTF-8") as file:
+        return json.load(file)
+
+
+def test_json_test_name_square(gs_json_square: Any) -> None:
+    """Test that the JSON file produced by gradescope has the correct test names."""
+    assert set(map(lambda x: x["name"], gs_json_square["tests"])) == {
+        "Test 4",
+        "Test 2",
+        "Test -2",
+    }
+
+
+def test_json_test_score_square(gs_json_square: Any) -> None:
+    """Test that the JSON file produced by gradescope has the correct score."""
+    assert gs_json_square["score"] == 3
+
+
+def test_json_test_visibility_square(gs_json_square: Any) -> None:
+    """Test that the JSON file produced by gradescope has the correct visibility."""
+    print(gs_json_square)
+    assert set(map(lambda t: t["visibility"], gs_json_square["tests"])) == {
+        "visible",
+        "visible",
+        "hidden",
+    }

@@ -118,6 +118,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
 @pytest.fixture(
     params=[  # type: ignore
         lazy_fixture("square"),
+        lazy_fixture("times"),
         lazy_fixture("diff"),
         lazy_fixture("palindrome"),
         lazy_fixture("kwd"),
@@ -136,13 +137,28 @@ def fixture_square() -> Problem[int]:
 
     @test_case(4)
     @test_case(2, aga_output=4)
-    @test_case(-2, aga_output=4)
+    @test_case(-2, aga_output=4, aga_hidden=True)
     @problem()
     def square(x: int) -> int:
         """Square x."""
         return x * x
 
     return square
+
+
+@pytest.fixture(name="times")
+def fixture_times() -> Problem[int]:
+    """Generate a problem which tests a times function."""
+
+    @test_case(4, 6)
+    @test_case(-2, 16)
+    @test_case(2, -3, aga_hidden=True, aga_output=-6)
+    @problem()
+    def times(x: int, y: int) -> int:
+        """Compute x * y."""
+        return x * y
+
+    return times
 
 
 @pytest.fixture(name="diff")

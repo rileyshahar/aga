@@ -1,4 +1,4 @@
-"""Tests for the `AutograderTestCase` class."""
+"""Tests for the `_AgaTestCase` class."""
 
 from typing import List, Tuple
 from unittest import TestCase

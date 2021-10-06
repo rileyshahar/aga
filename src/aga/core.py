@@ -5,13 +5,27 @@ typing *args and **kwargs is quite difficult. There might be a way to do this, b
 not sure how, and it seemed much easier to just ignore them.
 """
 
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
 from unittest import TestCase, TestSuite
 
 Output = TypeVar("Output")
 
 
-class _AutograderTestCase(TestCase):
+@dataclass(frozen=True)
+class TestMetadata:
+    """Stores metadata about a specific class.
+
+    Attributes
+    ----------
+    hidden : bool
+        Whether the test should be hidden.
+    """
+
+    hidden: bool = False
+
+
+class AgaTestCase(TestCase):
     """A `TestCase` which runs a single test of a `Problem`."""
 
     def __init__(
@@ -19,19 +33,23 @@ class _AutograderTestCase(TestCase):
         test_input: "_TestInputs",
         golden: Callable[..., Output],
         under_test: Callable[..., Output],
+        hidden: bool = False,
     ) -> None:
         super().__init__()
         self._test_input = test_input
         self._golden = golden
         self._under_test = under_test
+        self._metadata = TestMetadata(hidden=hidden)
+
+    def metadata(self) -> TestMetadata:
+        """Get the test's metadata."""
+        return self._metadata
 
     # pylint: disable=invalid-name
     # camelCase is required by unittest
     def runTest(self) -> None:
         """Run the test case."""
         self._test_input.check(self._golden, self._under_test)
-
-    runTest.__weight__ = 1  # type: ignore
 
     # pylint: disable=invalid-name
     # camelCase is required by unittest
@@ -51,8 +69,10 @@ class _TestInputs(TestCase):
     outputs will be compared, and a unittest failure raised if they differ.
     """
 
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+    def __init__(self, *args, aga_hidden=False, **kwargs) -> None:  # type: ignore
         super().__init__()
+        self._hidden = aga_hidden
+
         self._args: Tuple = args  # type: ignore
         self._kwargs: Dict = kwargs  # type: ignore
 
@@ -83,9 +103,9 @@ class _TestInputs(TestCase):
 
     def generate_test_case(
         self, golden: Callable[..., Output], under_test: Callable[..., Output]
-    ) -> _AutograderTestCase:
+    ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
-        return _AutograderTestCase(self, golden, under_test)
+        return AgaTestCase(self, golden, under_test, hidden=self._hidden)
 
     def _args_repr(self) -> str:
         return ",".join(repr(x) for x in self._args)
@@ -233,7 +253,7 @@ def _check_reserved_keyword(kwd: str) -> None:
 
 
 def test_case(  # type: ignore
-    *args, aga_output: Optional[Any] = None, **kwargs
+    *args, aga_output: Optional[Any] = None, aga_hidden: bool = False, **kwargs
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     r"""Declare a specific test case for some problem.
 
@@ -246,6 +266,8 @@ def test_case(  # type: ignore
         the "golden solution" to the problem. If aga_output is specified, the inputs
         will double as a test _of_ the golden solution; to successfully produce the
         problem grader, the golden solution must return aga_output from the given input.
+    aga_hidden : bool
+        If True, hide the problem from students on supported frontends.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
@@ -260,10 +282,12 @@ def test_case(  # type: ignore
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
         if aga_output is not None:
-            prob.add_golden_test_case(_GoldenTestInputs(aga_output, *args, **kwargs))
+            prob.add_golden_test_case(
+                _GoldenTestInputs(aga_output, *args, aga_hidden=aga_hidden, **kwargs)
+            )
 
         else:
-            prob.add_test_case(_TestInputs(*args, **kwargs))
+            prob.add_test_case(_TestInputs(*args, aga_hidden=aga_hidden, **kwargs))
 
         return prob
 
