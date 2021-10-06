@@ -18,10 +18,13 @@ class TestMetadata:
 
     Attributes
     ----------
+    name : str
+        The test's name.
     hidden : bool
         Whether the test should be hidden.
     """
 
+    name: str
     hidden: bool = False
 
 
@@ -34,12 +37,15 @@ class AgaTestCase(TestCase):
         golden: Callable[..., Output],
         under_test: Callable[..., Output],
         hidden: bool = False,
+        name: Optional[str] = None,
     ) -> None:
         super().__init__()
         self._test_input = test_input
         self._golden = golden
         self._under_test = under_test
-        self._metadata = TestMetadata(hidden=hidden)
+        self._metadata = TestMetadata(
+            name=name or f"Test {repr(self._test_input)}", hidden=hidden
+        )
 
     def metadata(self) -> TestMetadata:
         """Get the test's metadata."""
@@ -56,10 +62,9 @@ class AgaTestCase(TestCase):
     def shortDescription(self) -> str:
         """Dynamically generate the test name.
 
-        This method is called by unittest, and then in turn by gradescope_utils, to
-        determine what to name the test on gradescope.
+        This method is called by unittest.
         """
-        return f"Test {repr(self._test_input)}"
+        return self.metadata().name
 
 
 class _TestInputs(TestCase):
@@ -69,8 +74,9 @@ class _TestInputs(TestCase):
     outputs will be compared, and a unittest failure raised if they differ.
     """
 
-    def __init__(self, *args, aga_hidden=False, **kwargs) -> None:  # type: ignore
+    def __init__(self, *args, aga_hidden=False, aga_name: Optional[str] = None, **kwargs) -> None:  # type: ignore
         super().__init__()
+        self._name = aga_name
         self._hidden = aga_hidden
 
         self._args: Tuple = args  # type: ignore
@@ -105,7 +111,9 @@ class _TestInputs(TestCase):
         self, golden: Callable[..., Output], under_test: Callable[..., Output]
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
-        return AgaTestCase(self, golden, under_test, hidden=self._hidden)
+        return AgaTestCase(
+            self, golden, under_test, hidden=self._hidden, name=self._name
+        )
 
     def _args_repr(self) -> str:
         return ",".join(repr(x) for x in self._args)
@@ -253,7 +261,11 @@ def _check_reserved_keyword(kwd: str) -> None:
 
 
 def test_case(  # type: ignore
-    *args, aga_output: Optional[Any] = None, aga_hidden: bool = False, **kwargs
+    *args,
+    aga_output: Optional[Any] = None,
+    aga_hidden: bool = False,
+    aga_name: Optional[str] = None,
+    **kwargs,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     r"""Declare a specific test case for some problem.
 
@@ -268,6 +280,9 @@ def test_case(  # type: ignore
         problem grader, the golden solution must return aga_output from the given input.
     aga_hidden : bool
         If True, hide the problem from students on supported frontends.
+    aga_name : Optional[str]
+        The Test Case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
+        a comma-separated list of args and kwargs.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
@@ -283,11 +298,19 @@ def test_case(  # type: ignore
     def outer(prob: Problem[Output]) -> Problem[Output]:
         if aga_output is not None:
             prob.add_golden_test_case(
-                _GoldenTestInputs(aga_output, *args, aga_hidden=aga_hidden, **kwargs)
+                _GoldenTestInputs(
+                    aga_output,
+                    *args,
+                    aga_hidden=aga_hidden,
+                    aga_name=aga_name,
+                    **kwargs,
+                )
             )
 
         else:
-            prob.add_test_case(_TestInputs(*args, aga_hidden=aga_hidden, **kwargs))
+            prob.add_test_case(
+                _TestInputs(*args, aga_hidden=aga_hidden, aga_name=aga_name, **kwargs)
+            )
 
         return prob
 

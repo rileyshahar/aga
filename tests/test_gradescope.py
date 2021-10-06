@@ -190,3 +190,23 @@ def test_json_test_output_square_error(gs_json_square_error: Any) -> None:
             gs_json_square_error["tests"],
         )
     )
+
+
+@pytest.fixture(name="gs_json_square_custom_name")
+def fixture_gs_json_square_custom_name(
+    square_custom_name: Problem[int],
+    source_square: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> Any:
+    """Generate the JSON output from the square problem with an erroring submission."""
+    return get_gs_json(square_custom_name, source_square, mocker, tmp_path)
+
+
+def test_json_test_name_square_custom_name(gs_json_square_custom_name: Any) -> None:
+    """Test that the JSON file produced by gradescope has the correct test names."""
+    assert set(map(lambda x: x["name"], gs_json_square_custom_name["tests"])) == {
+        "Test positive two",
+        "Test minus two",
+        "This is a deliberately silly name!",
+    }

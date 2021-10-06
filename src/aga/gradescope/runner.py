@@ -96,7 +96,7 @@ class _GradescopeTestResult(TestResult):
     def _test_json(self, test: AgaTestCase) -> _GradescopeTestJson:
         """Construct the test json schema for a test, with _no_ output."""
         metadata = test.metadata()
-        name = test.shortDescription()
+        name = metadata.name
         visibility = self._visibility_string(metadata.hidden)
 
         return _GradescopeTestJson(

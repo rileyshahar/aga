@@ -140,6 +140,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
 @pytest.fixture(
     params=[  # type: ignore
         lazy_fixture("square"),
+        lazy_fixture("square_custom_name"),
         lazy_fixture("times"),
         lazy_fixture("diff"),
         lazy_fixture("palindrome"),
@@ -160,6 +161,25 @@ def fixture_square() -> Problem[int]:
     @test_case(4)
     @test_case(2, aga_output=4)
     @test_case(-2, aga_output=4, aga_hidden=True)
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
+@pytest.fixture(name="square_custom_name")
+def fixture_square_custom_name() -> Problem[int]:
+    """Generate a problem which tests a square function.
+
+    This fixture uses the `aga_name` argument to `test_case` to generate a test case
+    with a name different from the default.
+    """
+
+    @test_case(4, aga_name="This is a deliberately silly name!")
+    @test_case(2, aga_output=4, aga_name="Test positive two")
+    @test_case(-2, aga_output=4, aga_hidden=True, aga_name="Test minus two")
     @problem()
     def square(x: int) -> int:
         """Square x."""
