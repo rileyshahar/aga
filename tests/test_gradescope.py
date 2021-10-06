@@ -176,9 +176,11 @@ def fixture_gs_json_square_error(
     """Generate the JSON output from the square problem with an erroring submission."""
     return get_gs_json(square, source_square_error, mocker, tmp_path)
 
+
 def test_json_test_score_square_error(gs_json_square_error: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct score."""
     assert gs_json_square_error["score"] == 0
+
 
 def test_json_test_output_square_error(gs_json_square_error: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct output."""
