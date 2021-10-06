@@ -6,7 +6,7 @@
 [![Read the Docs](https://readthedocs.org/projects/aga/badge/)](https://aga.readthedocs.io/)
 [![License](https://img.shields.io/github/license/nihilistkitten/aga)](https://choosealicense.com/licenses/mit/)
 
-**aga** (aga grades assignments) is a tool for easily producing autograders for python programming assignments.
+**aga** (aga grades assignments) is a tool for easily producing autograders for python programming assignments, originally developed for Reed College's CS1 course.
 
 ## Installation
 

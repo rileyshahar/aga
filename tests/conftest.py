@@ -15,6 +15,16 @@ def square(x: int) -> int:
     return x * x
 """
 
+SOURCE_SQUARE_INCORRECT = """
+def square(x: int) -> int:
+    return x - x
+"""
+
+SOURCE_SQUARE_ERROR = """
+def square(x: int) -> int:
+    return x - y
+"""
+
 SOURCE_DUPLICATE = """
 def duplicate(x: int):
     return (x, x)
@@ -64,6 +74,18 @@ def _write_sources_to_files(
 def fixture_source_square(tmp_path: Path) -> str:
     """Generate a source file with SOURCE_SQUARE, returning its path."""
     return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE)
+
+
+@pytest.fixture(name="source_square_incorrect")
+def fixture_source_square_incorrect(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SQUARE_INCORRECT, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_INCORRECT)
+
+
+@pytest.fixture(name="source_square_error")
+def fixture_source_square_error(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SQUARE_ERROR, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_ERROR)
 
 
 @pytest.fixture(name="source_car")
@@ -118,6 +140,8 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
 @pytest.fixture(
     params=[  # type: ignore
         lazy_fixture("square"),
+        lazy_fixture("square_custom_name"),
+        lazy_fixture("times"),
         lazy_fixture("diff"),
         lazy_fixture("palindrome"),
         lazy_fixture("kwd"),
@@ -136,13 +160,47 @@ def fixture_square() -> Problem[int]:
 
     @test_case(4)
     @test_case(2, aga_output=4)
-    @test_case(-2, aga_output=4)
+    @test_case(-2, aga_output=4, aga_hidden=True)
     @problem()
     def square(x: int) -> int:
         """Square x."""
         return x * x
 
     return square
+
+
+@pytest.fixture(name="square_custom_name")
+def fixture_square_custom_name() -> Problem[int]:
+    """Generate a problem which tests a square function.
+
+    This fixture uses the `aga_name` argument to `test_case` to generate a test case
+    with a name different from the default.
+    """
+
+    @test_case(4, aga_name="This is a deliberately silly name!")
+    @test_case(2, aga_output=4, aga_name="Test positive two")
+    @test_case(-2, aga_output=4, aga_hidden=True, aga_name="Test minus two")
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
+@pytest.fixture(name="times")
+def fixture_times() -> Problem[int]:
+    """Generate a problem which tests a times function."""
+
+    @test_case(4, 6)
+    @test_case(-2, 16)
+    @test_case(2, -3, aga_hidden=True, aga_output=-6)
+    @problem()
+    def times(x: int, y: int) -> int:
+        """Compute x * y."""
+        return x * y
+
+    return times
 
 
 @pytest.fixture(name="diff")
