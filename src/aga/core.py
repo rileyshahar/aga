@@ -36,16 +36,13 @@ class AgaTestCase(TestCase):
         test_input: "_TestInputs",
         golden: Callable[..., Output],
         under_test: Callable[..., Output],
-        hidden: bool = False,
-        name: Optional[str] = None,
+        metadata: TestMetadata,
     ) -> None:
         super().__init__()
         self._test_input = test_input
         self._golden = golden
         self._under_test = under_test
-        self._metadata = TestMetadata(
-            name=name or f"Test {repr(self._test_input)}", hidden=hidden
-        )
+        self._metadata = metadata
 
     def metadata(self) -> TestMetadata:
         """Get the test's metadata."""
@@ -74,7 +71,9 @@ class _TestInputs(TestCase):
     outputs will be compared, and a unittest failure raised if they differ.
     """
 
-    def __init__(self, *args, aga_hidden=False, aga_name: Optional[str] = None, **kwargs) -> None:  # type: ignore
+    def __init__(  # type: ignore
+        self, *args, aga_hidden=False, aga_name: Optional[str] = None, **kwargs
+    ) -> None:
         super().__init__()
         self._name = aga_name
         self._hidden = aga_hidden
@@ -111,9 +110,10 @@ class _TestInputs(TestCase):
         self, golden: Callable[..., Output], under_test: Callable[..., Output]
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
-        return AgaTestCase(
-            self, golden, under_test, hidden=self._hidden, name=self._name
+        metadata = TestMetadata(
+            name=self._name or f"Test {repr(self)}", hidden=self._hidden
         )
+        return AgaTestCase(self, golden, under_test, metadata)
 
     def _args_repr(self) -> str:
         return ",".join(repr(x) for x in self._args)
