@@ -281,7 +281,7 @@ def test_case(  # type: ignore
     aga_hidden : bool
         If True, hide the problem from students on supported frontends.
     aga_name : Optional[str]
-        The Test Case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
+        The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
         a comma-separated list of args and kwargs.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
