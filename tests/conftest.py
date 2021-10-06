@@ -15,6 +15,16 @@ def square(x: int) -> int:
     return x * x
 """
 
+SOURCE_SQUARE_INCORRECT = """
+def square(x: int) -> int:
+    return x - x
+"""
+
+SOURCE_SQUARE_ERROR = """
+def square(x: int) -> int:
+    return x - y
+"""
+
 SOURCE_DUPLICATE = """
 def duplicate(x: int):
     return (x, x)
@@ -64,6 +74,18 @@ def _write_sources_to_files(
 def fixture_source_square(tmp_path: Path) -> str:
     """Generate a source file with SOURCE_SQUARE, returning its path."""
     return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE)
+
+
+@pytest.fixture(name="source_square_incorrect")
+def fixture_source_square_incorrect(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SQUARE_INCORRECT, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_INCORRECT)
+
+
+@pytest.fixture(name="source_square_error")
+def fixture_source_square_error(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SQUARE_ERROR, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_ERROR)
 
 
 @pytest.fixture(name="source_car")

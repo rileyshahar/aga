@@ -110,13 +110,7 @@ class _GradescopeTestResult(TestResult):
         """Construct the test json schema for an error."""
         json = self._test_json(test)
         json.output = f"Test failed: {err}."
-
-        return json
-
-    def _skip_json(self, test: AgaTestCase, reason: str) -> _GradescopeTestJson:
-        """Construct the test json schema for a skip."""
-        json = self._test_json(test)
-        json.output = f"Test skipped: {reason}."
+        json.score = 0.0
 
         return json
 
@@ -136,11 +130,6 @@ class _GradescopeTestResult(TestResult):
         """Add a success."""
         super().addSuccess(test)
         self._json.tests.append(self._test_json(test))
-
-    def addSkip(self, test: AgaTestCase, reason: str) -> None:  # type: ignore
-        """Add a skip."""
-        super().addSkip(test, reason)
-        self._json.tests.append(self._skip_json(test, reason))
 
     def build(self) -> str:
         """Build the result into a JSON string."""
