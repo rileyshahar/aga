@@ -114,7 +114,7 @@ class _GradescopeTestResult(TestResult):
         return json
 
     def _skip_json(self, test: AgaTestCase, reason: str) -> _GradescopeTestJson:
-        """Construct the test json schema for an error."""
+        """Construct the test json schema for a skip."""
         json = self._test_json(test)
         json.output = f"Test skipped: {reason}."
 
