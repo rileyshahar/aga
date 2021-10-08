@@ -45,7 +45,7 @@ class _GradescopeTestJson:
 
 @dataclass_json
 @dataclass
-class _GradescopeJson:
+class GradescopeJson:
     """The JSON schema for Gradescope.
 
     We currently don't support the leaderboard and extra_data features of the gradescope
@@ -86,7 +86,7 @@ class _GradescopeTestResult(TestResult):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._json = _GradescopeJson(tests=[])
+        self._json = GradescopeJson(tests=[])
 
     @staticmethod
     def _visibility_string(hidden: bool) -> str:
