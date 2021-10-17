@@ -51,7 +51,7 @@ def test_into_gradescope_zip_problem(
     with ZipFile(zip_path) as zip_f:
         with zip_f.open("problem.pckl") as problem:
             problem_loaded = load(problem)  # type: Problem[Output]
-            problem_loaded.run_golden_tests()
+            problem_loaded.check()
             assert problem_loaded.name() == orig_problem.name()
 
 

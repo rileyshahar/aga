@@ -134,6 +134,9 @@ class _TestInputs(TestCase):
 
         return args_repr + sep + kwargs_repr
 
+    def check_one(self, under_test: Callable[..., Output]) -> None:
+        pass
+
 
 class _GoldenTestInputs(_TestInputs, TestCase):
     """A set of test inputs which also contains an expected output.
@@ -152,14 +155,40 @@ class _GoldenTestInputs(_TestInputs, TestCase):
         self.assertEqual(self._eval(under_test), self._output)
 
 
+class _TestInputGroup:
+    """A group of test cases with shared configuration."""
+
+    def __init__(self, name: str = ""):
+        self._name = name or None
+        self._test_cases: List[_TestInputs] = []
+
+    def add_test_case(self, case: _TestInputs) -> None:
+        """Add a test case to the group."""
+        self._test_cases.append(case)
+
+    def generate_test_suite(
+        self, golden: Callable[..., Output], under_test: Callable[..., Output]
+    ) -> TestSuite:
+        """Generate a test suite from all the test cases for this group."""
+        suite = TestSuite([])
+
+        for case in self._test_cases:
+            suite.addTest(case.generate_test_case(golden, under_test))
+
+        return suite
+
+    def check_one(self, golden: Callable[..., Output]) -> None:
+        for case in self._test_cases:
+            case.check_one(golden)
+
+
 class Problem(Generic[Output]):
     """Stores tests for a single problem."""
 
     def __init__(self, golden: Callable[..., Output], name: str) -> None:
         self._golden: Callable[..., Output] = golden
         self._name = name
-        self._test_cases: List[_TestInputs] = []
-        self._golden_test_cases: List[_GoldenTestInputs] = []
+        self._groups: List[_TestInputGroup] = [_TestInputGroup()]
 
     def add_test_case(self, case: _TestInputs) -> None:
         """Add a test case to the problem.
@@ -167,21 +196,15 @@ class Problem(Generic[Output]):
         Student solutions will be checked against the golden solution; i.e., this method
         does _not_ produce a test of the golden solution.
         """
-        self._test_cases.append(case)
+        self._groups[-1].add_test_case(case)
 
-    def add_golden_test_case(self, case: _GoldenTestInputs) -> None:
-        """Add a golden test case to the problem.
+    def check(self) -> None:
+        """Check that the problem is correct.
 
-        Student solutions will be checked against the golden solution, and both against
-        the output pasted to the GoldenTestInputs constructor; i.e., this method _does_
-        produce a test of the golden solution.
+        Currently, this runs all tests of the golden solution.
         """
-        self._golden_test_cases.append(case)
-
-    def run_golden_tests(self) -> None:
-        """Run all tests of the golden solution."""
-        for case in self._golden_test_cases:
-            case.check_one(self._golden)
+        for group in self._groups:
+            group.check_one(self._golden)
 
     def generate_test_suite(self, under_test: Callable[..., Output]) -> TestSuite:
         """Generate a `TestSuite` for the student submitted function.
@@ -204,11 +227,8 @@ class Problem(Generic[Output]):
         """
         suite = TestSuite([])
 
-        for case in self._test_cases:
-            suite.addTest(case.generate_test_case(self._golden, under_test))
-
-        for case in self._golden_test_cases:
-            suite.addTest(case.generate_test_case(self._golden, under_test))
+        for group in self._groups:
+            suite.addTest(group.generate_test_suite(self._golden, under_test))
 
         return suite
 
@@ -297,21 +317,18 @@ def test_case(  # type: ignore
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
         if aga_output is not None:
-            prob.add_golden_test_case(
-                _GoldenTestInputs(
-                    aga_output,
-                    *args,
-                    aga_hidden=aga_hidden,
-                    aga_name=aga_name,
-                    **kwargs,
-                )
+            tc: _TestInputs = _GoldenTestInputs(
+                aga_output,
+                *args,
+                aga_hidden=aga_hidden,
+                aga_name=aga_name,
+                **kwargs,
             )
 
         else:
-            prob.add_test_case(
-                _TestInputs(*args, aga_hidden=aga_hidden, aga_name=aga_name, **kwargs)
-            )
+            tc = _TestInputs(*args, aga_hidden=aga_hidden, aga_name=aga_name, **kwargs)
 
+        prob.add_test_case(tc)
         return prob
 
     return outer
