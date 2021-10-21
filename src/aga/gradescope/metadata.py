@@ -6,10 +6,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
 
+from backports.datetime_fromisoformat import MonkeyPatch
 from dataclasses_json import config, dataclass_json
 from marshmallow import fields
 
 from .runner import GradescopeJson
+
+# backwards compatibility for python 3.6
+MonkeyPatch.patch_fromisoformat()
 
 
 @dataclass_json
@@ -42,7 +46,7 @@ class GradescopeAssignmentMetadata:
     due_date: datetime = field(
         metadata=config(
             encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat,
+            decoder=datetime.fromisoformat,  # type: ignore
             mm_field=fields.DateTime(format="iso"),
         )
     )
@@ -54,14 +58,12 @@ class GradescopeAssignmentMetadata:
     release_date: datetime = field(
         metadata=config(
             encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat,
+            decoder=datetime.fromisoformat,  # type: ignore
             mm_field=fields.DateTime(format="iso"),
         )
     )
     title: str
-    total_points: float = field(
-        metadata=config(encoder=lambda x: str(x), decoder= lambda s: float(s))
-    )
+    total_points: float = field(metadata=config(encoder=str, decoder=float))
 
 
 @dataclass_json
@@ -102,7 +104,7 @@ class GradescopePreviousSubmission:
     submission_time: datetime = field(
         metadata=config(
             encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat,
+            decoder=datetime.fromisoformat,  # type: ignore
             mm_field=fields.DateTime(format="iso"),
         )
     )
@@ -139,7 +141,7 @@ class GradescopeSubmissionMetadata:
     created_at: datetime = field(
         metadata=config(
             encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat,
+            decoder=datetime.fromisoformat,  # type: ignore
             mm_field=fields.DateTime(format="iso"),
         )
     )

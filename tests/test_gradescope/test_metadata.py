@@ -86,6 +86,7 @@ def test_example_assignment_metadata_name(
     """Test that the example metadata's assignment's name is correct."""
     assert example_metadata_assignment.title == "Programming Assignment 1"
 
+
 def test_example_assignment_metadata_total_points(
     example_metadata_assignment: GradescopeAssignmentMetadata,
 ) -> None:

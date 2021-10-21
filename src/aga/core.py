@@ -134,8 +134,11 @@ class _TestInputs(TestCase):
 
         return args_repr + sep + kwargs_repr
 
-    def check_one(self, under_test: Callable[..., Output]) -> None:
-        pass
+    def check_one(self, golden: Callable[..., Output]) -> None:
+        """Check that the golden solution is correct.
+
+        This should be implemented by subclasses which expose this functionality.
+        """
 
 
 class _GoldenTestInputs(_TestInputs, TestCase):
@@ -150,9 +153,9 @@ class _GoldenTestInputs(_TestInputs, TestCase):
         super().__init__(*args, **kwargs)
         self._output = output
 
-    def check_one(self, under_test: Callable[..., Output]) -> None:
-        """Assert that `under_test`'s output matches the golden output."""
-        self.assertEqual(self._eval(under_test), self._output)
+    def check_one(self, golden: Callable[..., Output]) -> None:
+        """Assert that `golden`'s output matches the golden output."""
+        self.assertEqual(self._eval(golden), self._output)
 
 
 class _TestInputGroup:
@@ -178,6 +181,7 @@ class _TestInputGroup:
         return suite
 
     def check_one(self, golden: Callable[..., Output]) -> None:
+        """Check the golden solution against all test cases."""
         for case in self._test_cases:
             case.check_one(golden)
 
@@ -317,7 +321,7 @@ def test_case(  # type: ignore
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
         if aga_output is not None:
-            tc: _TestInputs = _GoldenTestInputs(
+            case: _TestInputs = _GoldenTestInputs(
                 aga_output,
                 *args,
                 aga_hidden=aga_hidden,
@@ -326,9 +330,11 @@ def test_case(  # type: ignore
             )
 
         else:
-            tc = _TestInputs(*args, aga_hidden=aga_hidden, aga_name=aga_name, **kwargs)
+            case = _TestInputs(
+                *args, aga_hidden=aga_hidden, aga_name=aga_name, **kwargs
+            )
 
-        prob.add_test_case(tc)
+        prob.add_test_case(case)
         return prob
 
     return outer

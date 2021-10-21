@@ -25,6 +25,7 @@ linters = (
     "flake8-bugbear",
     "pydocstyle",
     "mypy",
+    "types-backports",  # dependency for mypy
     "pylint",
 )
 
