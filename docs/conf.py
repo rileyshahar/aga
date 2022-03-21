@@ -10,7 +10,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "myst_parser",
     "sphinx_rtd_theme",
-    "sphinx_click"
+    "sphinx_click",
 ]
 
 html_theme = "sphinx_rtd_theme"

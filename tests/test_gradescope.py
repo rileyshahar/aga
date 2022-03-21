@@ -14,7 +14,7 @@ from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
-from importlib_resources import open_text
+from importlib_resources import files
 from pytest_mock import MockerFixture
 
 from aga.core import Problem
@@ -67,12 +67,14 @@ def test_into_gradescope_zip_run_autograder(
 ) -> None:
     """Test that into_gradescope_zip copies files correctly."""
 
+    RESOURCES_DIR = "aga.gradescope.resources"
+
     _, zip_path = gradescope_zip
 
     with ZipFile(zip_path) as zip_f:
         with zip_f.open(file, "r") as zip_byte_stream:
             with TextIOWrapper(zip_byte_stream) as zipped_file:
-                with open_text("aga.gradescope.resources", file) as src:
+                with files(RESOURCES_DIR).joinpath(file).open() as src:  # type: ignore
                     assert zipped_file.read() == src.read()
 
 

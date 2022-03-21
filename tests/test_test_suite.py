@@ -16,7 +16,7 @@ def square_wrong(x: int) -> int:
 
 def square_right(x: int) -> int:
     """Square x, correctly."""
-    return x ** 2
+    return x**2
 
 
 @test_case(2)

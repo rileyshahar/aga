@@ -10,7 +10,7 @@ from typing import Optional
 from zipfile import ZipFile
 
 from dill import dump  # type: ignore
-from importlib_resources import open_text
+from importlib_resources import files
 
 from ..core import Output, Problem
 
@@ -70,7 +70,7 @@ def _copy_resource_to(
 ) -> str:
     """Copy the resource at package.fname to tempdir/fname, returning the dest path."""
     path = pathjoin(tempdir, fname)
-    with open_text(package, fname) as src:
+    with files(package).joinpath(fname).open() as src:  # type: ignore
         with open(path, "w", encoding="UTF-8") as dest:
             copyfileobj(src, dest)
 
