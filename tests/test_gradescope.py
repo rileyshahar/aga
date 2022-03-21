@@ -23,6 +23,9 @@ from aga.gradescope.main import gradescope_main
 
 Output = TypeVar("Output")
 
+# location of resources file, for testing imports
+RESOURCES_DIR = "aga.gradescope.resources"
+
 
 @pytest.fixture(name="gradescope_zip")
 def fixture_gradescope_zip(
@@ -66,8 +69,6 @@ def test_into_gradescope_zip_run_autograder(
     gradescope_zip: Tuple[Problem[Output], str], file: str
 ) -> None:
     """Test that into_gradescope_zip copies files correctly."""
-
-    RESOURCES_DIR = "aga.gradescope.resources"
 
     _, zip_path = gradescope_zip
 
