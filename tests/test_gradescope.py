@@ -14,7 +14,7 @@ from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
-from importlib_resources import open_text
+from importlib_resources import files
 from pytest_mock import MockerFixture
 
 from aga.core import Problem
@@ -22,6 +22,9 @@ from aga.gradescope import InvalidProblem, into_gradescope_zip
 from aga.gradescope.main import gradescope_main
 
 Output = TypeVar("Output")
+
+# location of resources file, for testing imports
+RESOURCES_DIR = "aga.gradescope.resources"
 
 
 @pytest.fixture(name="gradescope_zip")
@@ -72,7 +75,7 @@ def test_into_gradescope_zip_run_autograder(
     with ZipFile(zip_path) as zip_f:
         with zip_f.open(file, "r") as zip_byte_stream:
             with TextIOWrapper(zip_byte_stream) as zipped_file:
-                with open_text("aga.gradescope.resources", file) as src:
+                with files(RESOURCES_DIR).joinpath(file).open() as src:  # type: ignore
                     assert zipped_file.read() == src.read()
 
 

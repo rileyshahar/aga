@@ -14,7 +14,7 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.10
 
       - name: Install poetry
         run: pip install poetry
@@ -26,7 +26,7 @@ jobs:
         run: pip install nox nox-poetry
 
       - name: Run nox
-        run: nox --python 3.9
+        run: nox --python 3.10
 
       - name: Build
         run: poetry build
