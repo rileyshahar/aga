@@ -5,7 +5,7 @@ from pathlib import Path
 from shutil import copyfileobj
 
 import pytest
-from importlib_resources import open_text
+from importlib_resources import files
 
 from aga.gradescope.metadata import (
     GradescopeAssignmentMetadata,
@@ -20,7 +20,9 @@ def fixture_example_metadata(tmp_path: Path) -> GradescopeSubmissionMetadata:
 
     path = pathjoin(tmp_path, "metadata.json")
 
-    with open_text("tests.test_gradescope.resources", "example_metadata.json") as src:
+    with files("tests.test_gradescope.resources").joinpath(  # type: ignore
+        "example_metadata.json"
+    ).open() as src:
         with open(pathjoin(tmp_path, "metadata.json"), "w", encoding="UTF-8") as dest:
             copyfileobj(src, dest)
 

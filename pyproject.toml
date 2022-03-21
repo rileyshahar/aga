@@ -17,11 +17,12 @@ dill = "^0.3.4"
 gradescope-utils = "^0.4.0"
 importlib-metadata = "^4.8.1"
 importlib-resources = "^5.2.2"
-python = "^3.6.1"
+python = "^3.6.2"
 typer = "^0.4.0"
 types-dataclasses = {version = "^0.1.7", python = "~3.6"}
 
 [tool.poetry.dev-dependencies]
+black = "^22.1.0"
 codecov = "^2.1.12"
 coverage = {extras = ["toml"], version = "^5.5"}
 docker = "^5.0.2"

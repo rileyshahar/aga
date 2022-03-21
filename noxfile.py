@@ -1,11 +1,11 @@
 """Configuration for `nox`, which runs tests across multiple python versions.
 
 Gradescope's docker autograder container is built on Ubuntu 18.04, which does not
-provide a newer python. Therefore, running tests in python3.7 is necessary. Nox does not
+provide a newer python. Therefore, running tests in python3.6 is necessary. Nox does not
 handle versioning of your python environment on its own; you can use a tool like `pyenv`
-to do so, or just install the python3.7 interpreter from the Python website.
+to do so, or just install the python3.6 interpreter from the Python website.
 
-Regardless, nox expects that you have a `python3.7` binary in your $PATH.
+Regardless, nox expects that you have a `python3.6` binary in your $PATH.
 """
 
 import nox
@@ -15,7 +15,7 @@ from nox_poetry import session as nox_session
 # default nox sessions (overridden with -s)
 nox.options.sessions = ("lint", "test")
 
-python_versions = ("3.9", "3.6")
+python_versions = ("3.10", "3.6")
 locations = ["src", "tests"]
 
 test_deps = ("pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock", "docker")
@@ -39,7 +39,7 @@ def test(session: Session) -> None:
     session.run("pytest", *args)
 
 
-@nox.session(python="3.9")
+@nox.session(python="3.10")
 def coverage(session: Session) -> None:
     """Upload coverage data."""
     session.install(".")
@@ -71,7 +71,7 @@ def lint(session: Session) -> None:
     session.run("mypy", *args)
 
 
-@nox_session(python="3.9")
+@nox_session(python="3.10")
 def fmt(session: Session) -> None:
     """Format the codebase with black."""
     args = session.posargs or locations

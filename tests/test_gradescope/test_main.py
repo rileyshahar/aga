@@ -1,3 +1,5 @@
+"""Tests for the gradescope main file."""
+
 import json
 from os.path import dirname
 from os.path import join as pathjoin

@@ -121,4 +121,4 @@ def test_complete_frontend_incomplete() -> None:
 
 def test_complete_frontend_no_match() -> None:
     """Check that complete_frontend works with a non-matching string."""
-    assert tuple(complete_frontend("nonexistent")) == ()
+    assert not tuple(complete_frontend("nonexistent"))
