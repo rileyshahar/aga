@@ -22,9 +22,12 @@ class TestMetadata:
         The test's name.
     hidden : bool
         Whether the test should be hidden.
+    max_score : int
+        The test's max score.
     """
 
     name: str
+    max_score: int
     hidden: bool = False
 
 
@@ -111,7 +114,7 @@ class _TestInputs(TestCase):
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
         metadata = TestMetadata(
-            name=self._name or f"Test {repr(self)}", hidden=self._hidden
+            name=self._name or f"Test {repr(self)}", hidden=self._hidden, max_score=1
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
@@ -141,7 +144,7 @@ class _TestInputs(TestCase):
         """
 
 
-class _GoldenTestInputs(_TestInputs, TestCase):
+class _GoldenTestInputs(_TestInputs):
     """A set of test inputs which also contains an expected output.
 
     This will be treated as a `TestInput` when the autograder is built, but provides
@@ -161,8 +164,8 @@ class _GoldenTestInputs(_TestInputs, TestCase):
 class _TestInputGroup:
     """A group of test cases with shared configuration."""
 
-    def __init__(self, name: str = ""):
-        self._name = name or None
+    def __init__(self, name: Optional[str] = None):
+        self._name = name
         self._test_cases: List[_TestInputs] = []
 
     def add_test_case(self, case: _TestInputs) -> None:
@@ -202,13 +205,17 @@ class Problem(Generic[Output]):
         """
         self._groups[-1].add_test_case(case)
 
+    def add_group(self, grp: _TestInputGroup) -> None:
+        """Add a group to the problem."""
+        self._groups.append(grp)
+
     def check(self) -> None:
         """Check that the problem is correct.
 
         Currently, this runs all tests of the golden solution.
         """
-        for group in self._groups:
-            group.check_one(self._golden)
+        for grp in self._groups:
+            grp.check_one(self._golden)
 
     def generate_test_suite(self, under_test: Callable[..., Output]) -> TestSuite:
         """Generate a `TestSuite` for the student submitted function.
@@ -231,8 +238,8 @@ class Problem(Generic[Output]):
         """
         suite = TestSuite([])
 
-        for group in self._groups:
-            suite.addTest(group.generate_test_suite(self._golden, under_test))
+        for grp in self._groups:
+            suite.addTest(grp.generate_test_suite(self._golden, under_test))
 
         return suite
 
@@ -335,6 +342,16 @@ def test_case(  # type: ignore
             )
 
         prob.add_test_case(case)
+        return prob
+
+    return outer
+
+
+def group(name: Optional[str] = None) -> Callable[[Problem[Output]], Problem[Output]]:
+    """Declare a group of problems."""
+
+    def outer(prob: Problem[Output]) -> Problem[Output]:
+        prob.add_group(_TestInputGroup(name))
         return prob
 
     return outer
