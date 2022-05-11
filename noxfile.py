@@ -1,12 +1,4 @@
-"""Configuration for `nox`, which runs tests across multiple python versions.
-
-Gradescope's docker autograder container is built on Ubuntu 18.04, which does not
-provide a newer python. Therefore, running tests in python3.6 is necessary. Nox does not
-handle versioning of your python environment on its own; you can use a tool like `pyenv`
-to do so, or just install the python3.6 interpreter from the Python website.
-
-Regardless, nox expects that you have a `python3.6` binary in your $PATH.
-"""
+"""Configuration for `nox`, which runs tests in a virtualized environment."""
 
 import nox
 from nox import Session
