@@ -5,6 +5,7 @@
 
 import json
 import os
+from importlib.resources import files
 from io import TextIOWrapper
 from os.path import dirname
 from os.path import join as pathjoin
@@ -14,7 +15,6 @@ from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
-from importlib_resources import files
 from pytest_mock import MockerFixture
 
 from aga.core import Problem

@@ -3,6 +3,7 @@
 More complete documentation is in `__init__.py`.
 """
 
+from importlib.resources import files
 from os.path import join as pathjoin
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
@@ -10,7 +11,6 @@ from typing import Optional
 from zipfile import ZipFile
 
 from dill import dump  # type: ignore
-from importlib_resources import files
 
 from ..core import Output, Problem
 

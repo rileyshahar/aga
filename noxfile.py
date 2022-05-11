@@ -15,17 +15,16 @@ from nox_poetry import session as nox_session
 # default nox sessions (overridden with -s)
 nox.options.sessions = ("lint", "test")
 
-python_versions = ("3.10", "3.6")
+python_versions = "3.10"
 locations = ["src", "tests"]
 
-test_deps = ("pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock", "docker")
+test_deps = ("pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock")
 linters = (
     "flake8",
     "flake8-black",
     "flake8-bugbear",
     "pydocstyle",
     "mypy",
-    "types-backports",  # dependency for mypy
     "pylint",
 )
 
