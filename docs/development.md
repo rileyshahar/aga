@@ -1,5 +1,11 @@
 # Development
 
+We have tooling for a modern development workflow provided in an environment
+based around `poetry`. If there's another workflow you like better, feel free to
+use it, but just make sure you're writing good code, passing tests, and not
+introducing additional linter errors. In particular, I will enforce conformance
+with `black`.
+
 ## Setup
 
 To set up the development environment:
@@ -60,3 +66,23 @@ We use two tools to enforce a uniform code style:
 
 To run both formatters, run `nox -rs fmt`. This is _not_ run by default runs of
 nox.
+
+# Maintenance
+
+Here I describe how to do common/regular maintenance tasks.
+
+## Bump python version
+
+We like to keep the default python version under which tests are run as the most
+recent stable version (currently 3.10), so that students don't unknowingly rely
+on new language features and have to debug versioning differences between their
+machine and the autograder. Right now, to fix this, we need to:
+
+1. Update the documentation: just grep for `3.10` and replace it with the new
+   version.
+2. Update the gradescope build: this is handled in `setup.sh`; you need to
+   install a different version and change the version we execute the scripts
+   with.
+3. Add the new version to be tested in the `noxfile`.
+4. Adjust the shebang of the `run_autograder` executable.
+5. Adjust `.readthedocs.yml` to build the docs on the newest python.
