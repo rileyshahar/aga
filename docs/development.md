@@ -49,7 +49,7 @@ A number of static analysis tools are available in the development environment:
 These tend to be quite strict, but after a while you'll get used to them, and
 they help write _much_ better code.
 
-To run all lints across python 3.6 and 3.10, run `nox -rs lint`.
+To run all lints, run `nox -rs lint`.
 
 ## Formatting
 
