@@ -14,5 +14,5 @@ rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # install aga
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-python3.10 -m pip install aga
+pip install wheel
 python3.10 -m pip cache purge
