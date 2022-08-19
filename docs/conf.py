@@ -6,6 +6,7 @@ author = "Riley Shahar"
 copyright = f"{datetime.now().year}, {author}"
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "myst_parser",

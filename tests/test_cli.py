@@ -105,6 +105,9 @@ def test_check_invalid_problem(
 
     mocked_lsfd.assert_called_once()
 
+    print(result.stdout)
+    print(result.stderr)
+
     assert "failed some golden tests" in result.stderr
     assert result.exit_code == 1
 

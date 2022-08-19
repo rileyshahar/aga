@@ -6,8 +6,10 @@ not sure how, and it seemed much easier to just ignore them.
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
+from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
+
+from .score import ScoreInfo, compute_scores
 
 Output = TypeVar("Output")
 
@@ -22,9 +24,12 @@ class TestMetadata:
         The test's name.
     hidden : bool
         Whether the test should be hidden.
+    max_score : float
+        The test's max score.
     """
 
     name: str
+    max_score: float
     hidden: bool = False
 
 
@@ -72,14 +77,21 @@ class _TestInputs(TestCase):
     """
 
     def __init__(  # type: ignore
-        self, *args, aga_hidden=False, aga_name: Optional[str] = None, **kwargs
+        self,
+        *args,
+        aga_hidden: bool,
+        aga_name: Optional[str],
+        aga_weight: int,
+        aga_value: float,
+        **kwargs,
     ) -> None:
         super().__init__()
         self._name = aga_name
         self._hidden = aga_hidden
+        self.score_info = ScoreInfo(aga_weight, aga_value)
 
-        self._args: Tuple = args  # type: ignore
-        self._kwargs: Dict = kwargs  # type: ignore
+        self._args = args  # type: ignore
+        self._kwargs = kwargs  # type: ignore
 
     def _eval(self, func: Callable[..., Output]) -> Output:
         """Evaluate func on the arguments."""
@@ -107,11 +119,16 @@ class _TestInputs(TestCase):
         )
 
     def generate_test_case(
-        self, golden: Callable[..., Output], under_test: Callable[..., Output]
+        self,
+        golden: Callable[..., Output],
+        under_test: Callable[..., Output],
+        score: float,
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
         metadata = TestMetadata(
-            name=self._name or f"Test {repr(self)}", hidden=self._hidden
+            name=self._name or f"Test on {repr(self)}",
+            hidden=self._hidden,
+            max_score=score,
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
@@ -134,8 +151,14 @@ class _TestInputs(TestCase):
 
         return args_repr + sep + kwargs_repr
 
+    def check_one(self, golden: Callable[..., Output]) -> None:
+        """Check that the golden solution is correct.
 
-class _GoldenTestInputs(_TestInputs, TestCase):
+        This should be implemented by subclasses which expose this functionality.
+        """
+
+
+class _GoldenTestInputs(_TestInputs):
     """A set of test inputs which also contains an expected output.
 
     This will be treated as a `TestInput` when the autograder is built, but provides
@@ -147,19 +170,57 @@ class _GoldenTestInputs(_TestInputs, TestCase):
         super().__init__(*args, **kwargs)
         self._output = output
 
-    def check_one(self, under_test: Callable[..., Output]) -> None:
-        """Assert that `under_test`'s output matches the golden output."""
-        self.assertEqual(self._eval(under_test), self._output)
+    def check_one(self, golden: Callable[..., Output]) -> None:
+        """Assert that `golden`'s output matches the golden output."""
+        self.assertEqual(self._eval(golden), self._output)
+
+
+class _TestInputGroup:
+    """A group of test cases with shared configuration."""
+
+    def __init__(self, weight: int = 1, value: float = 0.0) -> None:
+        self._test_cases: list[_TestInputs] = []
+        self.score_info = ScoreInfo(weight, value)
+
+    def add_test_case(self, case: _TestInputs) -> None:
+        """Add a test case to the group."""
+        self._test_cases.append(case)
+
+    def generate_test_suite(
+        self,
+        golden: Callable[..., Output],
+        under_test: Callable[..., Output],
+        group_score: float,
+    ) -> TestSuite:
+        """Generate a test suite from all the test cases for this group."""
+        suite = TestSuite([])
+
+        score_infos = [case.score_info for case in self._test_cases]
+        scores = compute_scores(score_infos, group_score)
+
+        for (score, case) in zip(scores, self._test_cases):
+            suite.addTest(case.generate_test_case(golden, under_test, score))
+
+        return suite
+
+    def check_one(self, golden: Callable[..., Output]) -> None:
+        """Check the golden solution against all test cases."""
+        for case in self._test_cases:
+            case.check_one(golden)
 
 
 class Problem(Generic[Output]):
     """Stores tests for a single problem."""
 
-    def __init__(self, golden: Callable[..., Output], name: str) -> None:
+    def __init__(
+        self,
+        golden: Callable[..., Output],
+        name: str,
+    ) -> None:
         self._golden: Callable[..., Output] = golden
         self._name = name
-        self._test_cases: List[_TestInputs] = []
-        self._golden_test_cases: List[_GoldenTestInputs] = []
+        self._ungrouped_tests: list[_TestInputs] = []
+        self._groups: list[_TestInputGroup] = []
 
     def add_test_case(self, case: _TestInputs) -> None:
         """Add a test case to the problem.
@@ -167,33 +228,39 @@ class Problem(Generic[Output]):
         Student solutions will be checked against the golden solution; i.e., this method
         does _not_ produce a test of the golden solution.
         """
-        self._test_cases.append(case)
+        self._ungrouped_tests.append(case)
 
-    def add_golden_test_case(self, case: _GoldenTestInputs) -> None:
-        """Add a golden test case to the problem.
+    def add_group(self, grp: _TestInputGroup) -> None:
+        """Add a group to the problem."""
+        for case in self._ungrouped_tests:
+            grp.add_test_case(case)
 
-        Student solutions will be checked against the golden solution, and both against
-        the output pasted to the GoldenTestInputs constructor; i.e., this method _does_
-        produce a test of the golden solution.
+        self._groups.append(grp)
+        self._ungrouped_tests = []
+
+    def check(self) -> None:
+        """Check that the problem is correct.
+
+        Currently, this runs all tests of the golden solution.
         """
-        self._golden_test_cases.append(case)
+        for grp in self._virtual_groups():
+            grp.check_one(self._golden)
 
-    def run_golden_tests(self) -> None:
-        """Run all tests of the golden solution."""
-        for case in self._golden_test_cases:
-            case.check_one(self._golden)
-
-    def generate_test_suite(self, under_test: Callable[..., Output]) -> TestSuite:
+    def generate_test_suite(
+        self, under_test: Callable[..., Output], total_score: float
+    ) -> TestSuite:
         """Generate a `TestSuite` for the student submitted function.
 
         Neither the generated test suite nor the body of this function will run golden
         tests; instead, golden test cases are treated as equivalent to ordinary ones. To
-        test the golden function, `run_golden_tests` should be used instead.
+        test the golden function, `check` should be used instead.
 
         Parameters
         ----------
         under_test : Callable[..., Output]
             The student submitted function.
+        total_score : float
+            The total score for the problem.
 
         Returns
         -------
@@ -204,11 +271,13 @@ class Problem(Generic[Output]):
         """
         suite = TestSuite([])
 
-        for case in self._test_cases:
-            suite.addTest(case.generate_test_case(self._golden, under_test))
+        groups = self._virtual_groups()
 
-        for case in self._golden_test_cases:
-            suite.addTest(case.generate_test_case(self._golden, under_test))
+        score_infos = [grp.score_info for grp in groups]
+        scores = compute_scores(score_infos, total_score)
+
+        for (score, grp) in zip(scores, groups):
+            suite.addTest(grp.generate_test_suite(self._golden, under_test, score))
 
         return suite
 
@@ -219,6 +288,19 @@ class Problem(Generic[Output]):
     def expected_symbol(self) -> str:
         """Get the name of the symbol that should be tested against."""
         return self._golden.__name__
+
+    def _virtual_groups(self) -> list[_TestInputGroup]:
+        """Get the list of groups, plus the current group under construction.
+
+        We need to do it this way because while the problem is being read we don't know
+        the configuration of the last test group yet.
+        """
+        virtual_group = _TestInputGroup()
+
+        for case in self._ungrouped_tests:
+            virtual_group.add_test_case(case)
+
+        return self._groups + [virtual_group]
 
 
 def problem(
@@ -255,7 +337,7 @@ def _check_reserved_keyword(kwd: str) -> None:
     """Raise an error if `kwd` is reserved."""
     if kwd.startswith("aga_"):
         raise ValueError(
-            f"invalid keyword arg to `test_case`: {kwd}: all keyword args"
+            f'invalid keyword arg "{kwd}" to `test_case`: all keyword args '
             "beginning `aga_` are reserved"
         )
 
@@ -265,6 +347,8 @@ def test_case(  # type: ignore
     aga_output: Optional[Any] = None,
     aga_hidden: bool = False,
     aga_name: Optional[str] = None,
+    aga_weight: int = 1,
+    aga_value: float = 0.0,
     **kwargs,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     r"""Declare a specific test case for some problem.
@@ -283,6 +367,11 @@ def test_case(  # type: ignore
     aga_name : Optional[str]
         The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
         a comma-separated list of args and kwargs.
+    aga_weight : int
+        The test case's relative weight to the group's score. See :ref:`Determining
+        Score` for details.
+    aga_value : int
+        The test case's absolute score. See :ref:`Determining Score` for details.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
@@ -297,21 +386,48 @@ def test_case(  # type: ignore
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
         if aga_output is not None:
-            prob.add_golden_test_case(
-                _GoldenTestInputs(
-                    aga_output,
-                    *args,
-                    aga_hidden=aga_hidden,
-                    aga_name=aga_name,
-                    **kwargs,
-                )
+            case: _TestInputs = _GoldenTestInputs(
+                aga_output,
+                *args,
+                aga_hidden=aga_hidden,
+                aga_name=aga_name,
+                aga_weight=aga_weight,
+                aga_value=aga_value,
+                **kwargs,
             )
 
         else:
-            prob.add_test_case(
-                _TestInputs(*args, aga_hidden=aga_hidden, aga_name=aga_name, **kwargs)
+            case = _TestInputs(
+                *args,
+                aga_hidden=aga_hidden,
+                aga_name=aga_name,
+                aga_weight=aga_weight,
+                aga_value=aga_value,
+                **kwargs,
             )
 
+        prob.add_test_case(case)
+        return prob
+
+    return outer
+
+
+def group(
+    weight: int = 1, value: float = 0.0
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    """Declare a group of problems.
+
+    Parameters
+    ----------
+    weight : int
+        The group's relative weight to the problem's score. See :ref:`Determining Score`
+        for details.
+    value : int
+        The group's absolute score. See :ref:`Determining Score` for details.
+    """
+
+    def outer(prob: Problem[Output]) -> Problem[Output]:
+        prob.add_group(_TestInputGroup(weight, value))
         return prob
 
     return outer
