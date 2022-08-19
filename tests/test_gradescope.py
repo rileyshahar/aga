@@ -83,7 +83,7 @@ def test_into_gradescope_zip_problem(
             assert problem_loaded.name() == orig_problem.name()
 
 
-@pytest.mark.parametrize("file", ("run_autograder", "setup.sh"))
+@pytest.mark.parametrize("file", ("run_autograder", "setup.sh", "setup.py"))
 def test_into_gradescope_zip_run_autograder(
     gradescope_zip: Tuple[Problem[Output], str], file: str
 ) -> None:

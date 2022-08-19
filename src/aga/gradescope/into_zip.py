@@ -17,7 +17,11 @@ from dill import dump  # type: ignore
 from ..core import Output, Problem
 
 # don't zip resources because we handle them manually
-ZIP_IGNORES = ("__pycache__", "resources")
+_ZIP_IGNORES = ("__pycache__", "resources")
+
+# files we need present in the gradescope environment that aren't part of the `aga`
+# source or of the specific problem
+_GS_ENV_DEPS = ("setup.sh", "setup.py", "run_autograder")
 
 
 class InvalidProblem(BaseException):
@@ -37,11 +41,9 @@ def into_gradescope_zip(problem: Problem[Output], path: Optional[str] = None) ->
             for (src_path, resource_name) in _copy_package_to(tempdir, files("aga")):
                 zip_f.write(src_path, arcname=resource_name)
 
-            path = _manual_copy_resource_to(tempdir, "run_autograder")
-            zip_f.write(path, arcname="run_autograder")
-
-            path = _manual_copy_resource_to(tempdir, "setup.sh")
-            zip_f.write(path, arcname="setup.sh")
+            for file in _GS_ENV_DEPS:
+                path = _manual_copy_resource_to(tempdir, file)
+                zip_f.write(path, arcname=file)
 
             path = _dump_problem_into_dir(problem, tempdir)
             zip_f.write(path, arcname="problem.pckl")
@@ -82,7 +84,7 @@ def _copy_package_to(
     makedirs(pathjoin(tempdir, prefix), exist_ok=True)
     # manually traverse the package structure, copying source files as we go
     for resource in package.iterdir():
-        if resource.name not in ZIP_IGNORES:
+        if resource.name not in _ZIP_IGNORES:
             if resource.is_dir():
                 yield from _copy_package_to(
                     tempdir,

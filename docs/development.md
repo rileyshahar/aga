@@ -86,3 +86,10 @@ machine and the autograder. Right now, to fix this, we need to:
 3. Add the new version to be tested in the `noxfile`.
 4. Adjust the shebang of the `run_autograder` executable.
 5. Adjust `.readthedocs.yml` to build the docs on the newest python.
+
+## Add dependencies
+
+Right now, we have a kind of janky setup where we maintain our own `setup.py`
+for installing the library on gradescope, in
+`aga/resources/gradescope/setup.py`. Whenever we add a dependency, we need to
+update this file accordingly.
