@@ -44,8 +44,25 @@ def test_into_gradescope_zip_path(gradescope_zip: Tuple[Problem[Output], str]) -
     assert zip_path == f"{orig_problem.name()}.zip"
 
 
+def test_into_gradescope_zip_source(
+    gradescope_zip: tuple[Problem[Output], str]
+) -> None:
+    """Test that into_gradescope_zip archives the library source correctly."""
+
+    _, zip_path = gradescope_zip
+    with ZipFile(zip_path) as zip_f:
+        for (name, module) in getmembers(aga, ismodule):
+            # don't check gradescope because it's a subdirectory and I'm too lazy to
+            # write special handling or recursion right now
+            if name != "gradescope":
+                with zip_f.open(pathjoin("aga", name + ".py")) as src:
+                    unzipped_core_source = src.read()
+                    core_source = bytes(getsource(module), "UTF-8")
+                    assert unzipped_core_source == core_source
+
+
 def test_into_gradescope_zip_problem(
-    gradescope_zip: Tuple[Problem[Output], str]
+    gradescope_zip: tuple[Problem[Output], str]
 ) -> None:
     """Test that into_gradescope_zip pickles the provided problem correctly."""
 
@@ -58,9 +75,9 @@ def test_into_gradescope_zip_problem(
             assert problem_loaded.name() == orig_problem.name()
 
 
-@pytest.mark.parametrize("file", ("run_autograder", "setup.sh"))
+@pytest.mark.parametrize("file", ("run_autograder", "setup.sh", "setup.py"))
 def test_into_gradescope_zip_run_autograder(
-    gradescope_zip: Tuple[Problem[Output], str], file: str
+    gradescope_zip: tuple[Problem[Output], str], file: str
 ) -> None:
     """Test that into_gradescope_zip copies files correctly."""
 
@@ -80,7 +97,7 @@ def test_into_gradescope_zip_custom_path(valid_problem: Problem[Output]) -> None
         zip_path = into_gradescope_zip(valid_problem, "archive.zip")
         assert zip_path == "archive.zip"
     finally:
-        os.remove(zip_path)
+        os.remove("archive.zip")
 
 
 def test_into_gradescope_zip_incorrect_problem(diff_bad_impl: Problem[int]) -> None:
