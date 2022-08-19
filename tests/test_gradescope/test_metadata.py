@@ -1,32 +1,11 @@
 """Tests for the submission metadata parser."""
 
-from importlib.resources import files
-from os.path import join as pathjoin
-from pathlib import Path
-from shutil import copyfileobj
-
 import pytest
 
 from aga.gradescope.metadata import (
     GradescopeAssignmentMetadata,
-    GradescopeSubmissionMetadata,
-    load_submission_metadata_from_file,
+    GradescopeSubmissionMetadata
 )
-
-
-@pytest.fixture(name="example_metadata")
-def fixture_example_metadata(tmp_path: Path) -> GradescopeSubmissionMetadata:
-    """Get the metadata file from the gradescope documentation."""
-
-    path = pathjoin(tmp_path, "metadata.json")
-
-    with files("tests.test_gradescope.resources").joinpath(  # type: ignore
-        "example_metadata.json"
-    ).open() as src:
-        with open(pathjoin(tmp_path, "metadata.json"), "w", encoding="UTF-8") as dest:
-            copyfileobj(src, dest)
-
-    return load_submission_metadata_from_file(path)
 
 
 def test_example_metadata_id(example_metadata: GradescopeSubmissionMetadata) -> None:

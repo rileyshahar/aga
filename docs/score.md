@@ -41,9 +41,9 @@ For example, consider the following problem with total score 20.
 
 ```python
 @test_case(-2, aga_weight = 2)
-@test_case(-1, aga_weight = 0, aga_value = 2)
-@test_case(0, aga_weight = 2, aga_value = 4)
-@test_case(1, aga_value = 2)
+@test_case(-1, aga_weight = 0, aga_value = 2.0)
+@test_case(0, aga_weight = 2, aga_value = 4.0)
+@test_case(1, aga_value = 2.0)
 @test_case(2)
 @problem()
 def square(x: int) -> int:
@@ -55,30 +55,30 @@ and so it is assigned all 20 points. We have the following weights and values:
 
 | Case | Weight | Value |
 | ---- | ------ | ----- |
-| -2   | 2      | 0     |
-| -1   | 0      | 2     |
-| 0    | 2      | 4     |
-| 1    | 1      | 2     |
-| 2    | 1      | 0     |
+| -2   | 2      | 0.0   |
+| -1   | 0      | 2.0   |
+| 0    | 2      | 4.0   |
+| 1    | 1      | 2.0   |
+| 2    | 1      | 0.0   |
 
 First, processing values leaves total score 12 and gives the following temporary
 scores:
 
 | Case | Score |
 | ---- | ----- |
-| -2   | 0     |
-| -1   | 2     |
-| 0    | 4     |
-| 1    | 2     |
-| 2    | 0     |
+| -2   | 0.0   |
+| -1   | 2.0   |
+| 0    | 4.0   |
+| 1    | 2.0   |
+| 2    | 0.0   |
 
 Next, we divide the remaining 12 units of score amongst the 6 units of weight,
 so each unit of weight represents 2 units of score. This give the final scores.
 
 | Case | Score |
 | ---- | ----- |
-| -2   | 4     |
-| -1   | 2     |
-| 0    | 8     |
-| 1    | 4     |
-| 2    | 2     |
+| -2   | 4.0   |
+| -1   | 2.0   |
+| 0    | 8.0   |
+| 1    | 4.0   |
+| 2    | 2.0   |

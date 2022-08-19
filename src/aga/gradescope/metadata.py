@@ -147,7 +147,7 @@ class GradescopeSubmissionMetadata:
     previous_submissions: List[GradescopePreviousSubmission]
 
 
-def load_submission_metadata_from_file(path: str) -> GradescopeSubmissionMetadata:
+def load_submission_metadata_from_path(path: str) -> GradescopeSubmissionMetadata:
     """Load the submission metadata from a json file."""
     with open(path, encoding="UTF-8") as file:
         # pylint: disable=no-member

@@ -25,6 +25,14 @@ def square(x: int) -> int:
     return x - y
 """
 
+SOURCE_SQUARE_WRONG_ON_ZERO = """
+def square(x: int) -> int:
+    if x == 0:
+        return 1
+    return x * x
+"""
+
+
 SOURCE_DUPLICATE = """
 def duplicate(x: int):
     return (x, x)
@@ -106,6 +114,14 @@ def fixture_source_invalid(tmp_path: Path) -> str:
     return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_INVALID)
 
 
+@pytest.fixture(name="source_square_wrong_on_zero")
+def fixture_source_square_wrong_on_zero(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_INVALID, returning its path."""
+    return _write_source_to_file(
+        tmp_path.joinpath("src.py"), SOURCE_SQUARE_WRONG_ON_ZERO
+    )
+
+
 @pytest.fixture(name="source_dir")
 def fixture_source_dir(tmp_path: Path) -> str:
     """Generate a directory containing numerous valid and invalid source files.
@@ -147,6 +163,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("kwd"),
         lazy_fixture("pos_and_kwd"),
         lazy_fixture("str_len"),
+        lazy_fixture("square_simple_weighted"),
     ]
 )
 def valid_problem(request):
@@ -316,3 +333,20 @@ def fixture_diff_bad_impl() -> Problem[int]:
         return x + y
 
     return diff_should_fail
+
+
+@pytest.fixture(name="square_simple_weighted")
+def fixture_square_simple_weighted() -> Problem[int]:
+    """Generate a problem which tests a square function, with simple manual weights."""
+
+    @test_case(-2, aga_weight=2)
+    @test_case(-1, aga_weight=0, aga_value=2.0)
+    @test_case(0, aga_weight=2, aga_value=4.0)
+    @test_case(1, aga_value=2.0)
+    @test_case(2)
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square

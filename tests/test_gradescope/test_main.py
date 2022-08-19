@@ -36,14 +36,22 @@ def fixture_gradescope_zip(
 
 
 def get_gs_json(
-    problem: Problem[Any], source: str, mocker: MockerFixture, tmp_path: Path
+    problem: Problem[Any],
+    source: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
 ) -> Any:
     """Get the gradescope JSON output for the given problem and submission source."""
     mocked_load_problem = mocker.patch("aga.gradescope.main.load_problem")
     mocked_load_problem.return_value = problem
 
     output = pathjoin(tmp_path, "results.json")
-    gradescope_main(submission_dir=dirname(source), output_file=output)
+    gradescope_main(
+        submission_dir=dirname(source),
+        metadata_file=example_metadata_file,
+        output_file=output,
+    )
 
     with open(output, encoding="UTF-8") as file:
         return json.load(file)
@@ -51,10 +59,14 @@ def get_gs_json(
 
 @pytest.fixture(name="gs_json_square")
 def fixture_gs_json_square(
-    square: Problem[int], source_square: str, mocker: MockerFixture, tmp_path: Path
+    square: Problem[int],
+    source_square: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
 ) -> Any:
     """Generate the JSON output from the square problem."""
-    return get_gs_json(square, source_square, mocker, tmp_path)
+    return get_gs_json(square, source_square, mocker, tmp_path, example_metadata_file)
 
 
 def test_json_test_name_square(gs_json_square: Any) -> None:
@@ -68,7 +80,8 @@ def test_json_test_name_square(gs_json_square: Any) -> None:
 
 def test_json_test_score_square(gs_json_square: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct score."""
-    assert gs_json_square["score"] == 3
+    # should be 20 because that's what our metadata file says
+    assert gs_json_square["score"] == 20.0
 
 
 def test_json_test_visibility_square(gs_json_square: Any) -> None:
@@ -85,9 +98,12 @@ def fixture_gs_json_square_incorrect(
     source_square_incorrect: str,
     mocker: MockerFixture,
     tmp_path: Path,
+    example_metadata_file: str,
 ) -> Any:
     """Generate the JSON output from the square problem with an incorrect submission."""
-    return get_gs_json(square, source_square_incorrect, mocker, tmp_path)
+    return get_gs_json(
+        square, source_square_incorrect, mocker, tmp_path, example_metadata_file
+    )
 
 
 def test_json_test_score_square_incorrect(gs_json_square_incorrect: Any) -> None:
@@ -111,9 +127,12 @@ def fixture_gs_json_square_error(
     source_square_error: str,
     mocker: MockerFixture,
     tmp_path: Path,
+    example_metadata_file: str,
 ) -> Any:
     """Generate the JSON output from the square problem with an erroring submission."""
-    return get_gs_json(square, source_square_error, mocker, tmp_path)
+    return get_gs_json(
+        square, source_square_error, mocker, tmp_path, example_metadata_file
+    )
 
 
 def test_json_test_score_square_error(gs_json_square_error: Any) -> None:
@@ -137,9 +156,12 @@ def fixture_gs_json_square_custom_name(
     source_square: str,
     mocker: MockerFixture,
     tmp_path: Path,
+    example_metadata_file: str,
 ) -> Any:
     """Generate the JSON output from the square problem with an erroring submission."""
-    return get_gs_json(square_custom_name, source_square, mocker, tmp_path)
+    return get_gs_json(
+        square_custom_name, source_square, mocker, tmp_path, example_metadata_file
+    )
 
 
 def test_json_test_name_square_custom_name(gs_json_square_custom_name: Any) -> None:
@@ -149,3 +171,24 @@ def test_json_test_name_square_custom_name(gs_json_square_custom_name: Any) -> N
         "Test minus two",
         "This is a deliberately silly name!",
     }
+
+
+def test_json_test_score_square_with_weights(
+    square_simple_weighted: Problem[int],
+    source_square_wrong_on_zero: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file produced by gradescope has the correct score."""
+    gs_json = get_gs_json(
+        square_simple_weighted,
+        source_square_wrong_on_zero,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # we have a total score of 20 and are wrong only for x=0, which has total score 8,
+    # so the final score should be 12
+    assert gs_json["score"] == 12

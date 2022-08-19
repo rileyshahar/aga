@@ -99,7 +99,7 @@ class _GradescopeTestResult(TestResult):
         visibility = self._visibility_string(metadata.hidden)
 
         return _GradescopeTestJson(
-            max_score=1.0,
+            max_score=metadata.max_score,
             name=metadata.name,
             score=metadata.max_score,
             visibility=visibility,
