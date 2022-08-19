@@ -1,4 +1,4 @@
-name: Tests
+name: Lints
 on:
   push:
     branches:
@@ -31,4 +31,4 @@ jobs:
         run: pip install nox nox-poetry
 
       - name: Run nox
-        run: nox --python ${{ matrix.python-version }} --session test
+        run: nox --python ${{ matrix.python-version }} --session lint

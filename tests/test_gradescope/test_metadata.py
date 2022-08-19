@@ -4,7 +4,7 @@ import pytest
 
 from aga.gradescope.metadata import (
     GradescopeAssignmentMetadata,
-    GradescopeSubmissionMetadata
+    GradescopeSubmissionMetadata,
 )
 
 
