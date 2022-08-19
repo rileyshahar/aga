@@ -5,13 +5,16 @@
 
 import os
 from importlib.resources import files
+from inspect import getmembers, getsource, ismodule
 from io import TextIOWrapper
+from os.path import join as pathjoin
 from typing import Iterable, Tuple, TypeVar
 from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
 
+import aga  # for source inspection
 from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
 

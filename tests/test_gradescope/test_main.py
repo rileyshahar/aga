@@ -2,22 +2,16 @@
 
 import json
 import os
-from importlib.resources import files
-from inspect import getmembers, getsource, ismodule
-from io import TextIOWrapper
 from os.path import dirname
 from os.path import join as pathjoin
 from pathlib import Path
 from typing import Any, Iterable, TypeVar
-from zipfile import ZipFile
 
 import pytest
-from dill import load  # type: ignore
 from pytest_mock import MockerFixture
 
-import aga  # for source inspection
 from aga.core import Problem
-from aga.gradescope import InvalidProblem, into_gradescope_zip
+from aga.gradescope import into_gradescope_zip
 from aga.gradescope.main import gradescope_main
 
 Output = TypeVar("Output")
