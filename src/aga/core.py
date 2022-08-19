@@ -126,7 +126,7 @@ class _TestInputs(TestCase):
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
         metadata = TestMetadata(
-            name=self._name or f"Test {repr(self)}",
+            name=self._name or f"Test on {repr(self)}",
             hidden=self._hidden,
             max_score=score,
         )
@@ -236,6 +236,7 @@ class Problem(Generic[Output]):
             grp.add_test_case(case)
 
         self._groups.append(grp)
+        self._ungrouped_tests = []
 
     def check(self) -> None:
         """Check that the problem is correct.
@@ -252,7 +253,7 @@ class Problem(Generic[Output]):
 
         Neither the generated test suite nor the body of this function will run golden
         tests; instead, golden test cases are treated as equivalent to ordinary ones. To
-        test the golden function, `run_golden_tests` should be used instead.
+        test the golden function, `check` should be used instead.
 
         Parameters
         ----------

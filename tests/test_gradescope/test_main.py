@@ -72,9 +72,9 @@ def fixture_gs_json_square(
 def test_json_test_name_square(gs_json_square: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct test names."""
     assert set(map(lambda x: x["name"], gs_json_square["tests"])) == {
-        "Test 4",
-        "Test 2",
-        "Test -2",
+        "Test on 4",
+        "Test on 2",
+        "Test on -2",
     }
 
 
@@ -192,3 +192,24 @@ def test_json_test_score_square_with_weights(
     # we have a total score of 20 and are wrong only for x=0, which has total score 8,
     # so the final score should be 12
     assert gs_json["score"] == 12
+
+
+def test_json_test_score_square_grouped(
+    square_grouped: Problem[int],
+    source_square_wrong_on_zero: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file produced by gradescope has the correct score."""
+    gs_json = get_gs_json(
+        square_grouped,
+        source_square_wrong_on_zero,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # we have a total score of 20 and are wrong only for x=0, which has total score 12,
+    # so the final score should be 8
+    assert gs_json["score"] == 8

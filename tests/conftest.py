@@ -7,7 +7,7 @@ import pytest
 from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
-from aga import problem, test_case
+from aga import group, problem, test_case
 from aga.core import Problem
 
 SOURCE_SQUARE = """
@@ -164,6 +164,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("pos_and_kwd"),
         lazy_fixture("str_len"),
         lazy_fixture("square_simple_weighted"),
+        lazy_fixture("square_grouped"),
     ]
 )
 def valid_problem(request):
@@ -342,6 +343,30 @@ def fixture_square_simple_weighted() -> Problem[int]:
     @test_case(-2, aga_weight=2)
     @test_case(-1, aga_weight=0, aga_value=2.0)
     @test_case(0, aga_weight=2, aga_value=4.0)
+    @test_case(1, aga_value=2.0)
+    @test_case(2)
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
+@pytest.fixture(name="square_grouped")
+def fixture_square_grouped() -> Problem[int]:
+    """Generate a problem which tests a square function, with grouped weights."""
+    # problem has score 20
+    # groups get assigned scores 6, 12, 2
+    # negative group, score 6, -1 gets score 3.333, -2 gets score 2.666
+    # 0 group just gets 12
+    # positive group, 1 gets score 2, 2 gets score 0
+
+    @test_case(-2, aga_weight=2)
+    @test_case(-1, aga_weight=1, aga_value=2.0)
+    @group(weight=2)
+    @test_case(0, aga_weight=2, aga_value=4.0)
+    @group(weight=0, value=2.0)
     @test_case(1, aga_value=2.0)
     @test_case(2)
     @problem()

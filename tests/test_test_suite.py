@@ -106,7 +106,7 @@ def test_failure_message(square_failure: List[Tuple[TestCase, str]]) -> None:
 def test_failure_description(square_failure: List[Tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem's test case description is correct."""
     message = square_failure[0][0].shortDescription()
-    assert message == "Test 2"
+    assert message == "Test on 2"
 
 
 @pytest.fixture(name="diff_failure")
@@ -144,7 +144,7 @@ def test_failure_description_multiple_args(
     tuples in `_TestInputs`.
     """
     message = diff_failure[0][0].shortDescription()
-    assert message == "Test 2,1"
+    assert message == "Test on 2,1"
 
 
 @pytest.fixture(name="square_kwd_failure")
@@ -182,7 +182,7 @@ def test_failure_description_kwdargs(
     formatting for kwdargs in `_TestInputs`.
     """
     message = square_kwd_failure[0][0].shortDescription()
-    assert message == "Test x=2"
+    assert message == "Test on x=2"
 
 
 @pytest.fixture(name="diff_kwd_failure")
@@ -220,4 +220,4 @@ def test_failure_description_pos_and_kwdargs(
     argument.
     """
     message = diff_kwd_failure[0][0].shortDescription()
-    assert message == "Test 2,y=1"
+    assert message == "Test on 2,y=1"
