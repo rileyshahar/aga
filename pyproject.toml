@@ -56,6 +56,7 @@ source = ["src", "*/site-packages"]
 [tool.coverage.run]
 branch = true
 source = ["aga"]
+omit = ["src/aga/gradescope/resources/setup.py"]
 
 [tool.coverage.report]
 show_missing = true
