@@ -367,10 +367,10 @@ def test_case(  # type: ignore
         The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
         a comma-separated list of args and kwargs.
     aga_weight : int
-        The test case's relative weight to the problem's score. See the docs on score
-        calculation for details.
+        The test case's relative weight to the group's score. See :ref:`Determining
+        Score` for details.
     aga_value : int
-        The test case's absolute score. See the docs on score calculation for details.
+        The test case's absolute score. See :ref:`Determining Score` for details.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
@@ -414,7 +414,16 @@ def test_case(  # type: ignore
 def group(
     weight: int = 1, value: float = 0.0
 ) -> Callable[[Problem[Output]], Problem[Output]]:
-    """Declare a group of problems."""
+    """Declare a group of problems.
+
+    Parameters
+    ----------
+    weight : int
+        The group's relative weight to the problem's score. See :ref:`Determining Score`
+        for details.
+    value : int
+        The group's absolute score. See :ref:`Determining Score` for details.
+    """
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
         prob.add_group(_TestInputGroup(weight, value))

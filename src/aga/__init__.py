@@ -8,5 +8,5 @@ from importlib.metadata import version
 
 from .core import problem, test_case
 
-__all__ = ("problem", "test_case")
+__all__ = ("problem", "test_case", "group")
 __version__ = version(__name__)  # type: ignore
