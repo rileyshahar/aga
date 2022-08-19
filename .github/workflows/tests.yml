@@ -1,4 +1,4 @@
-name: Tests
+name: tests
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
   pull_request:
 jobs:
   tests:
-    name: Python ${{ matrix.python-version }}
+    name: python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
