@@ -6,14 +6,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
 
-from backports.datetime_fromisoformat import MonkeyPatch
 from dataclasses_json import config, dataclass_json
 from marshmallow import fields
 
 from .runner import GradescopeJson
-
-# backwards compatibility for python 3.6
-MonkeyPatch.patch_fromisoformat()
 
 
 @dataclass_json

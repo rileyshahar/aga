@@ -4,13 +4,13 @@
 # pylint: disable=no-member
 
 import os
+from importlib.resources import files
 from io import TextIOWrapper
 from typing import Iterable, Tuple, TypeVar
 from zipfile import ZipFile
 
 import pytest
 from dill import load  # type: ignore
-from importlib_resources import files
 
 from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip

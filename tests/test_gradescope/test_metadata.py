@@ -1,11 +1,11 @@
 """Tests for the submission metadata parser."""
 
+from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
 
 import pytest
-from importlib_resources import files
 
 from aga.gradescope.metadata import (
     GradescopeAssignmentMetadata,
@@ -45,13 +45,13 @@ def test_example_metadata_created_at(
     example_metadata: GradescopeSubmissionMetadata,
 ) -> None:
     """Test that the example metadata file's created at is correct."""
-    dt = example_metadata.created_at
-    assert dt.year == 2018
-    assert dt.month == 7
-    assert dt.day == 1
-    assert dt.hour == 14
-    assert dt.minute == 22
-    assert dt.second == 32
+    time = example_metadata.created_at
+    assert time.year == 2018
+    assert time.month == 7
+    assert time.day == 1
+    assert time.hour == 14
+    assert time.minute == 22
+    assert time.second == 32
 
 
 def test_example_metadata_previous_submissions(
