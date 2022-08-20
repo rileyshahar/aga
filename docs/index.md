@@ -5,6 +5,7 @@
    :hidden:
    :maxdepth: 1
 
+   tutorial
    score
    reference
    cli
