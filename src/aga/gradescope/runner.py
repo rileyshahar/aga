@@ -105,10 +105,21 @@ class _GradescopeTestResult(TestResult):
             visibility=visibility,
         )
 
+    def _fail_json(self, test: AgaTestCase, err) -> _GradescopeTestJson:  # type: ignore
+        """Construct the test json schema for a failure."""
+        json = self._test_json(test)
+        json.output = f"Your submission didn't give the output we expected: {err[1]}"
+        json.score = 0.0
+
+        return json
+
     def _err_json(self, test: AgaTestCase, err) -> _GradescopeTestJson:  # type: ignore
         """Construct the test json schema for an error."""
         json = self._test_json(test)
-        json.output = f"Test failed: {err}."
+        json.output = (
+            f"A python error occured while running your submission: "
+            f"{err[0].__name__}: {err[1]}"
+        )
         json.score = 0.0
 
         return json
@@ -123,7 +134,7 @@ class _GradescopeTestResult(TestResult):
     def addFailure(self, test: AgaTestCase, err) -> None:  # type: ignore
         """Add a failure."""
         super().addFailure(test, err)
-        self._json.tests.append(self._err_json(test, err))
+        self._json.tests.append(self._fail_json(test, err))
 
     def addSuccess(self, test: AgaTestCase) -> None:  # type: ignore[override]
         """Add a success."""

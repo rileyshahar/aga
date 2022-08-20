@@ -63,10 +63,10 @@ def square(x: int) -> int:
     return x * x
 ```
 
-Now re-run `aga gen square` and upload the resultant zip to
+Now re-run `aga gen square` and upload the resultant file to
 [Gradescope](https://gradescope-autograders.readthedocs.io/en/latest/getting_started/).
 
-There are a couple of things to know about the behavior of this zip.
+There are a couple of things to know about the behavior of this autograder.
 
 First, while the student can upload any number of files, precisely one of them
 must contain a python object matching the name of the reference solution; in this

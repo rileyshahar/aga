@@ -112,10 +112,7 @@ class _TestInputs(TestCase):
         self.assertEqual(
             golden_output,
             under_test_output,
-            msg=(
-                f"Checked with {repr(self)}. Expected {repr(golden_output)}. "
-                f"Got {repr(under_test_output)} instead."
-            ),
+            msg=self._failure_message(golden_output, under_test_output),
         )
 
     def generate_test_case(
@@ -131,6 +128,13 @@ class _TestInputs(TestCase):
             max_score=score,
         )
         return AgaTestCase(self, golden, under_test, metadata)
+
+    def _failure_message(self, expected: Output, got: Output) -> str:
+        """Determine the message to output on test failure."""
+        return (
+            f"Checked with {repr(self)}. Expected {repr(expected)}. "
+            f"Got {repr(got)} instead."
+        )
 
     def _args_repr(self) -> str:
         return ",".join(repr(x) for x in self._args)
