@@ -9,6 +9,14 @@
 
 **aga** (aga grades assignments) is a tool for easily producing autograders for python programming assignments, originally developed for Reed College's CS1 course.
 
+## Motivation
+
+Unlike traditional software testing, where there is likely no _a priori_ known-correct implementation, there is always such an implementation (or one can be easily written by course staff) in homework grading. Therefore, applying traditional software testing frameworks to homework grading is limited. Relying on reference implementations (what aga calls _golden solutions_) has several benefits:
+
+1] Reliability: having a reference solution gives a second layer of confirmation for the correctness of expected outputs. Aga supports _golden tests_, which function as traditional unit tests of the golden solution.
+2] Test case generation: many complex test cases can easily be generated via the reference solution, instead of needing to work out the expected output by hand. Aga supports generating test cases from inputs without explcitly referring to an expected output, and [will support](https://github.com/nihilistkitten/aga/issues/8) collecting test cases from python generators.
+3] Property testing: unit-testing libraries like [hypothesis](https://hypothesis.readthedocs.io) allow testing properties against large sets of arbitrary inputs, and identifying simple inputs which reproduce issues. This is traditionally unreliable, because identifying specific properties to test is difficult. In homework grading, the property can simply be "the input matches the golden solution's output." Support for hypothesis is a [long-term goal](https://github.com/nihilistkitten/aga/issues/32).
+
 ## Installation
 
 Install from pip:
