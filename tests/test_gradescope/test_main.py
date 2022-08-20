@@ -115,9 +115,8 @@ def test_json_test_output_square_incorrect(gs_json_square_incorrect: Any) -> Non
     """Test that the JSON file produced by gradescope has the correct output."""
     assert any(
         map(
-            lambda t: t["output"]
-            == "Your submission didn't give the output we expected: 4 != 0 : "
-            "Checked with 2. Expected 4. Got 0 instead.",
+            lambda t: t["output"] == "Your submission didn't give the output we "
+            "expected: 4 != 0 : Checked with 2. Expected 4. Got 0 instead.",
             gs_json_square_incorrect["tests"],
         )
     )
