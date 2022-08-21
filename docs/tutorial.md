@@ -79,12 +79,37 @@ Second, each test case will be run against the student's submission and the
 golden solution. If the outputs differ, the test will be marked as failing. The
 score of each test case will be half of the total score of the problem; by
 default, each test case has equal weight. Modifying this default will be
-discussed in [Custom Weights](tutorial.html#custom-weights).
+discussed in [Custom Weights](tutorial.html#custom-score).
 
 ## Golden Tests
 
-TODO
+We still have a single point of failure: the golden solution. _Golden tests_ are
+aga's main tool for testing the golden solution. They work like pure unit tests;
+you declare an input and expected output, which aga tests against your golden
+solution. We expect that any cases you want to use to test your golden solution
+will also be good test cases for student submissions, hence the following
+syntax:
 
-## Custom Weights
+```python
+from aga import problem, test_case
+
+@test_case(-2)
+@test_case(2, aga_output = 4)
+@problem()
+def square(x: int) -> int:
+    """Square x."""
+    return x * x
+```
+
+Note that we prefix all keyword arguments to the `test_case` decorator with
+`aga_`, so that you can still declare test inputs for problems with actual
+keyword arguments.
+
+If you run `aga check square`, it will run all golden tests (i.e., all test
+cases with declared `aga_output`), displaying any which fail. This also happens
+by default when you run `aga gen square`, so you don't accidentally upload a
+golden solution which fails unit testing.
+
+## Custom Score
 
 TODO
