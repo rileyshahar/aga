@@ -79,12 +79,13 @@ Second, each test case will be run against the student's submission and the
 golden solution. If the outputs differ, the test will be marked as failing. The
 score of each test case will be half of the total score of the problem; by
 default, each test case has equal weight. Modifying this default will be
-discussed in [Custom Weights](tutorial.html#custom-score).
+discussed in
+[Customizing Test Case Score](tutorial.html#customizing-test-case-score).
 
-## Golden Tests
+## Testing the Golden Solution
 
 We still have a single point of failure: the golden solution. _Golden tests_ are
-aga's main tool for testing the golden solution. They work like pure unit tests;
+aga's main tool for testing the golden solution. They work like simple unit tests;
 you declare an input and expected output, which aga tests against your golden
 solution. We expect that any cases you want to use to test your golden solution
 will also be good test cases for student submissions, hence the following
@@ -110,6 +111,41 @@ cases with declared `aga_output`), displaying any which fail. This also happens
 by default when you run `aga gen square`, so you don't accidentally upload a
 golden solution which fails unit testing.
 
-## Custom Score
+## Customizing Test Case Score
 
-TODO
+By default, aga takes the problem's total score (configured on Gradescope) and
+divides it evenly among each problem. This division is weighted by a parameter,
+`aga_weight`, of `test_case`, which defaults to `1`. If our total score is 20,
+and we want the `2` test case to be worth 15 and the `-2` to be worth 5, we can
+do this:
+
+```python
+from aga import problem, test_case
+
+@test_case(-2)
+@test_case(2, aga_output = 4, aga_weight = 3)
+@problem()
+def square(x: int) -> int:
+    """Square x."""
+    return x * x
+```
+
+It is also possible to directly control the value of test cases:
+
+```python
+from aga import problem, test_case
+
+@test_case(-2, aga_weight = 0, aga_value = 5)
+@test_case(2, aga_output = 4, aga_weight = 0, aga_value = 15)
+@problem()
+def square(x: int) -> int:
+    """Square x."""
+    return x * x
+```
+
+However, this is not recommended, because it can lead to strange results if
+there is incongruity between the values assigned via aga and the total score
+assigned via Gradescope.
+
+For complete semantics of score determination, see [Determining
+Score](score.md).
