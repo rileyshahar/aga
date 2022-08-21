@@ -273,7 +273,7 @@ def test_json_diff_generated_cases(
     }
 
 
-def test_json_diff_generated_cases(
+def test_json_diff_kwarg_generated_cases(
     pos_and_kwd_generated: Problem[int],
     source_diff: str,
     mocker: MockerFixture,
