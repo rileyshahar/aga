@@ -7,7 +7,7 @@ import pytest
 from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
-from aga import group, problem, test_case
+from aga import group, problem, test_case, test_cases
 from aga.core import Problem
 
 SOURCE_SQUARE = """
@@ -57,6 +57,11 @@ def str_len(s: str) -> int:
 
 SOURCE_INVALID = """
 This is not valid python code!
+"""
+
+SOURCE_DIFF = """
+def difference(x: int, y: int = 0) -> int:
+    return x - y
 """
 
 
@@ -116,10 +121,16 @@ def fixture_source_invalid(tmp_path: Path) -> str:
 
 @pytest.fixture(name="source_square_wrong_on_zero")
 def fixture_source_square_wrong_on_zero(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_INVALID, returning its path."""
+    """Generate a source file with SOURCE_SQUARE_WRONG_ON_ZERO, returning its path."""
     return _write_source_to_file(
         tmp_path.joinpath("src.py"), SOURCE_SQUARE_WRONG_ON_ZERO
     )
+
+
+@pytest.fixture(name="source_diff")
+def fixture_source_diff(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_DIFF, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_DIFF)
 
 
 @pytest.fixture(name="source_dir")
@@ -165,6 +176,9 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("str_len"),
         lazy_fixture("square_simple_weighted"),
         lazy_fixture("square_grouped"),
+        lazy_fixture("square_generated_cases"),
+        lazy_fixture("pos_and_kwd_generated"),
+        lazy_fixture("diff_generated"),
     ]
 )
 def valid_problem(request):
@@ -375,3 +389,49 @@ def fixture_square_grouped() -> Problem[int]:
         return x * x
 
     return square
+
+
+@pytest.fixture(name="square_generated_cases")
+def fixture_square_generated_cases() -> Problem[int]:
+    """Generate a problem which tests a square function using generated test cases."""
+
+    @test_cases(range(-2, 3))
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
+@pytest.fixture(name="diff_generated")
+def fixture_diff_generator() -> Problem[int]:
+    """Generate a problem which tests a diff function.
+
+    This function has generator-created test cases for two positional arguments.
+    """
+
+    @test_cases(range(-1, 2), range(-1, 2))
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
+@pytest.fixture(name="pos_and_kwd_generated")
+def fixture_pos_and_kwd_generated() -> Problem[int]:
+    """Generate a problem which tests a diff function.
+
+    This function has generator-created test cases for both positional and keyword
+    arguments.
+    """
+
+    @test_cases(range(-1, 2), y=range(-1, 2))
+    @problem()
+    def difference(x: int, y: int = 0) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference

@@ -15,7 +15,7 @@ from ..core import AgaTestCase
 
 @dataclass_json
 @dataclass
-class _GradescopeTestJson:
+class GradescopeTestJson:
     """The JSON schema for a single Test.
 
     Attributes
@@ -68,7 +68,7 @@ class GradescopeJson:
         Whether to show stdout for the tests. Same options as for visibility.
     """
 
-    tests: List[_GradescopeTestJson]
+    tests: List[GradescopeTestJson]
     score: Optional[float] = None
     execution_time: Optional[int] = None
     output: Optional[str] = None
@@ -93,19 +93,19 @@ class _GradescopeTestResult(TestResult):
         """Get the appropriate visibility string for Gradescope's JSON format."""
         return "hidden" if hidden else "visible"
 
-    def _test_json(self, test: AgaTestCase) -> _GradescopeTestJson:
+    def _test_json(self, test: AgaTestCase) -> GradescopeTestJson:
         """Construct the test json schema for a test, with _no_ output."""
         metadata = test.metadata()
         visibility = self._visibility_string(metadata.hidden)
 
-        return _GradescopeTestJson(
+        return GradescopeTestJson(
             max_score=metadata.max_score,
             name=metadata.name,
             score=metadata.max_score,
             visibility=visibility,
         )
 
-    def _fail_json(self, test: AgaTestCase, err) -> _GradescopeTestJson:  # type: ignore
+    def _fail_json(self, test: AgaTestCase, err) -> GradescopeTestJson:  # type: ignore
         """Construct the test json schema for a failure."""
         json = self._test_json(test)
         json.output = f"Your submission didn't give the output we expected: {err[1]}"
@@ -113,7 +113,7 @@ class _GradescopeTestResult(TestResult):
 
         return json
 
-    def _err_json(self, test: AgaTestCase, err) -> _GradescopeTestJson:  # type: ignore
+    def _err_json(self, test: AgaTestCase, err) -> GradescopeTestJson:  # type: ignore
         """Construct the test json schema for an error."""
         json = self._test_json(test)
         json.output = (
