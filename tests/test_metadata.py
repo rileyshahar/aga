@@ -5,4 +5,4 @@ from aga import __version__ as agaversion
 
 def test_version() -> None:
     """Test that the version is correct."""
-    assert agaversion == "0.5.0"
+    assert agaversion == "0.5.1"
