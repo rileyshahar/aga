@@ -435,3 +435,20 @@ def fixture_pos_and_kwd_generated() -> Problem[int]:
         return x - y
 
     return difference
+
+
+@pytest.fixture(name="pos_and_kwd_zip")
+def fixture_pos_and_kwd_zip() -> Problem[int]:
+    """Generate a problem which tests a diff function.
+
+    This function has generator-created test cases for both positional and keyword
+    arguments.
+    """
+
+    @test_cases(range(-1, 2), y=range(-1, 2), aga_product=False)
+    @problem()
+    def difference(x: int, y: int = 0) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
