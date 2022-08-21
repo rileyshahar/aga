@@ -62,18 +62,23 @@ def gen(
     ),
     frontend: str = typer.Option(
         "gradescope",
+        "-f",
+        "--frontend",
         autocompletion=complete_frontend,
         help="The frontend to use. Currently only gradescope is supported.",
     ),
-    dest: Optional[str] = typer.Option(
-        None, help="The path to place the output file(s)."
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="The path to place the output file(s).",
     ),
 ) -> None:
     """Generate an autograder file for a problem."""
     problem = _load_problem(problem_name)  # type: ignore
 
     if frontend == "gradescope":
-        _gen_gradescope(problem, dest)
+        _gen_gradescope(problem, output)
     else:
         _handle_invalid_frontend(frontend)
 

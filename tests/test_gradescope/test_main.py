@@ -115,7 +115,8 @@ def test_json_test_output_square_incorrect(gs_json_square_incorrect: Any) -> Non
     """Test that the JSON file produced by gradescope has the correct output."""
     assert any(
         map(
-            lambda t: "Checked with 2. Expected 4. Got 0 instead." in t["output"],
+            lambda t: t["output"] == "Your submission didn't give the output we "
+            "expected: 4 != 0 : Checked with 2. Expected 4. Got 0 instead.",
             gs_json_square_incorrect["tests"],
         )
     )
@@ -142,6 +143,7 @@ def test_json_test_score_square_error(gs_json_square_error: Any) -> None:
 
 def test_json_test_output_square_error(gs_json_square_error: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct output."""
+    print([t["output"] for t in gs_json_square_error["tests"]])
     assert all(
         map(
             lambda t: "NameError" in t["output"],
