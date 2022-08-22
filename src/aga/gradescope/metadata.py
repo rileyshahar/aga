@@ -9,7 +9,7 @@ from typing import List, Optional
 from dataclasses_json import config, dataclass_json
 from marshmallow import fields
 
-from .runner import GradescopeJson
+from .schema import GradescopeJson
 
 
 @dataclass_json

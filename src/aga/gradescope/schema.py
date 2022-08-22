@@ -9,8 +9,7 @@ from typing import Optional, TextIO
 
 from dataclasses_json import dataclass_json
 
-from ..core import AgaTestSuite
-from ..runner import AgaProblemOutput, AgaTestCaseOutput, run
+from ..runner import AgaProblemOutput, AgaTestCaseOutput
 
 
 @dataclass_json
@@ -96,11 +95,8 @@ class GradescopeJson:
         )
 
 
-def run_suite(suite: AgaTestSuite, stream: TextIO) -> None:
-    """Run a TestSuite of `AgaTestCase`s, writing json to a text stream."""
-    result = run(suite)
-
+def write_to(output: AgaProblemOutput, stream: TextIO) -> None:
+    """Write the data from output as gradescope json to a text stream."""
     # pylint: disable=no-member
-    json = GradescopeJson.from_problem_output(result).to_json()  # type: ignore
-
+    json = GradescopeJson.from_problem_output(output).to_json()  # type: ignore
     stream.write(json)

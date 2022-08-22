@@ -95,6 +95,10 @@ def add_or_subtract(x: int, y: int, sign: bool = true) -> int:
         return x - y
 ```
 
+As a final note, you often won't want to upload the autograder to gradescope
+just to see the output that's given to students. You can use the `aga run`
+command to manually check a student submission in the command line.
+
 ## Testing the Golden Solution
 
 We still have a single point of failure: the golden solution. _Golden tests_ are

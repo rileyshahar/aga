@@ -103,6 +103,25 @@ def test_run(
 
     mocked_lpfp.assert_called_once()
 
+    # not going to test the whole CLI ui right now
+    assert "20.0" in result.stdout
+    assert result.exit_code == 0
+
+
+def test_run_failing(
+    mocked_lpfp: MagicMock,
+    square: Problem[int],
+    source_square_incorrect: str,
+) -> None:
+    """Test that gen_gradescope works correctly."""
+    mocked_lpfp.return_value = [square]
+
+    result = runner.invoke(aga_app, ["run", "square.py", source_square_incorrect])
+
+    mocked_lpfp.assert_called_once()
+
+    # not going to test the whole CLI ui right now
+    assert "0.0" in result.stdout
     assert result.exit_code == 0
 
 
