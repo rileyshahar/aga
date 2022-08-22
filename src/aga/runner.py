@@ -139,11 +139,7 @@ class _AgaTestResult(TestResult):
         """Build the main output string."""
         config = self._config.submission
 
-        failed_tests = [
-            t
-            for t in self._tests
-            if (t.score and t.max_score and t.score < t.max_score)
-        ]
+        failed_tests = [t for t in self._tests if t.score < t.max_score]
         if failed_tests:
             # add failed test message
             self._output_msgs.append(config.failed_tests_msg)
