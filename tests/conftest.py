@@ -1,6 +1,9 @@
 """Contains various fixtures, especially pre-written problems."""
 
+from importlib.resources import files
+from os.path import join as pathjoin
 from pathlib import Path
+from shutil import copyfileobj
 from typing import Iterable, Iterator, List
 
 import pytest
@@ -8,6 +11,7 @@ from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 from aga import group, problem, test_case, test_cases
+from aga.config import AgaConfig, load_config_from_path
 from aga.core import Problem
 
 SOURCE_SQUARE = """
@@ -212,8 +216,8 @@ def fixture_square_custom_name() -> Problem[int]:
     """
 
     @test_case(4, aga_name="This is a deliberately silly name!")
-    @test_case(2, aga_expect=4, aga_name="Test positive two")
-    @test_case(-2, aga_expect=4, aga_hidden=True, aga_name="Test minus two")
+    @test_case(2, aga_expect=4, aga_name="Test positive two.")
+    @test_case(-2, aga_expect=4, aga_hidden=True, aga_name="Test minus two.")
     @problem()
     def square(x: int) -> int:
         """Square x."""
@@ -475,3 +479,25 @@ def fixture_pos_and_kwd_generator_function() -> Problem[int]:
         return x - y
 
     return difference
+
+
+@pytest.fixture(name="example_config_file")
+def fixture_example_config_file(
+    tmp_path: Path,
+) -> str:
+    """Get a path to the example config file."""
+    path = pathjoin(tmp_path, "aga.toml")
+
+    with files("tests.resources").joinpath("aga.toml").open() as src:  # type: ignore
+        with open(path, "w", encoding="UTF-8") as dest:
+            copyfileobj(src, dest)
+
+    return path
+
+
+@pytest.fixture(name="example_config")
+def fixture_example_config(
+    example_config_file: str,
+) -> AgaConfig:
+    """Get the example metadata file from the gradescope documentation."""
+    return load_config_from_path(example_config_file)

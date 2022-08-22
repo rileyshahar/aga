@@ -90,7 +90,7 @@ class _ProblemUnpickler(Unpickler):  # type: ignore
     """A custom unpickler which will always get the `Problem` class from `aga`.
 
     This is a hack-ish thing which is required because dill expects us to unpickle an
-    object in the some module it was pickled in, so it can then find the object's type
+    object in the same module it was pickled in, so it can then find the object's type
     and use that for instantiation. We want to be able to unpickle the object in any
     type, and we know that we always have a Problem pickled at `problem.pckl`, so we can
     just assert that its class should be Problem. This is _highly_ unsafe if we are

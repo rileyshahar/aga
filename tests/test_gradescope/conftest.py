@@ -20,7 +20,7 @@ def fixture_example_metadata_file(tmp_path: Path) -> str:
     with files("tests.test_gradescope.resources").joinpath(  # type: ignore
         "example_metadata.json"
     ).open() as src:
-        with open(pathjoin(tmp_path, "metadata.json"), "w", encoding="UTF-8") as dest:
+        with open(path, "w", encoding="UTF-8") as dest:
             copyfileobj(src, dest)
 
     return path

@@ -11,6 +11,7 @@ from unittest import TestResult, TestSuite
 from dataclasses_json import dataclass_json
 
 from ..core import AgaTestCase
+from ..util import limited_traceback
 
 
 @dataclass_json
@@ -108,7 +109,7 @@ class _GradescopeTestResult(TestResult):
     def _fail_json(self, test: AgaTestCase, err) -> GradescopeTestJson:  # type: ignore
         """Construct the test json schema for a failure."""
         json = self._test_json(test)
-        json.output = f"Your submission didn't give the output we expected: {err[1]}"
+        json.output = str(err[1])
         json.score = 0.0
 
         return json
@@ -116,9 +117,10 @@ class _GradescopeTestResult(TestResult):
     def _err_json(self, test: AgaTestCase, err) -> GradescopeTestJson:  # type: ignore
         """Construct the test json schema for an error."""
         json = self._test_json(test)
-        json.output = (
-            f"A python error occured while running your submission: "
-            f"{err[0].__name__}: {err[1]}"
+        json.output = test.metadata().error_msg.format(
+            type=err[0].__name__,
+            message=err[1],
+            traceback=limited_traceback(err[2]),
         )
         json.score = 0.0
 
