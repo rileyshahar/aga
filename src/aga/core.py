@@ -151,13 +151,6 @@ class _TestInputs(TestCase):
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
-    def _failure_message(self, expected: Output, got: Output) -> str:
-        """Determine the message to output on test failure."""
-        return (
-            f"Checked with {repr(self)}. Expected {repr(expected)}. "
-            f"Got {repr(got)} instead."
-        )
-
     def _args_repr(self, sep: str) -> str:
         return sep.join(repr(x) for x in self._args)
 
