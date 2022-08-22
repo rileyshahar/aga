@@ -12,4 +12,10 @@ are found, an error will be raised. A more nuanced (type-sensitive,
 directory-recursive) discovery algotirhm is on the roadmap, but has not yet been
 implemented.
 
-`{eval-rst} .. click:: aga.cli:click_object :prog: aga :nested: full `
+## CLI Reference
+
+```{eval-rst}
+.. click:: aga.cli:click_object
+   :prog: aga
+   :nested: full
+```
