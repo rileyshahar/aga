@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+from os.path import isdir
 from os.path import join as pathjoin
 from types import ModuleType
 from typing import Any, Callable, Iterable, TypeVar
@@ -88,7 +89,7 @@ def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
     yield from _load_problems_from_module(mod)
 
 
-def load_symbol_from_path(path: str, symbol: str) -> Any:
+def load_symbol_from_file(path: str, symbol: str) -> Any:
     """Load a specific symbol from a source file found at path, absolute or relative."""
     mod = _load_source_from_path(path)
     return _load_attr_from_module(symbol, mod)
@@ -110,6 +111,18 @@ def load_symbol_from_dir(path: str, symbol: str) -> Any:
     if len(matching_symbols) == 0:
         raise NoMatchingSymbol
     return matching_symbols[0]
+
+
+def load_symbol_from_path(path: str, symbol: str) -> Any:
+    """Load a specific symbol from `path`.
+
+    If path is a directory, load from any file in the directory. If path is a file, load
+    from that file.
+    """
+    if isdir(path):
+        return load_symbol_from_dir(path, symbol)
+    else:
+        return load_symbol_from_file(path, symbol)
 
 
 class _ProblemUnpickler(Unpickler):  # type: ignore

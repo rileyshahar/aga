@@ -3,17 +3,10 @@
 from os.path import join as pathjoin
 from typing import TypeVar
 
-from ..config import AgaConfig
-from ..core import Problem
-from ..loader import (
-    NoMatchingSymbol,
-    SubmissionSyntaxError,
-    TooManyMatchingSymbols,
-    load_problem,
-    load_symbol_from_dir,
-)
+from ..loader import load_problem
+from ..runner import load_and_run
 from .metadata import load_submission_metadata_from_path
-from .runner import GradescopeJson, run_suite
+from .schema import write_to
 
 Output = TypeVar("Output")
 
@@ -34,55 +27,9 @@ def gradescope_main(
 
     The parameters are to allow overriding the file structure in unit testing.
     """
-    # if nonempty, will exit before running tests and display these to the student
-    error_messages: list[str] = []
-
     problem = load_problem(problem_src)  # type: ignore
     metadata = load_submission_metadata_from_path(metadata_file)
-
-    try:
-        under_test = load_symbol_from_dir(
-            submission_dir, problem.expected_symbol()  # pylint: disable=no-member
-        )
-    except SubmissionSyntaxError as err:
-        error_messages.append(
-            _submission_syntax_error_msg(
-                err.__cause__, problem.config()  # type: ignore
-            )
-        )
-    except NoMatchingSymbol:
-        error_messages.append(_no_matches_error_msg(problem))
-    except TooManyMatchingSymbols:
-        error_messages.append(_too_many_matches_error_msg(problem))
+    output = load_and_run(problem, submission_dir, metadata.assignment.total_points)
 
     with open(output_file, "w+", encoding="UTF-8") as file:
-        if error_messages:
-            out = GradescopeJson()
-            out.output = "\n\n".join(error_messages)
-            out.score = 0.0
-            # pylint: disable=no-member
-            file.write(out.to_json())  # type: ignore
-        else:
-            # we generate the suite here because it has to be in the else, because it
-            # relies on `under_test`, but we want this if/else under the open so both
-            # branches can use the file stream
-            suite = problem.generate_test_suite(
-                under_test, metadata.assignment.total_points
-            )  # pylint: disable=no-member
-            run_suite(suite, file)
-
-
-def _submission_syntax_error_msg(cause: SyntaxError, config: AgaConfig) -> str:
-    return config.submission.import_error_msg.format(message=str(cause))
-
-
-def _no_matches_error_msg(problem: Problem[Output]) -> str:
-    return problem.config().submission.no_match_msg.format(
-        name=problem.expected_symbol()
-    )
-
-
-def _too_many_matches_error_msg(problem: Problem[Output]) -> str:
-    return problem.config().submission.too_many_matches_msg.format(
-        name=problem.expected_symbol()
-    )
+        write_to(output, file)
