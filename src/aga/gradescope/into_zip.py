@@ -28,16 +28,13 @@ class InvalidProblem(BaseException):
     """The Problem failed some golden tests."""
 
 
-def into_gradescope_zip(
-    name: str, problems: list[Problem[Output]], path: Optional[str] = None
-) -> str:
+def into_gradescope_zip(problem: Problem[Output], path: Optional[str] = None) -> str:
     """Convert a Problem into a gradescope autograder zip, returning its location.
 
     This is the high-level entrypoint for this module.
     """
-    for problem in problems:
-        _check_problem(problem)
-    zip_name = _get_zipfile_dest(path, name)
+    _check_problem(problem)
+    zip_name = _get_zipfile_dest(path, problem)
 
     with TemporaryDirectory() as tempdir:
         with ZipFile(zip_name, "w") as zip_f:
@@ -48,21 +45,20 @@ def into_gradescope_zip(
                 path = _manual_copy_resource_to(tempdir, file)
                 zip_f.write(path, arcname=file)
 
-            for problem in problems:
-                path = _dump_problem_into_dir(problem, tempdir)
-                zip_f.write(path, arcname=f"{problem.name()}.pckl")
+            path = _dump_problem_into_dir(problem, tempdir)
+            zip_f.write(path, arcname="problem.pckl")
 
     return zip_name
 
 
-def _get_zipfile_dest(path: Optional[str], name: str) -> str:
+def _get_zipfile_dest(path: Optional[str], problem: Problem[Output]) -> str:
     """Determine the destination in which to put the zip file.
 
     If `path` is none, this is the problem's name; otherwise it's just the provided
     path.
     """
     if path is None:
-        return name + ".zip"
+        return problem.name() + ".zip"
     else:
         return path
 

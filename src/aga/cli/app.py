@@ -1,7 +1,6 @@
 """The main command-line typer application."""
 
-from os.path import basename, splitext
-from typing import Any, Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 from unittest import TextTestRunner
 
 import typer
@@ -9,13 +8,7 @@ import typer
 from ..config import AgaConfig, load_config_from_path
 from ..core import Output, Problem
 from ..gradescope import into_gradescope_zip
-from ..loader import (
-    NoMatchingSymbol,
-    TooManyMatchingSymbols,
-    load_problems_from_path,
-    load_symbol_from_dir,
-    load_symbol_from_path,
-)
+from ..loader import load_problems_from_path, load_symbol_from_path
 
 app = typer.Typer()
 
@@ -34,16 +27,9 @@ def complete_frontend(incomplete: str) -> Iterable[Tuple[str, str]]:
             yield frontend
 
 
-def _zip_prefix(path: str) -> str:
-    """Determine the prefix of the zip file created from the problems at path."""
-    return splitext(basename(path))[1]  # type: ignore
-
-
-def _gen_gradescope(
-    name: str, problems: list[Problem[Output]], path: Optional[str] = None
-) -> None:
+def _gen_gradescope(problem: Problem[Output], path: Optional[str] = None) -> None:
     """Generate a Gradescope autograder zip."""
-    zip_path = into_gradescope_zip(name, problems, path=path)
+    zip_path = into_gradescope_zip(problem, path=path)
     typer.echo(zip_path)
 
 
@@ -57,32 +43,26 @@ def _load_config(path: str = "aga.toml") -> AgaConfig:
     return config
 
 
-def _load_problems(path: str, config: AgaConfig) -> list[Problem[Any]]:
+def _load_problem(path: str, config: AgaConfig) -> Problem[Output]:
     """Load a problem from the top-level directory."""
     problems = list(load_problems_from_path(path))
+
     if not problems:
-        typer.echo(f"no problems found at {path}", err=True)
+        typer.echo(f"No problems found at {path}.", err=True)
         raise typer.Exit(1)
 
-    for problem in problems:
-        problem.update_config_weak(config)
+    if len(problems) > 1:
+        typer.echo(
+            f"Multiple problems found in {path}. "
+            "Currently, only one problem is supported per file.",
+            err=True,
+        )
+        raise typer.Exit(1)
 
-    return problems
+    problem = problems[0]
+    problem.update_config_weak(config)
 
-
-def _load_problem(name: str, config: AgaConfig) -> Problem[Output]:
-    """Load a problem from the top-level directory."""
-    try:
-        problem = load_symbol_from_dir(".", name)  # type: Problem[Output]
-        problem.update_config_weak(config)
-        return problem
-
-    except NoMatchingSymbol as err:
-        typer.echo(f"problem not found: {name}", err=True)
-        raise typer.Exit(1) from err
-    except TooManyMatchingSymbols as err:
-        typer.echo(f"multiple matching problems: {name}", err=True)
-        raise typer.Exit(1) from err
+    return problem
 
 
 def _handle_invalid_frontend(frontend: str) -> None:
@@ -92,10 +72,10 @@ def _handle_invalid_frontend(frontend: str) -> None:
 
 
 @app.command()
-def gen_many(
+def gen(
     source: str = typer.Argument(
         ...,
-        help="The problem file to generate.",
+        help="The file with the problem to generate.",
     ),
     frontend: str = typer.Option(
         "gradescope",
@@ -116,52 +96,19 @@ def gen_many(
 ) -> None:
     """Generate an autograder file for a problem."""
     config = _load_config(config_file)
-    problem = _load_problems(source, config)  # type: ignore
+    problem = _load_problem(source, config)  # type: ignore
 
     if frontend == "gradescope":
-        _gen_gradescope(_zip_prefix(source), problem, output)
-    else:
-        _handle_invalid_frontend(frontend)
-
-
-@app.command()
-def gen(
-    problem_name: str = typer.Argument(
-        ..., help='The problem to generate (see "problem discovery" in the CLI docs).'
-    ),
-    frontend: str = typer.Option(
-        "gradescope",
-        "-f",
-        "--frontend",
-        autocompletion=complete_frontend,
-        help="The frontend to use. Currently only gradescope is supported.",
-    ),
-    output: Optional[str] = typer.Option(
-        None,
-        "--output",
-        "-o",
-        help="The path to place the output file(s).",
-    ),
-    config_file: str = typer.Option(
-        "aga.toml", "--config", "-c", help="The path to the aga config file."
-    ),
-) -> None:
-    """Generate an autograder file for a problem."""
-    config = _load_config(config_file)
-    problem = _load_problem(problem_name, config)  # type: ignore
-
-    if frontend == "gradescope":
-        _gen_gradescope(problem_name, [problem], output)
+        _gen_gradescope(problem, output)
     else:
         _handle_invalid_frontend(frontend)
 
 
 @app.command()
 def check(
-    problem_name: str = typer.Argument(
+    source: str = typer.Argument(
         ...,
-        metavar="problem",
-        help='The problem to check (see "problem discovery" in the CLI docs).',
+        help="The problem to check.",
     ),
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
@@ -169,7 +116,7 @@ def check(
 ) -> None:
     """Check a problem against test cases with an `aga_expect`."""
     config = _load_config(config_file)
-    problem = _load_problem(problem_name, config)  # type: ignore
+    problem = _load_problem(source, config)  # type: ignore
 
     try:
         problem.check()
@@ -183,12 +130,11 @@ def check(
 
 @app.command()
 def run(
-    problem_name: str = typer.Argument(
+    source: str = typer.Argument(
         ...,
-        metavar="problem",
-        help='The problem to check (see "problem discovery" in the CLI docs).',
+        help="The problem to run.",
     ),
-    submission_file: str = typer.Argument(
+    submission: str = typer.Argument(
         ..., help="The file containing the student submission."
     ),
     config_file: str = typer.Option(
@@ -197,8 +143,8 @@ def run(
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
-    problem: Problem = _load_problem(problem_name, config)  # type: ignore
-    under_test = load_symbol_from_path(submission_file, problem.expected_symbol())
+    problem: Problem = _load_problem(source, config)  # type: ignore
+    under_test = load_symbol_from_path(submission, problem.expected_symbol())
 
     suite = problem.generate_test_suite(under_test, 1.0)
     TextTestRunner().run(suite)
