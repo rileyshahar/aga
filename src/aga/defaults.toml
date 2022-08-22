@@ -51,3 +51,12 @@ no_match_msg = "It looks like you didn't include the right object; we were looki
 # Supported format specifiers:
 #  - `name`: the expected symbol name.
 too_many_matches_msg = "It looks like multiple files you submitted have objects named `{name}`; unfortunately, we can't figure out which one is supposed to be the real submission. Please remove all but one of them and resumbit."
+
+# The global message to show if any tests failed.
+failed_tests_msg = "Good work, but it looks like some tests failed; take a look and see if you can fix them!"
+
+# The global message to show if any hidden tests failed.
+failed_hidden_tests_msg = "Some of those tests were hidden tests, for which you won't know the inputs. In the real world, we don't always know exactly how or why our code is failing. Try to test edge cases and see if you can find the bugs!"
+
+# The global message to show if no tests failed.
+no_failed_tests_msg = "Great work! Looks like you're passing all the tests."

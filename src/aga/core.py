@@ -73,6 +73,14 @@ class AgaTestCase(TestCase):
         return self.metadata().name
 
 
+class AgaTestSuite(TestSuite):
+    """A thin wrapper around TestSuite that store a config."""
+
+    def __init__(self, config: AgaConfig, tests: list[AgaTestCase]):
+        super().__init__(tests)
+        self.config = config
+
+
 class _TestInputs(TestCase):
     """A single set of test inputs for a problem.
 
@@ -211,9 +219,9 @@ class _TestInputGroup:
         under_test: Callable[..., Output],
         group_score: float,
         config: AgaConfig,
-    ) -> TestSuite:
+    ) -> AgaTestSuite:
         """Generate a test suite from all the test cases for this group."""
-        suite = TestSuite([])
+        suite = AgaTestSuite(config, [])
 
         score_infos = [case.score_info for case in self._test_cases]
         scores = compute_scores(score_infos, group_score)
@@ -273,7 +281,7 @@ class Problem(Generic[Output]):
 
     def generate_test_suite(
         self, under_test: Callable[..., Output], total_score: float
-    ) -> TestSuite:
+    ) -> AgaTestSuite:
         """Generate a `TestSuite` for the student submitted function.
 
         Neither the generated test suite nor the body of this function will run golden
@@ -289,12 +297,12 @@ class Problem(Generic[Output]):
 
         Returns
         -------
-        TestSuite
+        AgaTestSuite
             A unittest test suite containing one test for each TestInput in this
             problem, checking the result of the problem's golden solution against
             `under_test`.
         """
-        suite = TestSuite([])
+        suite = AgaTestSuite(self._config, [])
 
         groups = self._virtual_groups()
 

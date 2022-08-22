@@ -30,6 +30,8 @@ class AgaTestConfig:
 class AgaSubmissionConfig:
     """Aga's student submission-related configuration."""
 
+    # this is pretty gross, we should find an easier way to do this
+    # we're doing this so we can single-source-of-truth the defaults in `defults.toml`.
     import_error_msg: str = field(
         default_factory=lambda: _DEFAULT_CONFIG.submission.import_error_msg
     )
@@ -38,6 +40,15 @@ class AgaSubmissionConfig:
     )
     too_many_matches_msg: str = field(
         default_factory=lambda: _DEFAULT_CONFIG.submission.too_many_matches_msg
+    )
+    failed_tests_msg: str = field(
+        default_factory=lambda: _DEFAULT_CONFIG.submission.failed_tests_msg
+    )
+    failed_hidden_tests_msg: str = field(
+        default_factory=lambda: _DEFAULT_CONFIG.submission.failed_hidden_tests_msg
+    )
+    no_failed_tests_msg: str = field(
+        default_factory=lambda: _DEFAULT_CONFIG.submission.no_failed_tests_msg
     )
 
     def update_weak(self, other: "AgaSubmissionConfig") -> None:

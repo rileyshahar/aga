@@ -10,7 +10,6 @@ from typer.testing import CliRunner
 from aga.cli import aga_app
 from aga.cli.app import FRONTENDS, complete_frontend
 from aga.core import Problem
-from aga.loader import NoMatchingSymbol, TooManyMatchingSymbols
 
 Output = TypeVar("Output")
 
@@ -90,6 +89,21 @@ def test_gen_invalid_frontend(
 
     assert "invalid frontend" in result.stderr
     assert result.exit_code == 1
+
+
+def test_run(
+    mocked_lpfp: MagicMock,
+    square: Problem[int],
+    source_square: str,
+) -> None:
+    """Test that gen_gradescope works correctly."""
+    mocked_lpfp.return_value = [square]
+
+    result = runner.invoke(aga_app, ["run", "square.py", source_square])
+
+    mocked_lpfp.assert_called_once()
+
+    assert result.exit_code == 0
 
 
 def test_check_valid_problem(
