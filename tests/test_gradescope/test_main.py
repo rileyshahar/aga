@@ -26,7 +26,7 @@ def fixture_gradescope_zip(
 ) -> Iterable[tuple[Problem[Output], str]]:
     """Construct a zip from a problem, returning the problem and the zip path."""
 
-    zip_path = into_gradescope_zip(valid_problem)
+    zip_path = into_gradescope_zip(valid_problem.name(), [valid_problem])
 
     # when you yield from a pytest fixture, it runs the test immediately, and then
     # returns to the fixture for cleanup

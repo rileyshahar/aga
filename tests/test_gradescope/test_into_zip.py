@@ -30,7 +30,7 @@ def fixture_gradescope_zip(
 ) -> Iterable[Tuple[Problem[Output], str]]:
     """Construct a zip from a problem, returning the problem and the zip path."""
 
-    zip_path = into_gradescope_zip(valid_problem)
+    zip_path = into_gradescope_zip(valid_problem.name(), [valid_problem])
 
     # when you yield from a pytest fixture, it runs the test immediately, and then
     # returns to the fixture for cleanup
@@ -72,7 +72,7 @@ def test_into_gradescope_zip_problem(
     orig_problem, zip_path = gradescope_zip
 
     with ZipFile(zip_path) as zip_f:
-        with zip_f.open("problem.pckl") as problem:
+        with zip_f.open(f"{gradescope_zip[0].name()}.pckl") as problem:
             problem_loaded = load(problem)  # type: Problem[Output]
             problem_loaded.check()
             assert problem_loaded.name() == orig_problem.name()
@@ -97,7 +97,9 @@ def test_into_gradescope_zip_custom_path(valid_problem: Problem[Output]) -> None
     """Test into_gradescope_zip with a custom path."""
 
     try:
-        zip_path = into_gradescope_zip(valid_problem, "archive.zip")
+        zip_path = into_gradescope_zip(
+            valid_problem.name(), [valid_problem], "archive.zip"
+        )
         assert zip_path == "archive.zip"
     finally:
         os.remove("archive.zip")
@@ -107,7 +109,7 @@ def test_into_gradescope_zip_incorrect_problem(diff_bad_impl: Problem[int]) -> N
     """Test into_gradescope_zip with an invalid problem."""
 
     with pytest.raises(InvalidProblem):
-        zip_path = into_gradescope_zip(diff_bad_impl)
+        zip_path = into_gradescope_zip(diff_bad_impl.name(), [diff_bad_impl])
 
         # should never be run if the test works, but if not, we want to clean up
         os.remove(zip_path)

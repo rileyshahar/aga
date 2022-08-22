@@ -4,7 +4,7 @@ import importlib.util
 import os
 from os.path import join as pathjoin
 from types import ModuleType
-from typing import Any, TypeVar
+from typing import Any, Callable, Iterable, TypeVar
 
 from dill import Unpickler  # type: ignore
 
@@ -60,6 +60,28 @@ def _load_attr_from_module(attr: str, module: ModuleType) -> Any:
         return module.__getattribute__(attr)
     except AttributeError as err:
         raise NoMatchingSymbol from err
+
+
+def _load_from_module_by(
+    pred: Callable[[Any], bool], module: ModuleType
+) -> Iterable[Any]:
+    """Return all items in the module satisfying the predicate."""
+    for item in module.__dict__.values():
+        if pred(item):
+            yield item
+
+
+def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any]]:
+    """Return all problems in the module."""
+    yield from _load_from_module_by(
+        lambda i: i.isinstance(Problem), module  # type: ignore
+    )
+
+
+def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
+    """Load all problems from the module at path."""
+    mod = _load_source_from_path(path)
+    yield from _load_problems_from_module(mod)
 
 
 def load_symbol_from_path(path: str, symbol: str) -> Any:

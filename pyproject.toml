@@ -47,7 +47,7 @@ sphinx-click = "^3.0.1"
 sphinx-rtd-theme = "^1.0.0"
 
 [tool.poetry.scripts]
-aga = "aga.cli:app"
+aga = "aga.cli:aga_app"
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore:'autocompletion' is renamed to 'shell_complete':DeprecationWarning"]
