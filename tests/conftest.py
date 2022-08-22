@@ -1,7 +1,7 @@
 """Contains various fixtures, especially pre-written problems."""
 
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, Iterator, List
 
 import pytest
 from _pytest.config import Config
@@ -177,8 +177,10 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("square_simple_weighted"),
         lazy_fixture("square_grouped"),
         lazy_fixture("square_generated_cases"),
-        lazy_fixture("pos_and_kwd_generated"),
         lazy_fixture("diff_generated"),
+        lazy_fixture("pos_and_kwd_generated"),
+        lazy_fixture("pos_and_kwd_zip"),
+        lazy_fixture("pos_and_kwd_generator_function"),
     ]
 )
 def valid_problem(request):
@@ -445,7 +447,28 @@ def fixture_pos_and_kwd_zip() -> Problem[int]:
     arguments.
     """
 
-    @test_cases(range(-1, 2), y=range(-1, 2), aga_product=False)
+    @test_cases([-1, 0, 1], y=range(-1, 2), aga_product=False)
+    @problem()
+    def difference(x: int, y: int = 0) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
+@pytest.fixture(name="pos_and_kwd_generator_function")
+def fixture_pos_and_kwd_generator_function() -> Problem[int]:
+    """Generate a problem which tests a diff function.
+
+    This function has generator-created test cases for both positional and keyword
+    arguments.
+    """
+
+    def generator() -> Iterator[int]:
+        for i in range(-1, 2):
+            yield i
+
+    @test_cases(generator(), y=generator())
     @problem()
     def difference(x: int, y: int = 0) -> int:
         """Compute x - y."""

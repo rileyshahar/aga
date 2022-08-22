@@ -325,3 +325,33 @@ def test_json_diff_kwarg_generated_cases(
         "Test on 0,y=1",
         "Test on 1,y=1",
     }
+
+
+def test_json_diff_kwarg_custom_generator(
+    pos_and_kwd_generator_function: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    gs_json = get_gs_json(
+        pos_and_kwd_generator_function,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # there should
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+        "Test on -1,y=-1",
+        "Test on 0,y=-1",
+        "Test on 1,y=-1",
+        "Test on -1,y=0",
+        "Test on 0,y=0",
+        "Test on 1,y=0",
+        "Test on -1,y=1",
+        "Test on 0,y=1",
+        "Test on 1,y=1",
+    }
