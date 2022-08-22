@@ -89,13 +89,13 @@ def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
     yield from _load_problems_from_module(mod)
 
 
-def load_symbol_from_file(path: str, symbol: str) -> Any:
+def _load_symbol_from_file(path: str, symbol: str) -> Any:
     """Load a specific symbol from a source file found at path, absolute or relative."""
     mod = _load_source_from_path(path)
     return _load_attr_from_module(symbol, mod)
 
 
-def load_symbol_from_dir(path: str, symbol: str) -> Any:
+def _load_symbol_from_dir(path: str, symbol: str) -> Any:
     """Load a specific symbol from any of the source files in a directory."""
     matching_symbols = []
     for file in os.listdir(path):
@@ -120,9 +120,9 @@ def load_symbol_from_path(path: str, symbol: str) -> Any:
     from that file.
     """
     if isdir(path):
-        return load_symbol_from_dir(path, symbol)
+        return _load_symbol_from_dir(path, symbol)
     else:
-        return load_symbol_from_file(path, symbol)
+        return _load_symbol_from_file(path, symbol)
 
 
 class _ProblemUnpickler(Unpickler):  # type: ignore

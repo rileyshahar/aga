@@ -13,7 +13,6 @@ from aga.loader import (
     TooManyMatchingSymbols,
     load_problem,
     load_problems_from_path,
-    load_symbol_from_dir,
     load_symbol_from_path,
 )
 
@@ -58,27 +57,27 @@ def test_load_symbol_from_path_no_symbol_errors(source_square: str) -> None:
 
 
 def test_load_symbol_from_dir_function(source_dir: str) -> None:
-    """Test that load_symbol_from_dir loads a function."""
-    square = load_symbol_from_dir(source_dir, "square")
+    """Test that load_symbol_from_path loads a function."""
+    square = load_symbol_from_path(source_dir, "square")
     assert square(5) == 25
 
 
 def test_load_symbol_from_dir_class(source_dir: str) -> None:
-    """Test that load_symbol_from_dir loads a class."""
-    Car = load_symbol_from_dir(source_dir, "Car")  # pylint: disable=invalid-name
+    """Test that load_symbol_from_path loads a class."""
+    Car = load_symbol_from_path(source_dir, "Car")  # pylint: disable=invalid-name
     car_tester(Car)
 
 
 def test_load_symbol_from_dir_nonexistent_symbol_errors(source_dir: str) -> None:
-    """Test that load_symbol_from_dir errors on nonexistent symbols."""
+    """Test that load_symbol_from_path errors on nonexistent symbols."""
     with pytest.raises(NoMatchingSymbol):
-        load_symbol_from_dir(source_dir, "foo")
+        load_symbol_from_path(source_dir, "foo")
 
 
 def test_load_symbol_from_dir_multiple_symble_errors(source_dir: str) -> None:
-    """Test that load_symbol_from_dir errors on nonexistent symbols."""
+    """Test that load_symbol_from_path errors on nonexistent symbols."""
     with pytest.raises(TooManyMatchingSymbols):
-        load_symbol_from_dir(source_dir, "duplicate")
+        load_symbol_from_path(source_dir, "duplicate")
 
 
 def test_load_problem(tmp_path: str, square: Problem[int]) -> None:
