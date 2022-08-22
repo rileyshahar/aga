@@ -21,9 +21,7 @@ class AgaTestConfig:
         # iterate over all the fields of the dataclass, checking them against the
         # default value, and updating them to the other value if they match the default
         # value
-        for attr in fields(self):
-            if attr.default_factory() == getattr(self, attr.name):  # type: ignore
-                setattr(self, attr.name, getattr(other, attr.name))
+        _update_weak_leaf(self, other)
 
 
 @dataclass
@@ -56,9 +54,14 @@ class AgaSubmissionConfig:
         # iterate over all the fields of the dataclass, checking them against the
         # default value, and updating them to the other value if they match the default
         # value
-        for attr in fields(self):
-            if attr.default_factory() == getattr(self, attr.name):  # type: ignore
-                setattr(self, attr.name, getattr(other, attr.name))
+        _update_weak_leaf(self, other)
+
+
+def _update_weak_leaf(self, other) -> None:  # type: ignore
+    """Update a leaf-level dataclass weakly."""
+    for attr in fields(self):
+        if attr.default_factory() == getattr(self, attr.name):  # type: ignore
+            setattr(self, attr.name, getattr(other, attr.name))
 
 
 @dataclass
