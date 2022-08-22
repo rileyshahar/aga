@@ -1,9 +1,4 @@
-"""The core library functionality.
-
-There are mypy "type: ignore" comments scattered throughout this file. This is because
-typing *args and **kwargs is quite difficult. There might be a way to do this, but I'm
-not sure how, and it seemed much easier to just ignore them.
-"""
+"""The core library functionality."""
 
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -78,22 +73,22 @@ class _TestInputs(TestCase):
     outputs will be compared, and a unittest failure raised if they differ.
     """
 
-    def __init__(  # type: ignore
+    def __init__(
         self,
-        *args,
+        *args: Any,
         aga_hidden: bool,
         aga_name: Optional[str],
         aga_weight: int,
         aga_value: float,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__()
         self._name = aga_name
         self._hidden = aga_hidden
         self.score_info = ScoreInfo(aga_weight, aga_value)
 
-        self._args = args  # type: ignore
-        self._kwargs = kwargs  # type: ignore
+        self._args = args
+        self._kwargs = kwargs
 
     def _eval(self, func: Callable[..., Output]) -> Output:
         """Evaluate func on the arguments."""
@@ -172,7 +167,7 @@ class _GoldenTestInputs(_TestInputs):
     testing the accuracy of the golden solution against known outputs.
     """
 
-    def __init__(self, output: Output, *args, **kwargs) -> None:  # type: ignore
+    def __init__(self, output: Output, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._output = output
 
