@@ -16,7 +16,22 @@ from .util import limited_traceback
 
 @dataclass
 class AgaTestCaseOutput:
-    """Stores information about a completed test case."""
+    """Stores information about a completed test case.
+
+    Attributes
+    ----------
+    score : float
+        The test's score.
+    max_score : float
+        The max score for the test.
+    name : str
+        The test's name.
+    output : Optional[str]
+        Human-readable text output of the test. Some frontends distinguish between no
+        output and empty output, i.e. in terms of showing UI elements.
+    hidden : bool
+        The test's visibility.
+    """
 
     score: float
     max_score: float
@@ -27,7 +42,18 @@ class AgaTestCaseOutput:
 
 @dataclass
 class AgaProblemOutput:
-    """Stores information about a completed problem."""
+    """Stores information about a completed problem.
+
+    Attributes
+    ----------
+    score : float
+        The total score for the problem. We currently do not track max score,
+        but instead expect frontends to do so.
+    tests : list[AgaTestCaseOutput]
+        The test cases for the problem.
+    output : str
+        Human-readable text output of the problem.
+    """
 
     tests: list[AgaTestCaseOutput]
     score: float
