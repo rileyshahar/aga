@@ -15,7 +15,7 @@ from setuptools import setup  # type: ignore
 
 setup(
     name="aga",
-    version="0.5.1",
+    version="0.6.0",
     install_requires=[
         "dataclasses-json >= 0.5.6",
         "dill >= 0.3.4",
