@@ -4,6 +4,7 @@ from typing import Iterable, Optional, Tuple
 
 import typer
 
+from .config import AgaConfig, load_config_from_path
 from .core import Output, Problem
 from .gradescope import into_gradescope_zip
 from .loader import NoMatchingSymbol, TooManyMatchingSymbols, load_symbol_from_dir
@@ -31,16 +32,28 @@ def _gen_gradescope(problem: Problem[Output], path: Optional[str] = None) -> Non
     typer.echo(zip_path)
 
 
-def _load_problem(problem: str) -> Problem[Output]:
+def _load_config(path: str = "aga.toml") -> AgaConfig:
+    """Load a config file from path, or return the default."""
+    try:
+        config = load_config_from_path(path)
+    except FileNotFoundError:
+        config = AgaConfig()
+
+    return config
+
+
+def _load_problem(name: str, config: AgaConfig) -> Problem[Output]:
     """Load a problem from the top-level directory."""
     try:
-        return load_symbol_from_dir(".", problem)  # type: ignore
+        problem = load_symbol_from_dir(".", name)  # type: Problem[Output]
+        problem.update_config_weak(config)
+        return problem
 
     except NoMatchingSymbol as err:
-        typer.echo(f"problem not found: {problem}", err=True)
+        typer.echo(f"problem not found: {name}", err=True)
         raise typer.Exit(1) from err
     except TooManyMatchingSymbols as err:
-        typer.echo(f"multiple matching problems: {problem}", err=True)
+        typer.echo(f"multiple matching problems: {name}", err=True)
         raise typer.Exit(1) from err
 
 
@@ -73,9 +86,13 @@ def gen(
         "-o",
         help="The path to place the output file(s).",
     ),
+    config_file: str = typer.Option(
+        "aga.toml", "--config", "-c", help="The path to the aga config file."
+    ),
 ) -> None:
     """Generate an autograder file for a problem."""
-    problem = _load_problem(problem_name)  # type: ignore
+    config = _load_config(config_file)
+    problem = _load_problem(problem_name, config)  # type: ignore
 
     if frontend == "gradescope":
         _gen_gradescope(problem, output)
@@ -88,9 +105,13 @@ def check(
     problem_name: str = typer.Argument(
         ..., help='The problem to check (see "problem discovery" in the CLI docs).'
     ),
+    config_file: str = typer.Option(
+        "aga.toml", "--config", "-c", help="The path to the aga config file."
+    ),
 ) -> None:
     """Check a problem against test cases with an `aga_expect`."""
-    problem = _load_problem(problem_name)  # type: ignore
+    config = _load_config(config_file)
+    problem = _load_problem(problem_name, config)  # type: ignore
 
     try:
         problem.check()

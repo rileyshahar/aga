@@ -6,6 +6,7 @@ from itertools import product
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
 
+from .config import AgaConfig
 from .score import ScoreInfo, compute_scores
 
 Output = TypeVar("Output")
@@ -222,6 +223,7 @@ class Problem(Generic[Output]):
         self._name = name
         self._ungrouped_tests: list[_TestInputs] = []
         self._groups: list[_TestInputGroup] = []
+        self._config: AgaConfig = AgaConfig()
 
     def add_test_case(self, case: _TestInputs) -> None:
         """Add a test case to the problem.
@@ -289,6 +291,10 @@ class Problem(Generic[Output]):
     def expected_symbol(self) -> str:
         """Get the name of the symbol that should be tested against."""
         return self._golden.__name__
+
+    def update_config_weak(self, config: AgaConfig) -> None:
+        """Update any non-default items in self.config."""
+        self._config.update_weak(config)
 
     def _virtual_groups(self) -> list[_TestInputGroup]:
         """Get the list of groups, plus the current group under construction.

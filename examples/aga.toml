@@ -1,0 +1,4 @@
+# This file contains all the default configuration options.
+
+[ui]
+test_name_fmt = "Test on {args}{kwargs}."

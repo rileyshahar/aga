@@ -1,0 +1,4 @@
+# An example config file
+
+[ui]
+test_name_fmt = "Check with args {args} and kwargs {kwargs}."
