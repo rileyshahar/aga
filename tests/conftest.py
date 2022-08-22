@@ -501,25 +501,3 @@ def fixture_example_config(
 ) -> AgaConfig:
     """Get the example metadata file from the gradescope documentation."""
     return load_config_from_path(example_config_file)
-
-
-@pytest.fixture(name="default_config_file")
-def fixture_default_config_file(
-    tmp_path: Path,
-) -> str:
-    """Get a path to the default config file."""
-    path = pathjoin(tmp_path, "aga.toml")
-
-    with files("examples").joinpath("aga.toml").open() as src:  # type: ignore
-        with open(path, "w", encoding="UTF-8") as dest:
-            copyfileobj(src, dest)
-
-    return path
-
-
-@pytest.fixture(name="default_config")
-def fixture_default_config(
-    default_config_file: str,
-) -> AgaConfig:
-    """Get the example metadata file from the gradescope documentation."""
-    return load_config_from_path(default_config_file)

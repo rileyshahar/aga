@@ -1,6 +1,7 @@
 """Utilities for configuring `aga`."""
 
 from dataclasses import dataclass, field, fields
+from importlib.resources import files
 
 import toml
 from dacite import from_dict  # type: ignore
@@ -10,17 +11,10 @@ from dacite import from_dict  # type: ignore
 class AgaTestConfig:
     """Aga's test-related configuration."""
 
-    name_sep: str = ","
-    name_fmt: str = "Test on {args}{sep}{kwargs}."
-    failure_msg: str = (
-        "Your submission didn't give the output we expected. "
-        "We checked it with {input} and got {output}, but we expected {expected}."
-    )
-
-    error_msg: str = (
-        "A python {type} occured while running your submission: "
-        "{message}.\n\nHere's what was running when it happened:{traceback}."
-    )
+    name_sep: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.name_sep)
+    name_fmt: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.name_fmt)
+    failure_msg: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.failure_msg)
+    error_msg: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.error_msg)
 
     def update_weak(self, other: "AgaTestConfig") -> None:
         """Update all default attributes of self to match other."""
@@ -28,7 +22,7 @@ class AgaTestConfig:
         # default value, and updating them to the other value if they match the default
         # value
         for attr in fields(self):
-            if attr.default == getattr(self, attr.name):
+            if attr.default_factory() == getattr(self, attr.name):  # type: ignore
                 setattr(self, attr.name, getattr(other, attr.name))
 
 
@@ -49,3 +43,11 @@ def load_config_from_path(path: str) -> AgaConfig:
         data_class=AgaConfig,
         data=toml.load(path),
     )
+
+
+_DEFAULT_CONFIG: AgaConfig = load_config_from_path(
+    # this is type safe, but there's not actually a safe way to indicate that to mypy,
+    # since `Traversable` (the type returned by `joinpath`) isn't re-exported by
+    # `importlib.resources`
+    files("aga").joinpath("defaults.toml")  # type: ignore
+)
