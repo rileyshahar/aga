@@ -1,6 +1,6 @@
 """Tests for the `_AgaTestCase` class."""
 
-from typing import List, Tuple
+from typing import no_type_check
 from unittest import TestCase
 
 import pytest
@@ -12,6 +12,14 @@ from aga.core import Problem
 def square_wrong(x: int) -> int:
     """Square x, incorrectly."""
     return x + 1
+
+
+@no_type_check
+def square_error(_: int) -> int:
+    """Square x, erroring."""
+    # pylint: disable=undefined-variable
+    # flake8: noqa
+    return y * y  # type: ignore
 
 
 def square_right(x: int) -> int:
@@ -84,7 +92,7 @@ def test_square_right(square: Problem[int]) -> None:
 
 
 @pytest.fixture(name="square_failure")
-def fixture_square_failure() -> List[Tuple[TestCase, str]]:
+def fixture_square_failure() -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc square problem."""
     suite = square_one_tc.generate_test_suite(square_wrong, 1.0)
     result = suite.run(TestCase().defaultTestResult())
@@ -92,25 +100,28 @@ def fixture_square_failure() -> List[Tuple[TestCase, str]]:
     return result.failures
 
 
-def test_one_failure(square_failure: List[Tuple[TestCase, str]]) -> None:
+def test_one_failure(square_failure: list[tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem only has one failure."""
     assert len(square_failure) == 1
 
 
-def test_failure_message(square_failure: List[Tuple[TestCase, str]]) -> None:
+def test_failure_message(square_failure: list[tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem's failure message is correct."""
     message = square_failure[0][1]
-    assert "Checked with 2. Expected 4. Got 3 instead." in message
+    assert (
+        "Your submission didn't give the output we expected. "
+        "We checked it with 2 and got 3, but we expected 4." in message
+    )
 
 
-def test_failure_description(square_failure: List[Tuple[TestCase, str]]) -> None:
+def test_failure_description(square_failure: list[tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem's test case description is correct."""
     message = square_failure[0][0].shortDescription()
-    assert message == "Test on 2"
+    assert message == "Test on 2."
 
 
 @pytest.fixture(name="diff_failure")
-def fixture_diff_failure() -> List[Tuple[TestCase, str]]:
+def fixture_diff_failure() -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc diff problem."""
     suite = diff_one_tc.generate_test_suite(diff_wrong, 1.0)
     result = suite.run(TestCase().defaultTestResult())
@@ -118,13 +129,13 @@ def fixture_diff_failure() -> List[Tuple[TestCase, str]]:
     return result.failures
 
 
-def test_one_failure_diff(diff_failure: List[Tuple[TestCase, str]]) -> None:
+def test_one_failure_diff(diff_failure: list[tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem only has one failure."""
     assert len(diff_failure) == 1
 
 
 def test_failure_message_multiple_args(
-    diff_failure: List[Tuple[TestCase, str]]
+    diff_failure: list[tuple[TestCase, str]]
 ) -> None:
     """Test that the one-tc diff problem's failure message is correct.
 
@@ -132,11 +143,14 @@ def test_failure_message_multiple_args(
     tuples in `_TestInputs`.
     """
     message = diff_failure[0][1]
-    assert "Checked with 2,1. Expected 1. Got 3 instead." in message
+    assert (
+        "Your submission didn't give the output we expected. "
+        "We checked it with 2,1 and got 3, but we expected 1." in message
+    )
 
 
 def test_failure_description_multiple_args(
-    diff_failure: List[Tuple[TestCase, str]]
+    diff_failure: list[tuple[TestCase, str]]
 ) -> None:
     """Test that the one-tc diff problem's test case description is correct.
 
@@ -144,11 +158,11 @@ def test_failure_description_multiple_args(
     tuples in `_TestInputs`.
     """
     message = diff_failure[0][0].shortDescription()
-    assert message == "Test on 2,1"
+    assert message == "Test on 2,1."
 
 
 @pytest.fixture(name="square_kwd_failure")
-def fixture_square_kwd_failure() -> List[Tuple[TestCase, str]]:
+def fixture_square_kwd_failure() -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc square kwd problem."""
     suite = square_one_tc_kwd.generate_test_suite(square_wrong, 1.0)
     result = suite.run(TestCase().defaultTestResult())
@@ -156,13 +170,13 @@ def fixture_square_kwd_failure() -> List[Tuple[TestCase, str]]:
     return result.failures
 
 
-def test_one_failure_square_kwd(square_kwd_failure: List[Tuple[TestCase, str]]) -> None:
+def test_one_failure_square_kwd(square_kwd_failure: list[tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem only has one failure."""
     assert len(square_kwd_failure) == 1
 
 
 def test_failure_message_kwdargs(
-    square_kwd_failure: List[Tuple[TestCase, str]]
+    square_kwd_failure: list[tuple[TestCase, str]]
 ) -> None:
     """Test that the one-tc square_kwd problem's failure message is correct.
 
@@ -170,11 +184,14 @@ def test_failure_message_kwdargs(
     formatting for kwdargs in `_TestInputs`.
     """
     message = square_kwd_failure[0][1]
-    assert "Checked with x=2. Expected 4. Got 3 instead." in message
+    assert (
+        "Your submission didn't give the output we expected. "
+        "We checked it with x=2 and got 3, but we expected 4." in message
+    )
 
 
 def test_failure_description_kwdargs(
-    square_kwd_failure: List[Tuple[TestCase, str]]
+    square_kwd_failure: list[tuple[TestCase, str]]
 ) -> None:
     """Test that the one-tc square_kwd problem's test case description is correct.
 
@@ -182,11 +199,11 @@ def test_failure_description_kwdargs(
     formatting for kwdargs in `_TestInputs`.
     """
     message = square_kwd_failure[0][0].shortDescription()
-    assert message == "Test on x=2"
+    assert message == "Test on x=2."
 
 
 @pytest.fixture(name="diff_kwd_failure")
-def fixture_diff_kwd_failure() -> List[Tuple[TestCase, str]]:
+def fixture_diff_kwd_failure() -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc diff kwd problem."""
     suite = diff_one_tc_kwd.generate_test_suite(diff_wrong, 1.0)
     result = suite.run(TestCase().defaultTestResult())
@@ -194,13 +211,13 @@ def fixture_diff_kwd_failure() -> List[Tuple[TestCase, str]]:
     return result.failures
 
 
-def test_one_failure_diff_kwd(diff_kwd_failure: List[Tuple[TestCase, str]]) -> None:
+def test_one_failure_diff_kwd(diff_kwd_failure: list[tuple[TestCase, str]]) -> None:
     """Test that the one-tc problem only has one failure."""
     assert len(diff_kwd_failure) == 1
 
 
 def test_failure_message_pos_and_kwdargs(
-    diff_kwd_failure: List[Tuple[TestCase, str]]
+    diff_kwd_failure: list[tuple[TestCase, str]]
 ) -> None:
     """Test that the one-tc diff_kwd problem's failure message is correct.
 
@@ -208,11 +225,16 @@ def test_failure_message_pos_and_kwdargs(
     argument.
     """
     message = diff_kwd_failure[0][1]
-    assert "Checked with 2,y=1. Expected 1. Got 3 instead." in message
+    print(diff_kwd_failure[0])
+    print(message)
+    assert (
+        "Your submission didn't give the output we expected. "
+        "We checked it with 2,y=1 and got 3, but we expected 1." in message
+    )
 
 
 def test_failure_description_pos_and_kwdargs(
-    diff_kwd_failure: List[Tuple[TestCase, str]]
+    diff_kwd_failure: list[tuple[TestCase, str]]
 ) -> None:
     """Test that the one-tc diff_kwd problem's test case description is correct.
 
@@ -220,4 +242,4 @@ def test_failure_description_pos_and_kwdargs(
     argument.
     """
     message = diff_kwd_failure[0][0].shortDescription()
-    assert message == "Test on 2,y=1"
+    assert message == "Test on 2,y=1."

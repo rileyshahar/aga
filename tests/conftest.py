@@ -216,8 +216,8 @@ def fixture_square_custom_name() -> Problem[int]:
     """
 
     @test_case(4, aga_name="This is a deliberately silly name!")
-    @test_case(2, aga_expect=4, aga_name="Test positive two")
-    @test_case(-2, aga_expect=4, aga_hidden=True, aga_name="Test minus two")
+    @test_case(2, aga_expect=4, aga_name="Test positive two.")
+    @test_case(-2, aga_expect=4, aga_hidden=True, aga_name="Test minus two.")
     @problem()
     def square(x: int) -> int:
         """Square x."""

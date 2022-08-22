@@ -24,10 +24,16 @@ class TestMetadata:
         Whether the test should be hidden.
     max_score : float
         The test's max score.
+    failure_fmt : str
+        The format string for a test failure.
+    error_fmt : str
+        The format string for a test error.
     """
 
     name: str
     max_score: float
+    failure_msg: str
+    error_msg: str
     hidden: bool = False
 
 
@@ -55,7 +61,7 @@ class AgaTestCase(TestCase):
     # camelCase is required by unittest
     def runTest(self) -> None:
         """Run the test case."""
-        self._test_input.check(self._golden, self._under_test)
+        self._test_input.check(self._golden, self._under_test, self._metadata)
 
     # pylint: disable=invalid-name
     # camelCase is required by unittest
@@ -96,7 +102,10 @@ class _TestInputs(TestCase):
         return func(*self._args, **self._kwargs)
 
     def check(
-        self, golden: Callable[..., Output], under_test: Callable[..., Output]
+        self,
+        golden: Callable[..., Output],
+        under_test: Callable[..., Output],
+        metadata: TestMetadata,
     ) -> None:
         """Assert that `golden` and `under_test` give the same output.
 
@@ -110,7 +119,11 @@ class _TestInputs(TestCase):
         self.assertEqual(
             golden_output,
             under_test_output,
-            msg=self._failure_message(golden_output, under_test_output),
+            msg=metadata.failure_msg.format(
+                input=repr(self),
+                expected=repr(golden_output),
+                output=repr(under_test_output),
+            ),
         )
 
     def generate_test_case(
@@ -118,11 +131,22 @@ class _TestInputs(TestCase):
         golden: Callable[..., Output],
         under_test: Callable[..., Output],
         score: float,
+        config: AgaConfig,
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
+        name_fmt = config.test.name_fmt
+        name_sep = config.test.name_sep
+
+        name = self._name or name_fmt.format(
+            args=self._args_repr(name_sep),
+            kwargs=self._kwargs_repr(name_sep),
+            sep=self._sep(name_sep),
+        )
         metadata = TestMetadata(
-            name=self._name or f"Test on {repr(self)}",
+            name=name,
             hidden=self._hidden,
+            failure_msg=config.test.failure_msg,
+            error_msg=config.test.error_msg,
             max_score=score,
         )
         return AgaTestCase(self, golden, under_test, metadata)
@@ -134,22 +158,22 @@ class _TestInputs(TestCase):
             f"Got {repr(got)} instead."
         )
 
-    def _args_repr(self) -> str:
-        return ",".join(repr(x) for x in self._args)
+    def _args_repr(self, sep: str) -> str:
+        return sep.join(repr(x) for x in self._args)
 
-    def _kwargs_repr(self) -> str:
+    def _kwargs_repr(self, sep: str) -> str:
         # we use k instead of repr(k) so we don't get quotes around it
-        return ",".join(k + "=" + repr(v) for k, v in self._kwargs.items())
+        return sep.join(k + "=" + repr(v) for k, v in self._kwargs.items())
 
-    @staticmethod
-    def _repr_sep(args_repr: str, kwargs_repr: str) -> str:
-        """Return ',' if both exist, '' otherwise."""
-        return args_repr and kwargs_repr and "," or ""
+    def _sep(self, sep: str) -> str:
+        """Return sep if both exist, "" otherwise."""
+        assert sep == ","
+        return self._args and self._kwargs and sep or ""
 
     def __repr__(self) -> str:
-        args_repr = self._args_repr()
-        kwargs_repr = self._kwargs_repr()
-        sep = self._repr_sep(args_repr, kwargs_repr)
+        args_repr = self._args_repr(",")
+        kwargs_repr = self._kwargs_repr(",")
+        sep = self._sep(",")
 
         return args_repr + sep + kwargs_repr
 
@@ -193,6 +217,7 @@ class _TestInputGroup:
         golden: Callable[..., Output],
         under_test: Callable[..., Output],
         group_score: float,
+        config: AgaConfig,
     ) -> TestSuite:
         """Generate a test suite from all the test cases for this group."""
         suite = TestSuite([])
@@ -201,7 +226,7 @@ class _TestInputGroup:
         scores = compute_scores(score_infos, group_score)
 
         for (score, case) in zip(scores, self._test_cases):
-            suite.addTest(case.generate_test_case(golden, under_test, score))
+            suite.addTest(case.generate_test_case(golden, under_test, score, config))
 
         return suite
 
@@ -280,7 +305,9 @@ class Problem(Generic[Output]):
         scores = compute_scores(score_infos, total_score)
 
         for (score, grp) in zip(scores, groups):
-            suite.addTest(grp.generate_test_suite(self._golden, under_test, score))
+            suite.addTest(
+                grp.generate_test_suite(self._golden, under_test, score, self._config)
+            )
 
         return suite
 

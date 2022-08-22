@@ -7,12 +7,22 @@ from dacite import from_dict  # type: ignore
 
 
 @dataclass
-class AgaUiConfig:
-    """Aga's UI-related configuration."""
+class AgaTestConfig:
+    """Aga's test-related configuration."""
 
-    test_name_fmt: str = "Test on {args}{kwargs}."
+    name_sep: str = ","
+    name_fmt: str = "Test on {args}{sep}{kwargs}."
+    failure_msg: str = (
+        "Your submission didn't give the output we expected. "
+        "We checked it with {input} and got {output}, but we expected {expected}."
+    )
 
-    def update_weak(self, other: "AgaUiConfig") -> None:
+    error_msg: str = (
+        "A python {type} occured while running your submission: "
+        "{message}.\n\nHere's what was running when it happened:{traceback}."
+    )
+
+    def update_weak(self, other: "AgaTestConfig") -> None:
         """Update all default attributes of self to match other."""
         # iterate over all the fields of the dataclass, checking them against the
         # default value, and updating them to the other value if they match the default
@@ -26,11 +36,11 @@ class AgaUiConfig:
 class AgaConfig:
     """Aga's configuration."""
 
-    ui: AgaUiConfig = field(default_factory=AgaUiConfig)
+    test: AgaTestConfig = field(default_factory=AgaTestConfig)
 
     def update_weak(self, other: "AgaConfig") -> None:
         """Update all default attributes of self to match other."""
-        self.ui.update_weak(other.ui)
+        self.test.update_weak(other.test)
 
 
 def load_config_from_path(path: str) -> AgaConfig:
