@@ -1,4 +1,6 @@
-# aga
+<div align="center">
+
+# aga grades assignments
 
 [![tests](https://github.com/nihilistkitten/aga/workflows/tests/badge.svg)](https://github.com/nihilistkitten/aga/actions?workflow=tests)
 [![lints](https://github.com/nihilistkitten/aga/workflows/lints/badge.svg)](https://github.com/nihilistkitten/aga/actions?workflow=lints)
@@ -6,6 +8,8 @@
 [![PyPI](https://img.shields.io/pypi/v/aga.svg)](https://pypi.org/project/aga/)
 [![Read the Docs](https://readthedocs.org/projects/aga/badge/)](https://aga.readthedocs.io/)
 [![License](https://img.shields.io/github/license/nihilistkitten/aga)](https://choosealicense.com/licenses/mit/)
+
+</div>
 
 **aga** (aga grades assignments) is a tool for easily producing autograders for python programming assignments, originally developed for Reed College's CS1 course.
 
