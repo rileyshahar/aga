@@ -28,6 +28,10 @@ class NoMatchingSymbol(InvalidSubmissionError, AttributeError):
 class SubmissionSyntaxError(InvalidSubmissionError, SyntaxError):
     """The submission held an invalid syntax."""
 
+    def __init__(self, file: str):
+        super().__init__()
+        self.file = file
+
 
 def _load_source_from_path(path: str, name: str = "module") -> Any:
     """Load the python source file found at path, absolute or relative, as a module.
@@ -49,7 +53,7 @@ def _load_source_from_path(path: str, name: str = "module") -> Any:
     try:
         spec.loader.exec_module(mod)  # type: ignore
     except (SyntaxError, NameError) as err:
-        raise SubmissionSyntaxError from err  # group all parse errors
+        raise SubmissionSyntaxError(path) from err  # group all parse errors
 
     return mod
 
@@ -98,8 +102,8 @@ def load_symbol_from_dir(path: str, symbol: str) -> Any:
         try:
             file_path = pathjoin(path, file)
             matching_symbols.append(load_symbol_from_path(file_path, symbol))
-        except (FileNotFoundError, AttributeError, SyntaxError):
-            continue
+        except (FileNotFoundError, NoMatchingSymbol):
+            pass
 
     if len(matching_symbols) > 1:
         raise TooManyMatchingSymbols

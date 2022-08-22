@@ -1,38 +1,22 @@
 """Tests for the gradescope main file."""
 
 import json
-import os
 from os.path import dirname
 from os.path import join as pathjoin
 from pathlib import Path
-from typing import Any, Iterable, TypeVar
+from typing import Any, TypeVar
 
 import pytest
 from pytest_mock import MockerFixture
 
+from aga import problem as agaproblem
 from aga.core import Problem
-from aga.gradescope import into_gradescope_zip
 from aga.gradescope.main import gradescope_main
 
 Output = TypeVar("Output")
 
 # location of resources file, for testing imports
 RESOURCES_DIR = "aga.gradescope.resources"
-
-
-@pytest.fixture(name="gradescope_zip")
-def fixture_gradescope_zip(
-    valid_problem: Problem[Output],
-) -> Iterable[tuple[Problem[Output], str]]:
-    """Construct a zip from a problem, returning the problem and the zip path."""
-
-    zip_path = into_gradescope_zip(valid_problem.name(), [valid_problem])
-
-    # when you yield from a pytest fixture, it runs the test immediately, and then
-    # returns to the fixture for cleanup
-    yield (valid_problem, zip_path)
-
-    os.remove(zip_path)
 
 
 def get_gs_json(
@@ -356,3 +340,85 @@ def test_json_diff_kwarg_custom_generator(
         "Test on 0,y=1.",
         "Test on 1,y=1.",
     }
+
+
+def test_json_invalid_source(
+    square: Problem[int],
+    source_invalid: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the error message is correct."""
+    gs_json = get_gs_json(
+        square,
+        source_invalid,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    assert gs_json["score"] == 0.0
+    assert "invalid syntax" in gs_json["output"]
+    assert (
+        "Looks like there's a python error in your code that prevented "
+        "us from running tests: " in gs_json["output"]
+    )
+    assert (
+        "Please fix this error, test your code again, and then resubmit."
+        in gs_json["output"]
+    )
+
+
+def test_json_no_matching_symbol(
+    diff: Problem[int],
+    source_dir: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the error message is correct."""
+    # source_dir has no solution for diff, so this should error
+    gs_json = get_gs_json(
+        diff,
+        # we join square.py because get_gs_json calls dirname
+        pathjoin(source_dir, "square.py"),
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    assert gs_json["score"] == 0.0
+    assert gs_json["output"] == (
+        "It looks like you didn't include the right object; we were looking for "
+        "something named `difference`. Please resumbit with the correct name."
+    )
+
+
+def test_json_too_many_matching_symbols(
+    source_dir: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the error message is correct."""
+    # source_dir has no solution for diff, so this should error
+    @agaproblem()
+    def duplicate() -> None:
+        """Mock problem because we want to expect this name."""
+
+    gs_json = get_gs_json(
+        duplicate,
+        # we join square.py because get_gs_json calls dirname
+        pathjoin(source_dir, "square.py"),
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    assert gs_json["score"] == 0.0
+    assert gs_json["output"] == (
+        "It looks like multiple files you submitted have objects named `duplicate`; "
+        "unfortunately, we can't figure out which one is supposed to be the real "
+        "submission. Please remove all but one of them and resumbit."
+    )

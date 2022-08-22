@@ -4,7 +4,7 @@ The design of this module is inspire by gradescope_utils's JSONTestRunner, but t
 complete rewrite.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, List, Optional, TextIO
 from unittest import TestResult, TestSuite
 
@@ -69,7 +69,7 @@ class GradescopeJson:
         Whether to show stdout for the tests. Same options as for visibility.
     """
 
-    tests: List[GradescopeTestJson]
+    tests: List[GradescopeTestJson] = field(default_factory=list)
     score: Optional[float] = None
     execution_time: Optional[int] = None
     output: Optional[str] = None
@@ -87,7 +87,7 @@ class _GradescopeTestResult(TestResult):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._json = GradescopeJson(tests=[])
+        self._json = GradescopeJson()
 
     @staticmethod
     def _visibility_string(hidden: bool) -> str:

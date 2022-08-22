@@ -259,6 +259,10 @@ class Problem(Generic[Output]):
         self._groups.append(grp)
         self._ungrouped_tests = []
 
+    def config(self) -> AgaConfig:
+        """Get access to the problem's config."""
+        return self._config
+
     def check(self) -> None:
         """Check that the problem is correct.
 
