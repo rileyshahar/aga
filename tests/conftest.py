@@ -14,6 +14,15 @@ from aga import group, problem, test_case, test_cases
 from aga.config import AgaConfig, load_config_from_path
 from aga.core import Problem
 
+SOURCE_SQUARE_PROBLEM = """
+from aga import problem, test_case
+
+@test_case(2)
+@problem()
+def square(x: int) -> int:
+    return x * x
+"""
+
 SOURCE_SQUARE = """
 def square(x: int) -> int:
     return x * x
@@ -135,6 +144,12 @@ def fixture_source_square_wrong_on_zero(tmp_path: Path) -> str:
 def fixture_source_diff(tmp_path: Path) -> str:
     """Generate a source file with SOURCE_DIFF, returning its path."""
     return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_DIFF)
+
+
+@pytest.fixture(name="source_square_problem")
+def fixture_source_square_problem(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SQUARE_PROBLEM, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_PROBLEM)
 
 
 @pytest.fixture(name="source_dir")

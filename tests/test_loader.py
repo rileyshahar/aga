@@ -12,6 +12,7 @@ from aga.loader import (
     SubmissionSyntaxError,
     TooManyMatchingSymbols,
     load_problem,
+    load_problems_from_path,
     load_symbol_from_dir,
     load_symbol_from_path,
 )
@@ -89,3 +90,12 @@ def test_load_problem(tmp_path: str, square: Problem[int]) -> None:
 
     square_loaded: Problem[int] = load_problem(tmp_path, "problem.pckl")
     square_loaded.check()  # pylint: disable=no-member
+
+
+def test_load_problems(source_square_problem: str) -> None:
+    """Test that load_problem loads square correctly."""
+
+    square_loaded: list[Problem[int]] = list(
+        load_problems_from_path(source_square_problem)
+    )
+    square_loaded[0].check()  # pylint: disable=no-member

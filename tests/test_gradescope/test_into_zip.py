@@ -57,7 +57,7 @@ def test_into_gradescope_zip_source(
         for (name, module) in getmembers(aga, ismodule):
             # don't check gradescope because it's a subdirectory and I'm too lazy to
             # write special handling or recursion right now
-            if name != "gradescope":
+            if name not in ("gradescope", "cli"):
                 with zip_f.open(pathjoin("aga", name + ".py")) as src:
                     unzipped_core_source = src.read()
                     core_source = bytes(getsource(module), "UTF-8")

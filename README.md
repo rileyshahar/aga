@@ -47,7 +47,7 @@ def square(x: int) -> int:
     return x * x
 ```
 
-Then run `aga gen square` from the directory with `square.py`. This will generate a ZIP file suitable for upload to Gradescope.
+Then run `aga gen square.py` from the directory with `square.py`. This will generate a ZIP file suitable for upload to Gradescope.
 
 ## Usage
 
@@ -58,7 +58,7 @@ To use aga:
 1. Write a golden solution to some programming problem.
 2. Decorate this solution with the `problem` decorator.
 3. Decorate this problem with any number of `test_case` decorators, which take arbitrary positional or keyword arguments and pass them verbatim to the golden and submitted functions.
-4. Generate the autograder using the CLI: `aga gen <function_name>`.
+4. Generate the autograder using the CLI: `aga gen <file_name>`.
 
 The `test_case` decorator may optionally take a special keyword argument called `aga_expect`. This allows easy testing of the golden solution: aga will not successfully produce an autograder unless the golden solution's output matches the `aga_expect`. You should use these as sanity checks to ensure your golden solution is implemented correctly.
 

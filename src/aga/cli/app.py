@@ -1,13 +1,14 @@
-"""Contains the command-line interface."""
+"""The main command-line typer application."""
 
 from typing import Iterable, Optional, Tuple
+from unittest import TextTestRunner
 
 import typer
 
-from .config import AgaConfig, load_config_from_path
-from .core import Output, Problem
-from .gradescope import into_gradescope_zip
-from .loader import NoMatchingSymbol, TooManyMatchingSymbols, load_symbol_from_dir
+from ..config import AgaConfig, load_config_from_path
+from ..core import Output, Problem
+from ..gradescope import into_gradescope_zip
+from ..loader import load_problems_from_path, load_symbol_from_path
 
 app = typer.Typer()
 
@@ -42,24 +43,26 @@ def _load_config(path: str = "aga.toml") -> AgaConfig:
     return config
 
 
-def _load_problem(name: str, config: AgaConfig) -> Problem[Output]:
+def _load_problem(path: str, config: AgaConfig) -> Problem[Output]:
     """Load a problem from the top-level directory."""
-    try:
-        problem = load_symbol_from_dir(".", name)  # type: Problem[Output]
-        problem.update_config_weak(config)
-        return problem
+    problems = list(load_problems_from_path(path))
 
-    except NoMatchingSymbol as err:
-        typer.echo(f"problem not found: {name}", err=True)
-        raise typer.Exit(1) from err
-    except TooManyMatchingSymbols as err:
-        typer.echo(f"multiple matching problems: {name}", err=True)
-        raise typer.Exit(1) from err
+    if not problems:
+        typer.echo(f"No problems found at {path}.", err=True)
+        raise typer.Exit(1)
 
+    if len(problems) > 1:
+        typer.echo(
+            f"Multiple problems found in {path}. "
+            "Currently, only one problem is supported per file.",
+            err=True,
+        )
+        raise typer.Exit(1)
 
-# def _process_frontend(frontend: str) -> None:
-#     if frontend not in (f[0] for f in FRONTENDS):
-#         _handle_invalid_frontend(frontend)
+    problem = problems[0]
+    problem.update_config_weak(config)
+
+    return problem
 
 
 def _handle_invalid_frontend(frontend: str) -> None:
@@ -70,8 +73,9 @@ def _handle_invalid_frontend(frontend: str) -> None:
 
 @app.command()
 def gen(
-    problem_name: str = typer.Argument(
-        ..., help='The problem to generate (see "problem discovery" in the CLI docs).'
+    source: str = typer.Argument(
+        ...,
+        help="The file with the problem to generate.",
     ),
     frontend: str = typer.Option(
         "gradescope",
@@ -92,7 +96,7 @@ def gen(
 ) -> None:
     """Generate an autograder file for a problem."""
     config = _load_config(config_file)
-    problem = _load_problem(problem_name, config)  # type: ignore
+    problem = _load_problem(source, config)  # type: ignore
 
     if frontend == "gradescope":
         _gen_gradescope(problem, output)
@@ -102,8 +106,9 @@ def gen(
 
 @app.command()
 def check(
-    problem_name: str = typer.Argument(
-        ..., help='The problem to check (see "problem discovery" in the CLI docs).'
+    source: str = typer.Argument(
+        ...,
+        help="The problem to check.",
     ),
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
@@ -111,7 +116,7 @@ def check(
 ) -> None:
     """Check a problem against test cases with an `aga_expect`."""
     config = _load_config(config_file)
-    problem = _load_problem(problem_name, config)  # type: ignore
+    problem = _load_problem(source, config)  # type: ignore
 
     try:
         problem.check()
@@ -121,6 +126,28 @@ def check(
     else:
         typer.echo(f"{problem.name()} passed golden tests.")
         raise typer.Exit()
+
+
+@app.command()
+def run(
+    source: str = typer.Argument(
+        ...,
+        help="The problem to run.",
+    ),
+    submission: str = typer.Argument(
+        ..., help="The file containing the student submission."
+    ),
+    config_file: str = typer.Option(
+        "aga.toml", "--config", "-c", help="The path to the aga config file."
+    ),
+) -> None:
+    """Run the autograder on an example submission."""
+    config = _load_config(config_file)
+    problem: Problem = _load_problem(source, config)  # type: ignore
+    under_test = load_symbol_from_path(submission, problem.expected_symbol())
+
+    suite = problem.generate_test_suite(under_test, 1.0)
+    TextTestRunner().run(suite)
 
 
 click_object = typer.main.get_command(app)  # exposed for documentation

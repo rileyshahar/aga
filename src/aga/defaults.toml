@@ -30,3 +30,33 @@ failure_msg = "Your submission didn't give the output we expected. We checked it
 #  - `output`: message: the error message.
 #  - `expected`: traceback: the error traceback.
 error_msg = "A python {type} occured while running your submission: {message}.\n\nHere's what was running when it happened:{traceback}."
+
+[submission]
+# Configuration related to student submissions.
+
+# The message to show on errors that prevented the submission from being run.
+#
+# Supported format specifiers:
+#  - `message`: the error message.
+import_error_msg = "Looks like there's a python error in your code that prevented us from running tests: {message}. Please fix this error, test your code again, and then resubmit."
+
+# The message to show if there's no symbol with the right name located.
+#
+# Supported format specifiers:
+#  - `name`: the expected symbol name.
+no_match_msg = "It looks like you didn't include the right object; we were looking for something named `{name}`. Please resumbit with the correct name."
+
+# The message to show if there's multiple symbols matching the expected name, i.e. in multiple submitted files.
+#
+# Supported format specifiers:
+#  - `name`: the expected symbol name.
+too_many_matches_msg = "It looks like multiple files you submitted have objects named `{name}`; unfortunately, we can't figure out which one is supposed to be the real submission. Please remove all but one of them and resumbit."
+
+# The global message to show if any tests failed.
+failed_tests_msg = "Good work, but it looks like some tests failed; take a look and see if you can fix them!"
+
+# The global message to show if any hidden tests failed.
+failed_hidden_tests_msg = "Some of those tests were hidden tests, for which you won't know the inputs. In the real world, we don't always know exactly how or why our code is failing. Try to test edge cases and see if you can find the bugs!"
+
+# The global message to show if no tests failed.
+no_failed_tests_msg = "Great work! Looks like you're passing all the tests."
