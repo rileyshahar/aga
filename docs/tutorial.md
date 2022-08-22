@@ -85,8 +85,9 @@ discussed in
 You can use a similar syntax for multiple arguments, or keyword arguments:
 
 ```python
-@test_case(2, 1, false)
-@test_case(-3, 4, false)
+@test_case(2, 1)  # defaults work as expected
+@test_case(2, 1, sign=false)
+@test_case(-3, 4, sign=false)
 @problem()
 def add_or_subtract(x: int, y: int, sign: bool = true) -> int:
     """If sign, add x and y; otherwise, subtract them."""
