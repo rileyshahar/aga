@@ -11,7 +11,7 @@
 
 </div>
 
-**aga** (aga grades assignments) is a tool for easily producing autograders for python programming assignments, originally developed for Reed College's CS1 course.
+**aga** (**a**ga **g**rades **a**ssignments) is a tool for easily producing autograders for python programming assignments, originally developed for Reed College's CS1 course.
 
 ## Motivation
 
