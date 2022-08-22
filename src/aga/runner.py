@@ -48,6 +48,10 @@ class AgaTestCaseOutput:
     output: Optional[str] = None
     hidden: bool = False
 
+    def correct(self) -> bool:
+        """Check whether the problem recieved full credit."""
+        return self.score == self.max_score
+
 
 @dataclass
 class AgaProblemOutput:
@@ -148,7 +152,7 @@ class _AgaTestResult(TestResult):
         """Build the main output string."""
         config = self._config.submission
 
-        failed_tests = [t for t in self._tests if t.score < t.max_score]
+        failed_tests = [t for t in self._tests if not t.correct()]
         if failed_tests:
             # add failed test message
             self._output_msgs.append(config.failed_tests_msg)

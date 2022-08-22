@@ -1,14 +1,15 @@
 """The main command-line typer application."""
 
 from typing import Iterable, Optional, Tuple
-from unittest import TextTestRunner
 
 import typer
 
 from ..config import AgaConfig, load_config_from_path
 from ..core import Output, Problem
 from ..gradescope import into_gradescope_zip
-from ..loader import load_problems_from_path, load_symbol_from_path
+from ..loader import load_problems_from_path
+from ..runner import load_and_run
+from .ui import print_fancy_summary
 
 app = typer.Typer()
 
@@ -140,14 +141,15 @@ def run(
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
     ),
+    points: float = typer.Option(
+        20.0, "--points", help="The total number of points for the problem."
+    ),
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
     problem: Problem = _load_problem(source, config)  # type: ignore
-    under_test = load_symbol_from_path(submission, problem.expected_symbol())
-
-    suite = problem.generate_test_suite(under_test, 1.0)
-    TextTestRunner().run(suite)
+    result = load_and_run(problem, submission, points)
+    print_fancy_summary(result)
 
 
 click_object = typer.main.get_command(app)  # exposed for documentation

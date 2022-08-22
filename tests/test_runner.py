@@ -83,7 +83,7 @@ def test_square_failure_output(
     )
     assert output.score == 0
     assert (
-        output.output == "Good work, but it looks like some tests failed; take a look "
+        output.output == "It looks like some tests failed; take a look "
         "and see if you can fix them!\n\nSome of those tests were hidden tests, for "
         "which you won't know the inputs. In the real world, we don't always know "
         "exactly how or why our code is failing. Try to test edge cases and see if you "
