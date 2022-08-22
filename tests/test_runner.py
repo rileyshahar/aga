@@ -1,9 +1,6 @@
 """Tests for the runner module."""
 
-from os.path import dirname
-
-from aga.core import Output, Problem
-from aga.loader import load_symbol_from_path
+from aga.core import Problem
 from aga.runner import AgaTestCaseOutput, load_and_run
 
 
