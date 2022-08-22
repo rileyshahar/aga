@@ -193,8 +193,8 @@ def fixture_square() -> Problem[int]:
     """Generate a problem which tests a square function."""
 
     @test_case(4)
-    @test_case(2, aga_output=4)
-    @test_case(-2, aga_output=4, aga_hidden=True)
+    @test_case(2, aga_expect=4)
+    @test_case(-2, aga_expect=4, aga_hidden=True)
     @problem()
     def square(x: int) -> int:
         """Square x."""
@@ -212,8 +212,8 @@ def fixture_square_custom_name() -> Problem[int]:
     """
 
     @test_case(4, aga_name="This is a deliberately silly name!")
-    @test_case(2, aga_output=4, aga_name="Test positive two")
-    @test_case(-2, aga_output=4, aga_hidden=True, aga_name="Test minus two")
+    @test_case(2, aga_expect=4, aga_name="Test positive two")
+    @test_case(-2, aga_expect=4, aga_hidden=True, aga_name="Test minus two")
     @problem()
     def square(x: int) -> int:
         """Square x."""
@@ -228,7 +228,7 @@ def fixture_times() -> Problem[int]:
 
     @test_case(4, 6)
     @test_case(-2, 16)
-    @test_case(2, -3, aga_hidden=True, aga_output=-6)
+    @test_case(2, -3, aga_hidden=True, aga_expect=-6)
     @problem()
     def times(x: int, y: int) -> int:
         """Compute x * y."""
@@ -242,8 +242,8 @@ def fixture_diff() -> Problem[int]:
     """Generate a problem which tests a difference function."""
 
     @test_case(17, 10)
-    @test_case(2, 4, aga_output=-2)
-    @test_case(3, 1, aga_output=2)
+    @test_case(2, 4, aga_expect=-2)
+    @test_case(3, 1, aga_expect=2)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""
@@ -257,9 +257,9 @@ def fixture_str_len() -> Problem[int]:
     """Generate a problem which tests a str length function."""
 
     @test_case("hello, world")
-    @test_case("", aga_output=0)
-    @test_case("noether", aga_output=7)
-    @test_case("14", aga_output=2)
+    @test_case("", aga_expect=0)
+    @test_case("noether", aga_expect=7)
+    @test_case("14", aga_expect=2)
     @problem()
     def str_len(s: str) -> int:
         """Find the length of s."""
@@ -278,9 +278,9 @@ def fixture_palindrome() -> Problem[bool]:
 
     @test_case("eve")
     @test_case("hello")
-    @test_case("", aga_output=True)
-    @test_case("goodbye", aga_output=False)
-    @test_case("123454321", aga_output=True)
+    @test_case("", aga_expect=True)
+    @test_case("goodbye", aga_expect=False)
+    @test_case("123454321", aga_expect=True)
     @problem(name="palindrome")
     def strpal(s: str) -> bool:
         """Determine whether s is a palindrome."""
@@ -299,9 +299,9 @@ def fixture_kwd() -> Problem[str]:
 
     @test_case(s="eve")
     @test_case(s="hello")
-    @test_case(aga_output="")
-    @test_case(s="goodbye", aga_output="goodbye")
-    @test_case(s="123454321", aga_output="123454321")
+    @test_case(aga_expect="")
+    @test_case(s="goodbye", aga_expect="goodbye")
+    @test_case(s="123454321", aga_expect="123454321")
     @problem()
     def kwd(s: str = "") -> str:
         """Return s."""
@@ -320,9 +320,9 @@ def fixture_pos_and_kwd() -> Problem[int]:
 
     @test_case(-5)
     @test_case(17, y=10)
-    @test_case(4, aga_output=4)
-    @test_case(2, y=4, aga_output=-2)
-    @test_case(3, y=1, aga_output=2)
+    @test_case(4, aga_expect=4)
+    @test_case(2, y=4, aga_expect=-2)
+    @test_case(3, y=1, aga_expect=2)
     @problem()
     def difference(x: int, y: int = 0) -> int:
         """Compute x - y."""
@@ -334,7 +334,7 @@ def fixture_pos_and_kwd() -> Problem[int]:
 @pytest.fixture(name="diff_bad_gt")
 def fixture_diff_bad_gt(diff: Problem[int]) -> Problem[int]:
     """Generate an implementation of difference with an incorrect golden test."""
-    return test_case(3, 1, aga_output=1)(diff)
+    return test_case(3, 1, aga_expect=1)(diff)
 
 
 @pytest.fixture(name="diff_bad_impl")
@@ -342,8 +342,8 @@ def fixture_diff_bad_impl() -> Problem[int]:
     """Generate a difference problem with an incorrect implementation."""
 
     @test_case(17, 10)
-    @test_case(2, 4, aga_output=-2)
-    @test_case(3, 1, aga_output=2)
+    @test_case(2, 4, aga_expect=-2)
+    @test_case(3, 1, aga_expect=2)
     @problem()
     def diff_should_fail(x: int, y: int) -> int:
         """Compute x - y."""

@@ -35,8 +35,8 @@ In `square.py` (or any python file), write:
 from aga import problem, test_case, test_cases
 
 @test_cases([-3, 100])
-@test_case(2, aga_output=4)
-@test_case(-2, aga_output=4)
+@test_case(2, aga_expect=4)
+@test_case(-2, aga_expect=4)
 @problem()
 def square(x: int) -> int:
     """Square x."""
@@ -56,7 +56,7 @@ To use aga:
 3. Decorate this problem with any number of `test_case` decorators, which take arbitrary positional or keyword arguments and pass them verbatim to the golden and submitted functions.
 4. Generate the autograder using the CLI: `aga gen <function_name>`.
 
-The `test_case` decorator may optionally take a special keyword argument called `aga_output`. This allows easy testing of the golden solution: aga will not successfully produce an autograder unless the golden solution's output matches the `aga_output`. You should use these as sanity checks to ensure your golden solution is implemented correctly.
+The `test_case` decorator may optionally take a special keyword argument called `aga_expect`. This allows easy testing of the golden solution: aga will not successfully produce an autograder unless the golden solution's output matches the `aga_expect`. You should use these as sanity checks to ensure your golden solution is implemented correctly.
 
 For more info, see the [tutorial](https://aga.readthedocs.io/en/stable/tutorial.html).
 

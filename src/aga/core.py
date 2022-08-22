@@ -350,7 +350,7 @@ def _check_reserved_keyword(kwd: str) -> None:
 
 def test_case(
     *args: Any,
-    aga_output: Optional[Any] = None,
+    aga_expect: Optional[Any] = None,
     aga_hidden: bool = False,
     aga_name: Optional[str] = None,
     aga_weight: int = 1,
@@ -363,11 +363,11 @@ def test_case(
     ----------
     args :
         The arguments to be passed to the functions under test.
-    aga_output : Optional[T]
-        If aga_output is None, the inputs will be tested against the wrapped function,
-        the "golden solution" to the problem. If aga_output is specified, the inputs
+    aga_expect : Optional[T]
+        If aga_expect is None, the inputs will be tested against the wrapped function,
+        the "golden solution" to the problem. If aga_expect is specified, the inputs
         will double as a test _of_ the golden solution; to successfully produce the
-        problem grader, the golden solution must return aga_output from the given input.
+        problem grader, the golden solution must return aga_expect from the given input.
     aga_hidden : bool
         If True, hide the problem from students on supported frontends.
     aga_name : Optional[str]
@@ -391,9 +391,9 @@ def test_case(
         _check_reserved_keyword(kwd)
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
-        if aga_output is not None:
+        if aga_expect is not None:
             case: _TestInputs = _GoldenTestInputs(
-                aga_output,
+                aga_expect,
                 *args,
                 aga_hidden=aga_hidden,
                 aga_name=aga_name,
@@ -421,7 +421,7 @@ def test_case(
 def test_cases(
     *args: Iterable[Any],
     aga_product: bool = True,
-    aga_output: Optional[Any] = None,
+    aga_expect: Optional[Any] = None,
     aga_hidden: bool = False,
     aga_name: Optional[str] = None,
     aga_weight: int = 1,
@@ -465,7 +465,7 @@ def test_cases(
             # hand; we can't capture them separately from the test case kwargs
             prob = test_case(
                 *curr_args,
-                aga_output=aga_output,
+                aga_expect=aga_expect,
                 aga_hidden=aga_hidden,
                 aga_name=aga_name,
                 aga_weight=aga_weight,

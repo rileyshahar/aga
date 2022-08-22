@@ -106,7 +106,7 @@ will also be good test cases for student submissions, hence the following
 syntax:
 
 ```python
-@test_case(2, aga_output = 4)
+@test_case(2, aga_expect = 4)
 @problem()
 def square(x: int) -> int:
     """Square x."""
@@ -118,7 +118,7 @@ Note that we prefix all keyword arguments to the `test_case` decorator with
 keyword arguments.
 
 If you run `aga check square`, it will run all golden tests (i.e., all test
-cases with declared `aga_output`), displaying any which fail. This also happens
+cases with declared `aga_expect`), displaying any which fail. This also happens
 by default when you run `aga gen square`, so you don't accidentally upload a
 golden solution which fails unit testing.
 
@@ -131,7 +131,7 @@ and we want the `2` test case to be worth 15 and the `-2` to be worth 5, we can
 do this:
 
 ```python
-@test_case(2, aga_output = 4, aga_weight = 3)
+@test_case(2, aga_expect = 4, aga_weight = 3)
 @problem()
 def square(x: int) -> int:
     """Square x."""
@@ -141,7 +141,7 @@ def square(x: int) -> int:
 It is also possible to directly control the value of test cases:
 
 ```python
-@test_case(2, aga_output = 4, aga_weight = 0, aga_value = 15)
+@test_case(2, aga_expect = 4, aga_weight = 0, aga_value = 15)
 @problem()
 def square(x: int) -> int:
     """Square x."""

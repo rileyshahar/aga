@@ -89,7 +89,7 @@ def check(
         ..., help='The problem to check (see "problem discovery" in the CLI docs).'
     ),
 ) -> None:
-    """Check a problem against test cases with an `aga_output`."""
+    """Check a problem against test cases with an `aga_expect`."""
     problem = _load_problem(problem_name)  # type: ignore
 
     try:
