@@ -1,8 +1,7 @@
 # This file contains all the default configuration options.
 
 [test]
-# Configuration related to student-facing UI, i.e. the messages displayed to them in the
-# frontend.
+# Configuration related to formatting and execution of test cases.
 
 # The separator for test case name generation.
 name_sep = ","
@@ -24,7 +23,7 @@ name_fmt = "Test on {args}{sep}{kwargs}."
 #  - `expected`: the repr of the golden solution's output.
 failure_msg = "Your submission didn't give the output we expected. We checked it with {input} and got {output}, but we expected {expected}."
 
-# The format string for generating failure messages.
+# The format string for generating error messages.
 #
 # Supported format specifiers:
 #  - `type`: the kind of python error, e.g. NameError.
