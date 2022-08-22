@@ -1,7 +1,7 @@
 # Command-Line Interface
 
 The command-line interface allows checking (via test cases with provided
-`aga_output`) the validity of golden solutions, as well as generating the
+`aga_expect`) the validity of golden solutions, as well as generating the
 autograder file from a problem.
 
 ## Problem Discovery
@@ -12,4 +12,4 @@ are found, an error will be raised. A more nuanced (type-sensitive,
 directory-recursive) discovery algotirhm is on the roadmap, but has not yet been
 implemented.
 
-```{eval-rst} .. click:: aga.cli:click_object :prog: aga :nested: full ```
+`{eval-rst} .. click:: aga.cli:click_object :prog: aga :nested: full `

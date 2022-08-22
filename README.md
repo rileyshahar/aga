@@ -14,7 +14,7 @@
 Unlike traditional software testing, where there is likely no _a priori_ known-correct implementation, there is always such an implementation (or one can be easily written by course staff) in homework grading. Therefore, applying traditional software testing frameworks to homework grading is limited. Relying on reference implementations (what aga calls _golden solutions_) has several benefits:
 
 1. Reliability: having a reference solution gives a second layer of confirmation for the correctness of expected outputs. Aga supports _golden tests_, which function as traditional unit tests of the golden solution.
-2. Test case generation: many complex test cases can easily be generated via the reference solution, instead of needing to work out the expected output by hand. Aga supports generating test cases from inputs without explcitly referring to an expected output, and [will support](https://github.com/nihilistkitten/aga/issues/8) collecting test cases from python generators.
+2. Test case generation: many complex test cases can easily be generated via the reference solution, instead of needing to work out the expected output by hand. Aga supports generating test cases from inputs without explcitly referring to an expected output, and supports collecting test cases from python generators.
 3. Property testing: unit testing libraries like [hypothesis](https://hypothesis.readthedocs.io) allow testing large sets of arbitrary inputs for certain properties, and identifying simple inputs which reproduce violations of those properties. This is traditionally unreliable, because identifying specific properties to test is difficult. In homework grading, the property can simply be "the input matches the golden solution's output." Support for hypothesis is a [long-term goal](https://github.com/nihilistkitten/aga/issues/32) of aga.
 
 ## Installation
@@ -27,18 +27,16 @@ pip install aga
 
 or with the python dependency manager of your choice (I like [poetry](https://github.com/python-poetry/poetry)).
 
-## Quickstart
+## Example
 
 In `square.py` (or any python file), write:
 
 ```python
-from aga import problem, test_case
+from aga import problem, test_case, test_cases
 
-
-@test_case(-3)
-@test_case(100)
-@test_case(2, aga_output=4)
-@test_case(-2, aga_output=4)
+@test_cases([-3, 100])
+@test_case(2, aga_expect=4)
+@test_case(-2, aga_expect=4)
 @problem()
 def square(x: int) -> int:
     """Square x."""
@@ -46,8 +44,6 @@ def square(x: int) -> int:
 ```
 
 Then run `aga gen square` from the directory with `square.py`. This will generate a ZIP file suitable for upload to Gradescope.
-
-For more info, see the [tutorial](https://aga.readthedocs.io/en/stable/tutorial.html).
 
 ## Usage
 
@@ -60,7 +56,9 @@ To use aga:
 3. Decorate this problem with any number of `test_case` decorators, which take arbitrary positional or keyword arguments and pass them verbatim to the golden and submitted functions.
 4. Generate the autograder using the CLI: `aga gen <function_name>`.
 
-The `test_case` decorator may optionally take a special keyword argument called `aga_output`. This allows easy testing of the golden solution: aga will not successfully produce an autograder unless the golden solution's output matches the `aga_output`. You should use these as sanity checks to ensure your golden solution is implemented correctly.
+The `test_case` decorator may optionally take a special keyword argument called `aga_expect`. This allows easy testing of the golden solution: aga will not successfully produce an autograder unless the golden solution's output matches the `aga_expect`. You should use these as sanity checks to ensure your golden solution is implemented correctly.
+
+For more info, see the [tutorial](https://aga.readthedocs.io/en/stable/tutorial.html).
 
 For complete documentation, including configuring problem and test case metadata, see the [API reference](https://aga.readthedocs.io/en/stable/reference.html).
 

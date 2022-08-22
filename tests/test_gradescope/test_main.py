@@ -215,3 +215,143 @@ def test_json_test_score_square_grouped(
     # we have a total score of 20 and are wrong only for x=0, which has total score 12,
     # so the final score should be 8
     assert gs_json["score"] == 8
+
+
+def test_json_square_generated_cases(
+    square_generated_cases: Problem[int],
+    source_square_wrong_on_zero: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    gs_json = get_gs_json(
+        square_generated_cases,
+        source_square_wrong_on_zero,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # there should
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+        "Test on -2",
+        "Test on -1",
+        "Test on 0",
+        "Test on 1",
+        "Test on 2",
+    }
+
+
+def test_json_diff_generated_cases(
+    diff_generated: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    gs_json = get_gs_json(
+        diff_generated,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # there should
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+        "Test on -1,-1",
+        "Test on 0,-1",
+        "Test on 1,-1",
+        "Test on -1,0",
+        "Test on 0,0",
+        "Test on 1,0",
+        "Test on -1,1",
+        "Test on 0,1",
+        "Test on 1,1",
+    }
+
+
+def test_json_diff_kwarg_generated_cases_no_product(
+    pos_and_kwd_zip: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    gs_json = get_gs_json(
+        pos_and_kwd_zip,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # there should
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+        "Test on -1,y=-1",
+        "Test on 0,y=0",
+        "Test on 1,y=1",
+    }
+
+
+def test_json_diff_kwarg_generated_cases(
+    pos_and_kwd_generated: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    gs_json = get_gs_json(
+        pos_and_kwd_generated,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # there should
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+        "Test on -1,y=-1",
+        "Test on 0,y=-1",
+        "Test on 1,y=-1",
+        "Test on -1,y=0",
+        "Test on 0,y=0",
+        "Test on 1,y=0",
+        "Test on -1,y=1",
+        "Test on 0,y=1",
+        "Test on 1,y=1",
+    }
+
+
+def test_json_diff_kwarg_custom_generator(
+    pos_and_kwd_generator_function: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    gs_json = get_gs_json(
+        pos_and_kwd_generator_function,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    # there should
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+        "Test on -1,y=-1",
+        "Test on 0,y=-1",
+        "Test on 1,y=-1",
+        "Test on -1,y=0",
+        "Test on 0,y=0",
+        "Test on 1,y=0",
+        "Test on -1,y=1",
+        "Test on 0,y=1",
+        "Test on 1,y=1",
+    }
