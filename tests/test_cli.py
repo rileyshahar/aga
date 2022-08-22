@@ -7,7 +7,8 @@ import pytest
 from pytest_mock import MockerFixture
 from typer.testing import CliRunner
 
-from aga.cli import FRONTENDS, app, complete_frontend
+from aga.cli import aga_app
+from aga.cli.app import FRONTENDS, complete_frontend
 from aga.core import Problem
 from aga.loader import NoMatchingSymbol, TooManyMatchingSymbols
 
@@ -19,13 +20,13 @@ runner = CliRunner(mix_stderr=False)
 @pytest.fixture(name="mocked_lsfd")
 def fixture_mocked_lsfd(mocker: MockerFixture) -> MagicMock:
     """Generate a mocked `load_symbol_from_dir`."""
-    return mocker.patch("aga.cli.load_symbol_from_dir")
+    return mocker.patch("aga.cli.app.load_symbol_from_dir")
 
 
 @pytest.fixture(name="mocked_igz")
 def fixture_mocked_igz(mocker: MockerFixture) -> MagicMock:
     """Generate a mocked `into_gradescope_zip`."""
-    return mocker.patch("aga.cli.into_gradescope_zip")
+    return mocker.patch("aga.cli.app.into_gradescope_zip")
 
 
 def test_gen_gradescope(
@@ -35,7 +36,7 @@ def test_gen_gradescope(
     mocked_lsfd.return_value = square
     mocked_igz.return_value = "square.zip"
 
-    result = runner.invoke(app, ["gen", "square"])
+    result = runner.invoke(aga_app, ["gen", "square"])
 
     mocked_lsfd.assert_called_once()
     mocked_igz.assert_called_once()
@@ -47,7 +48,7 @@ def test_gen_gradescope(
 def test_gen_gradescope_no_match(mocked_lsfd: MagicMock, mocked_igz: MagicMock) -> None:
     """Test that gen_gradescope errors with no matching symbol."""
     mocked_lsfd.side_effect = NoMatchingSymbol
-    result = runner.invoke(app, ["gen", "square"])
+    result = runner.invoke(aga_app, ["gen", "square"])
 
     mocked_lsfd.assert_called_once()
     mocked_igz.assert_not_called()
@@ -61,7 +62,7 @@ def test_gen_gradescope_multiple_matches(
 ) -> None:
     """Test that gen_gradescope errors with multiple matching symbols."""
     mocked_lsfd.side_effect = TooManyMatchingSymbols
-    result = runner.invoke(app, ["gen", "square"])
+    result = runner.invoke(aga_app, ["gen", "square"])
 
     mocked_lsfd.assert_called_once()
     mocked_igz.assert_not_called()
@@ -72,7 +73,7 @@ def test_gen_gradescope_multiple_matches(
 
 def test_gen_invalid_frontend(mocked_lsfd: MagicMock, mocked_igz: MagicMock) -> None:
     """Test that gen_gradescope errors with multiple matching symbols."""
-    result = runner.invoke(app, ["gen", "square", "--frontend", "doesnt-exist"])
+    result = runner.invoke(aga_app, ["gen", "square", "--frontend", "doesnt-exist"])
 
     mocked_lsfd.assert_called_once()
     mocked_igz.assert_not_called()
@@ -87,7 +88,7 @@ def test_check_valid_problem(
     """Test that check succeeds with a valid problem."""
     mocked_lsfd.return_value = valid_problem
 
-    result = runner.invoke(app, ["check", valid_problem.name()])
+    result = runner.invoke(aga_app, ["check", valid_problem.name()])
 
     mocked_lsfd.assert_called_once()
 
@@ -101,7 +102,7 @@ def test_check_invalid_problem(
     """Test that check fails with an invalid problem."""
     mocked_lsfd.return_value = diff_bad_gt
 
-    result = runner.invoke(app, ["check", diff_bad_gt.name()])
+    result = runner.invoke(aga_app, ["check", diff_bad_gt.name()])
 
     mocked_lsfd.assert_called_once()
 

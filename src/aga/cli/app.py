@@ -1,15 +1,15 @@
-"""Contains the command-line interface."""
+"""The main command-line typer application."""
 
 from typing import Iterable, Optional, Tuple
 
 import typer
 
-from .config import AgaConfig, load_config_from_path
-from .core import Output, Problem
-from .gradescope import into_gradescope_zip
-from .loader import NoMatchingSymbol, TooManyMatchingSymbols, load_symbol_from_dir
+from ..config import AgaConfig, load_config_from_path
+from ..core import Output, Problem
+from ..gradescope import into_gradescope_zip
+from ..loader import NoMatchingSymbol, TooManyMatchingSymbols, load_symbol_from_dir
 
-app = typer.Typer()
+aga_app = typer.Typer()
 
 FRONTENDS = (
     (
@@ -68,7 +68,7 @@ def _handle_invalid_frontend(frontend: str) -> None:
     raise typer.Exit(1)
 
 
-@app.command()
+@aga_app.command()
 def gen(
     problem_name: str = typer.Argument(
         ..., help='The problem to generate (see "problem discovery" in the CLI docs).'
@@ -100,7 +100,7 @@ def gen(
         _handle_invalid_frontend(frontend)
 
 
-@app.command()
+@aga_app.command()
 def check(
     problem_name: str = typer.Argument(
         ..., help='The problem to check (see "problem discovery" in the CLI docs).'
@@ -123,4 +123,4 @@ def check(
         raise typer.Exit()
 
 
-click_object = typer.main.get_command(app)  # exposed for documentation
+click_object = typer.main.get_command(aga_app)  # exposed for documentation
