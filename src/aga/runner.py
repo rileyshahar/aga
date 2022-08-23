@@ -110,7 +110,7 @@ class _AgaTestResult(TestResult):
     def _err_data(self, test: AgaTestCase, err) -> AgaTestCaseOutput:  # type: ignore
         """Construct the test json schema for an error."""
         data = self._test_data(test)
-        data.output = test.metadata().error_msg.format(
+        data.output = test.metadata().config.error_msg.format(
             type=err[0].__name__,
             message=err[1],
             traceback=limited_traceback(err[2]),

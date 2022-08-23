@@ -21,15 +21,29 @@ name_fmt = "Test on {args}{sep}{kwargs}."
 #  - `input`: a formatted repr of the test case inputs.
 #  - `output`: the repr of the student submission's output.
 #  - `expected`: the repr of the golden solution's output.
-failure_msg = "Your submission didn't give the output we expected. We checked it with {input} and got {output}, but we expected {expected}."
+#  - `diff` if a diff is available (i.e. the output is a string), a text diff.
+#  - `diff_explanation`: if a diff is available, the value of diff_explanation_msg, else empty.
+failure_msg = "Your submission didn't give the output we expected. We checked it with {input} and got {output}, but we expected {expected}.{diff_explanation}{diff}"
 
 # The format string for generating error messages.
 #
 # Supported format specifiers:
 #  - `type`: the kind of python error, e.g. NameError.
-#  - `output`: message: the error message.
-#  - `expected`: traceback: the error traceback.
+#  - `message`: the error message.
+#  - `traceback`: the error traceback.
 error_msg = "A python {type} occured while running your submission: {message}.\n\nHere's what was running when it happened:{traceback}."
+
+# The message to print if `check_stdout` is true and the stdouts differ.
+# 
+# Supported format specifiers:
+#  - `input`: a formatted repr of the test case inputs.
+#  - `output`: the repr of the student submission's output.
+#  - `expected`: the repr of the golden solution's output.
+#  - `diff` a text diff.
+#  - `diff_explanation`: the value of diff_explanation_msg.
+stdout_differ_msg = "Your submission printed something different from what we expected. We checked it with {input}.{diff_explanation}{diff}"
+
+diff_explanation_msg = "\n\nHere's a detailed look at the difference between the strings. Lines starting with `-` are what we got from you, lines starting with `+` are what we expected, and `_`s in lines starting with `?` denote characters that are different. Be wary for spaces, which don't show up well in this format.\n\n"
 
 [submission]
 # Configuration related to student submissions.
@@ -60,3 +74,9 @@ failed_hidden_tests_msg = "Some of those tests were hidden tests, for which you 
 
 # The global message to show if no tests failed.
 no_failed_tests_msg = "Great work! Looks like you're passing all the tests."
+
+[problem]
+# Configration for problem settings.
+
+# If true, check that the stdout of the problem and submission both match.
+check_stdout = false

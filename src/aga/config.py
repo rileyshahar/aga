@@ -15,12 +15,15 @@ class AgaTestConfig:
     name_fmt: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.name_fmt)
     failure_msg: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.failure_msg)
     error_msg: str = field(default_factory=lambda: _DEFAULT_CONFIG.test.error_msg)
+    stdout_differ_msg: str = field(
+        default_factory=lambda: _DEFAULT_CONFIG.test.stdout_differ_msg
+    )
+    diff_explanation_msg: str = field(
+        default_factory=lambda: _DEFAULT_CONFIG.test.diff_explanation_msg
+    )
 
     def update_weak(self, other: "AgaTestConfig") -> None:
         """Update all default attributes of self to match other."""
-        # iterate over all the fields of the dataclass, checking them against the
-        # default value, and updating them to the other value if they match the default
-        # value
         _update_weak_leaf(self, other)
 
 
@@ -51,17 +54,20 @@ class AgaSubmissionConfig:
 
     def update_weak(self, other: "AgaSubmissionConfig") -> None:
         """Update all default attributes of self to match other."""
-        # iterate over all the fields of the dataclass, checking them against the
-        # default value, and updating them to the other value if they match the default
-        # value
         _update_weak_leaf(self, other)
 
 
-def _update_weak_leaf(self, other) -> None:  # type: ignore
-    """Update a leaf-level dataclass weakly."""
-    for attr in fields(self):
-        if attr.default_factory() == getattr(self, attr.name):  # type: ignore
-            setattr(self, attr.name, getattr(other, attr.name))
+@dataclass
+class AgaProblemConfig:
+    """Aga's problem-related configuration."""
+
+    check_stdout: bool = field(
+        default_factory=lambda: _DEFAULT_CONFIG.problem.check_stdout
+    )
+
+    def update_weak(self, other: "AgaProblemConfig") -> None:
+        """Update all default attributes of self to match other."""
+        _update_weak_leaf(self, other)
 
 
 @dataclass
@@ -70,11 +76,22 @@ class AgaConfig:
 
     test: AgaTestConfig = field(default_factory=AgaTestConfig)
     submission: AgaSubmissionConfig = field(default_factory=AgaSubmissionConfig)
+    problem: AgaProblemConfig = field(default_factory=AgaProblemConfig)
 
     def update_weak(self, other: "AgaConfig") -> None:
         """Update all default attributes of self to match other."""
-        self.test.update_weak(other.test)
-        self.submission.update_weak(other.submission)
+        for attr in fields(self):
+            getattr(self, attr.name).update_weak(getattr(other, attr.name))
+
+
+def _update_weak_leaf(self, other) -> None:  # type: ignore
+    """Update a leaf-level dataclass weakly."""
+    # iterate over all the fields of the dataclass, checking them against the
+    # default value, and updating them to the other value if they match the default
+    # value
+    for attr in fields(self):
+        if attr.default_factory() == getattr(self, attr.name):  # type: ignore
+            setattr(self, attr.name, getattr(other, attr.name))
 
 
 def load_config_from_path(path: str) -> AgaConfig:

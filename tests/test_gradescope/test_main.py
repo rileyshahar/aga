@@ -100,7 +100,7 @@ def test_json_test_output_square_incorrect(gs_json_square_incorrect: Any) -> Non
     print(gs_json_square_incorrect["tests"])
     assert any(
         map(
-            lambda t: t["output"] == "4 != 0 : Your submission didn't give the output "
+            lambda t: t["output"] == "Your submission didn't give the output "
             "we expected. We checked it with 2 and got 0, but we expected 4.",
             gs_json_square_incorrect["tests"],
         )

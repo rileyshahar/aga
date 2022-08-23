@@ -1,5 +1,14 @@
 """Utilities for aga."""
+import difflib
 from traceback import extract_tb
+
+
+def text_diff(old: str, new: str) -> str:
+    """Generate a diff between old and new."""
+    old_list = old.splitlines(keepends=True)
+    new_list = new.splitlines(keepends=True)
+
+    return "".join(difflib.ndiff(old_list, new_list))
 
 
 def limited_traceback(traceback) -> str:  # type: ignore
@@ -12,7 +21,9 @@ def limited_traceback(traceback) -> str:  # type: ignore
     out = ""
     for (frame, formatted_frame) in zip(stack_summary, stack_summary.format()):
         if "aga" in frame.filename or "unittest" in frame.filename:
-            pass
+            # reset output, we don't want any earlier lines bc student code hasn't been
+            # called yet
+            out = ""
         else:
             out += "\n"
             out += formatted_frame
