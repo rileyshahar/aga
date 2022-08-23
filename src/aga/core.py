@@ -390,12 +390,10 @@ def problem(
     Callable[[Callable[..., T]], Problem[T]]
         A decorator which turns a golden solution into a problem.
     """
-    # TODO: bug with configuration: if check_stdout is true, but a problem sets it to
-    # false, the cli will have the config file's implementation override i, because the
-    # problem's implementation looks like the default.
     config = AgaConfig()
     if check_stdout is not None:
         config.problem.check_stdout = check_stdout
+        config.problem.check_stdout_overridden = True
 
     def outer(func: Callable[..., Output]) -> Problem[Output]:
         problem_name = name or func.__name__

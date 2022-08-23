@@ -1,6 +1,7 @@
 """Tests for the configuration functionality."""
 
-from aga.config import AgaConfig, AgaTestConfig
+from aga import problem
+from aga.config import AgaConfig, AgaProblemConfig, AgaTestConfig
 
 
 def test_config_test_name(example_config: AgaConfig) -> None:
@@ -26,3 +27,17 @@ def test_config_update_weak_nondefault() -> None:
     config1.update_weak(config2)
 
     assert config1.test.name_fmt == "self"
+
+
+def test_config_overridden() -> None:
+    """Test `update_weak` with a non-default field."""
+    config = AgaConfig(problem=AgaProblemConfig(check_stdout=True))
+
+    @problem(check_stdout=False)
+    def dummy() -> None:
+        pass
+
+    dummy.update_config_weak(config)
+
+    # the problem decorator should override the config
+    assert not dummy.config().problem.check_stdout
