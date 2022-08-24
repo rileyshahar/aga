@@ -15,11 +15,14 @@ from setuptools import setup  # type: ignore
 
 setup(
     name="aga",
-    version="0.7.0",
+    version="0.7.1",
     install_requires=[
         "dataclasses-json >= 0.5.6",
         "dill >= 0.3.4",
         "gradescope-utils >= 0.4.0",
         "typer >= 0.4.0",
+        "dacite >= ^1.6.0",
+        "toml >= ^0.10.2",
+        "types-toml >= ^0.10.8",
     ],
 )
