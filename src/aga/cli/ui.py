@@ -25,7 +25,6 @@ def print_fancy_summary(output: AgaProblemOutput) -> None:
     )
 
     for test in output.tests:
-        # TODO: should we print smth even if there's no output?
         if test.output and not test.hidden:
             rprint(
                 Panel(
