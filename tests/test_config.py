@@ -31,9 +31,9 @@ def test_config_update_weak_nondefault() -> None:
 
 def test_config_overridden() -> None:
     """Test `update_weak` with a non-default field."""
-    config = AgaConfig(problem=AgaProblemConfig(check_stdout=True))
+    config = AgaConfig(problem=AgaProblemConfig(check_stdout=True, mock_input=False))
 
-    @problem(check_stdout=False)
+    @problem(check_stdout=False, mock_input=True)
     def dummy() -> None:
         pass
 
@@ -41,3 +41,16 @@ def test_config_overridden() -> None:
 
     # the problem decorator should override the config
     assert not dummy.config().problem.check_stdout
+    assert dummy.config().problem.mock_input
+
+
+def test_config_script() -> None:
+    """Test that script defaults are overrideable."""
+
+    @problem(script=True, check_stdout=False, mock_input=False)
+    def dummy() -> None:
+        pass
+
+    # the problem decorator should override the config
+    assert not dummy.config().problem.check_stdout
+    assert not dummy.config().problem.mock_input
