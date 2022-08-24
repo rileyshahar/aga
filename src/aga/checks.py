@@ -9,7 +9,7 @@ def with_captured_stdout(func: Callable[..., Any]) -> Callable[..., tuple[str, A
     """Run func, returning its stdout and normal return value."""
 
     def inner(*args: Any, **kwargs: Any) -> tuple[str, Any]:
-        with patch("sys.stdout", new=StringIO()) as stdout:
+        with patch("sys.stdout", new_callable=StringIO) as stdout:
             func_out = func(*args, **kwargs)
 
         return stdout.getvalue(), func_out
