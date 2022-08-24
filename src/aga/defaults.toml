@@ -80,3 +80,6 @@ no_failed_tests_msg = "Great work! Looks like you're passing all the tests."
 
 # If true, check that the stdout of the problem and submission both match.
 check_stdout = false
+
+# If true, test case arguments will be interpreted as outputs for successive calls of `input()`.
+mock_input = false

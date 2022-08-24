@@ -65,6 +65,9 @@ class AgaProblemConfig:
     check_stdout: bool = _from_default(["problem", "check_stdout"])
     check_stdout_overridden: bool = False
 
+    mock_input: bool = _from_default(["problem", "mock_input"])
+    mock_input_overridden: bool = False
+
     def update_weak(self, other: "AgaProblemConfig") -> None:
         """Update all default attributes of self to match other."""
         _update_weak_leaf(self, other)

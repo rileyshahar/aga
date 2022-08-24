@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from itertools import product
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
+from unittest.mock import patch
 
 from .checks import with_captured_stdout
 from .config import AgaConfig, AgaTestConfig
@@ -23,6 +24,7 @@ class TestMetadata:
     max_score: float
     config: AgaTestConfig
     check_stdout: bool
+    mock_input: bool
     hidden: bool = False
 
 
@@ -31,7 +33,7 @@ class AgaTestCase(TestCase):
 
     def __init__(
         self,
-        test_input: "_TestInputs",
+        test_input: "_TestInputs[Output]",
         golden: Callable[..., Output],
         under_test: Callable[..., Output],
         metadata: TestMetadata,
@@ -70,7 +72,7 @@ class AgaTestSuite(TestSuite):
         self.config = config
 
 
-class _TestInputs(TestCase):
+class _TestInputs(TestCase, Generic[Output]):
     """A single set of test inputs for a problem.
 
     These will be run against the golden solution and the function under test; their
@@ -83,25 +85,33 @@ class _TestInputs(TestCase):
     def __init__(
         self,
         *args: Any,
+        aga_expect: Optional[Output],
         aga_hidden: bool,
         aga_name: Optional[str],
         aga_weight: int,
         aga_value: float,
+        aga_mock_input: bool,
         **kwargs: Any,
     ) -> None:
         super().__init__()
         self._name = aga_name
         self._hidden = aga_hidden
+        self._mock_input = aga_mock_input
+        self._expect = aga_expect
         self.score_info = ScoreInfo(aga_weight, aga_value)
 
         self._args = args
         self._kwargs = kwargs
 
-    def _eval(self, func: Callable[..., Output]) -> Output:
+    def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
         # deepcopy in case the student submission mutates arguments; we don't want it to
         # mess with our copy of the arguments
-        return func(*deepcopy(self._args), **deepcopy(self._kwargs))
+        if self._mock_input:
+            with patch("builtins.input", side_effect=[*deepcopy(self._args)]) as _:
+                return func()
+        else:
+            return func(*deepcopy(self._args), **deepcopy(self._kwargs))
 
     def check(
         self,
@@ -182,6 +192,7 @@ class _TestInputs(TestCase):
             config=config.test,
             max_score=score,
             check_stdout=config.problem.check_stdout,
+            mock_input=config.problem.mock_input,
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
@@ -205,37 +216,19 @@ class _TestInputs(TestCase):
         return args_repr + sep + kwargs_repr
 
     def check_one(self, golden: Callable[..., Output]) -> None:
-        """Check that the golden solution is correct.
-
-        This should be implemented by subclasses which expose this functionality.
-        """
-
-
-class _GoldenTestInputs(_TestInputs):
-    """A set of test inputs which also contains an expected output.
-
-    This will be treated as a `TestInput` when the autograder is built, but provides
-    additional methods to verify a golden solution against the expected output, for
-    testing the accuracy of the golden solution against known outputs.
-    """
-
-    def __init__(self, output: Output, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._output = output
-
-    def check_one(self, golden: Callable[..., Output]) -> None:
-        """Assert that `golden`'s output matches the golden output."""
-        self.assertEqual(self._eval(golden), self._output)
+        """Check that the golden solution is correct."""
+        if self._expect is not None:
+            self.assertEqual(self._eval(golden), self._expect)
 
 
-class _TestInputGroup:
+class _TestInputGroup(Generic[Output]):
     """A group of test cases with shared configuration."""
 
     def __init__(self, weight: int = 1, value: float = 0.0) -> None:
-        self._test_cases: list[_TestInputs] = []
+        self._test_cases: list[_TestInputs[Output]] = []
         self.score_info = ScoreInfo(weight, value)
 
-    def add_test_case(self, case: _TestInputs) -> None:
+    def add_test_case(self, case: _TestInputs[Output]) -> None:
         """Add a test case to the group."""
         self._test_cases.append(case)
 
@@ -267,23 +260,47 @@ class Problem(Generic[Output]):
     """Stores tests for a single problem."""
 
     def __init__(
-        self, golden: Callable[..., Output], name: str, config: AgaConfig
+        self,
+        golden: Callable[..., Output],
+        name: str,
+        config: AgaConfig,
+        is_script: bool,
     ) -> None:
         self._golden: Callable[..., Output] = golden
         self._name = name
         self._config = config
-        self._ungrouped_tests: list[_TestInputs] = []
-        self._groups: list[_TestInputGroup] = []
+        self._ungrouped_tests: list[_TestInputs[Output]] = []
+        self._groups: list[_TestInputGroup[Output]] = []
+        self.is_script = is_script
 
-    def add_test_case(self, case: _TestInputs) -> None:
+    def add_test_case(
+        self,
+        *args: Any,
+        aga_expect: Optional[Output] = None,
+        aga_hidden: bool = False,
+        aga_name: Optional[str] = None,
+        aga_weight: int = 1,
+        aga_value: float = 0.0,
+        **kwargs: Any,
+    ) -> None:
         """Add a test case to the problem.
 
         Student solutions will be checked against the golden solution; i.e., this method
         does _not_ produce a test of the golden solution.
         """
+        case: _TestInputs[Output] = _TestInputs(
+            *args,
+            aga_expect=aga_expect,
+            aga_hidden=aga_hidden,
+            aga_name=aga_name,
+            aga_weight=aga_weight,
+            aga_value=aga_value,
+            aga_mock_input=self._config.problem.mock_input,
+            **kwargs,
+        )
         self._ungrouped_tests.append(case)
 
-    def add_group(self, grp: _TestInputGroup) -> None:
+    def add_group(self, grp: _TestInputGroup[Output]) -> None:
         """Add a group to the problem."""
         for case in self._ungrouped_tests:
             grp.add_test_case(case)
@@ -352,13 +369,13 @@ class Problem(Generic[Output]):
         """Update any non-default items in self.config."""
         self._config.update_weak(config)
 
-    def _virtual_groups(self) -> list[_TestInputGroup]:
+    def _virtual_groups(self) -> list[_TestInputGroup[Output]]:
         """Get the list of groups, plus the current group under construction.
 
         We need to do it this way because while the problem is being read we don't know
         the configuration of the last test group yet.
         """
-        virtual_group = _TestInputGroup()
+        virtual_group: _TestInputGroup[Output] = _TestInputGroup()
 
         for case in self._ungrouped_tests:
             virtual_group.add_test_case(case)
@@ -367,7 +384,10 @@ class Problem(Generic[Output]):
 
 
 def problem(
-    name: Optional[str] = None, check_stdout: Optional[bool] = None
+    name: Optional[str] = None,
+    script: bool = False,
+    check_stdout: Optional[bool] = None,
+    mock_input: Optional[bool] = None,
 ) -> Callable[[Callable[..., Output]], Problem[Output]]:
     """Declare a function as the golden solution to a problem.
 
@@ -381,9 +401,16 @@ def problem(
     name : Optional[str]
         The problem's name. If None (the default), the wrapped function's name will be
         used.
+    script : bool
+        Whether the problem represents a script, as opposed to a function. Implies
+        `check_stdout` and `mock_input` unless they are passed explicitly.
     check_stdout : Optional[bool]
         Overrides the `problem.check_stdout` configuration option. If True, check the
         golden solution's stdout against the student submission's for all test cases.
+    mock_input : Optional[bool]
+        Overrides the `problem.mock_input` configuration option. If True, test cases for
+        this problem will be interpreted as mocked outputs of `builtins.input`, rather
+        than inputs to the function.
 
     Returns
     -------
@@ -391,21 +418,41 @@ def problem(
         A decorator which turns a golden solution into a problem.
     """
     config = AgaConfig()
+
     if check_stdout is not None:
         config.problem.check_stdout = check_stdout
         config.problem.check_stdout_overridden = True
 
+    if mock_input is not None:
+        config.problem.mock_input = mock_input
+        config.problem.mock_input_overridden = True
+
     def outer(func: Callable[..., Output]) -> Problem[Output]:
         problem_name = name or func.__name__
 
-        return Problem(func, problem_name, config)
+        if script:
+            if check_stdout is None:
+                config.problem.check_stdout = True
+                config.problem.check_stdout_overridden = True
+
+            if mock_input is None:
+                config.problem.mock_input = True
+                config.problem.mock_input_overridden = True
+
+        return Problem(func, problem_name, config, script)
 
     return outer
 
 
 def _check_reserved_keyword(kwd: str) -> None:
     """Raise an error if `kwd` is reserved."""
-    if kwd.startswith("aga_"):
+    if kwd.startswith("aga_") and kwd not in (
+        "aga_expect",
+        "aga_hidden",
+        "aga_name",
+        "aga_weight",
+        "aga_value",
+    ):
         raise ValueError(
             f'invalid keyword arg "{kwd}" to `test_case`: all keyword args '
             "beginning `aga_` are reserved"
@@ -414,11 +461,6 @@ def _check_reserved_keyword(kwd: str) -> None:
 
 def test_case(
     *args: Any,
-    aga_expect: Optional[Any] = None,
-    aga_hidden: bool = False,
-    aga_name: Optional[str] = None,
-    aga_weight: int = 1,
-    aga_value: float = 0.0,
     **kwargs: Any,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     r"""Declare a specific test case for some problem.
@@ -455,28 +497,10 @@ def test_case(
         _check_reserved_keyword(kwd)
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
-        if aga_expect is not None:
-            case: _TestInputs = _GoldenTestInputs(
-                aga_expect,
-                *args,
-                aga_hidden=aga_hidden,
-                aga_name=aga_name,
-                aga_weight=aga_weight,
-                aga_value=aga_value,
-                **kwargs,
-            )
-
-        else:
-            case = _TestInputs(
-                *args,
-                aga_hidden=aga_hidden,
-                aga_name=aga_name,
-                aga_weight=aga_weight,
-                aga_value=aga_value,
-                **kwargs,
-            )
-
-        prob.add_test_case(case)
+        prob.add_test_case(
+            *args,
+            **kwargs,
+        )
         return prob
 
     return outer
@@ -485,11 +509,6 @@ def test_case(
 def test_cases(
     *args: Iterable[Any],
     aga_product: bool = True,
-    aga_expect: Optional[Any] = None,
-    aga_hidden: bool = False,
-    aga_name: Optional[str] = None,
-    aga_weight: int = 1,
-    aga_value: float = 0.0,
     **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     r"""Generate many test cases programatically, from generators of inputs.
@@ -504,7 +523,8 @@ def test_cases(
         generator in sequence). Default `True`.
     aga_*
         Other `aga_` keywords have their meaning inherited from `test_case`, and are
-        applied to each test case generated by this function.
+        applied to each test case generated by this function. Aga_expect is not
+        supported.
     kwargs :
         Generators for keyword arguments to be passed to the functions under test. Any
         keyword starting with aga\_ is reserved.
@@ -529,11 +549,6 @@ def test_cases(
             # hand; we can't capture them separately from the test case kwargs
             prob = test_case(
                 *curr_args,
-                aga_expect=aga_expect,
-                aga_hidden=aga_hidden,
-                aga_name=aga_name,
-                aga_weight=aga_weight,
-                aga_value=aga_value,
                 **final_kwargs,
             )(prob)
 

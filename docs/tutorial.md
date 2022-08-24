@@ -243,12 +243,36 @@ def difference(x: int, y: int) -> int:
 This will short-circuit when the smaller iterator ends, so this will generate
 three test cases: `(-5, -1)`, `(0, 0)`, and `(1, 2)`.
 
-## Additional Checks
+## Checking Scripts
 
-Sometimes, you want to check something about a problem other than the input or
-output. Aga provides additional options for some additional checks:
+Sometimes, submissions look like python scripts, meant to be run from the
+command-line, as opposed to importable libraries. To test a script, provide the
+`script=True` argument to the `problem` decorator:
 
-- Standard output: by setting `check_stdout = True` in
-  [configuration](config.html) or the problem decorator, aga will compare the
-  standard output of the student submission to the standard output of the golden
-  solution.
+```python
+@test_case("Alice", "Bob")
+@test_case("world", "me")
+@problem(script=True)
+def hello_name() -> None:
+    """A simple interactive script."""
+    listener = input("Listener? ")
+    print(f"Hello, {listener}.")
+
+    speaker = input("Speaker ?")
+    print(f"I'm {speaker}.")
+```
+
+This has three implications:
+
+1. Aga will load the student submission as a script, instead of looking for a
+   function with a matching name.
+2. Aga will compare the standard output of the student submission to the
+   standard output of the golden solution.
+3. Aga will interpret the arguments to `test_case` as mocked outputs of the
+   built in `input()` function. For example, for the "Alice","Bob" test case,
+   aga will expect this standard output:
+
+```
+Hello, Alice.
+I'm Bob.
+```

@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+from importlib.machinery import ModuleSpec
 from os.path import isdir
 from os.path import join as pathjoin
 from types import ModuleType
@@ -34,14 +35,8 @@ class SubmissionSyntaxError(InvalidSubmissionError, SyntaxError):
         self.file = file
 
 
-def _load_source_from_path(path: str, name: str = "module") -> Any:
-    """Load the python source file found at path, absolute or relative, as a module.
-
-    There's a lot of weird stuff going on in this method with type signatures and
-    poorly-documented code that python uses internally for their `import` statement. I
-    got this implementation from https://stackoverflow.com/a/67692 and made only small
-    modifications to it, but I'm not 100% sure I can explain how it works.
-    """
+def _get_spec_from_path(path: str, name: str) -> ModuleSpec:
+    """Get the spec of the module at path."""
     spec = importlib.util.spec_from_file_location(name, path)
 
     if spec is None:
@@ -50,7 +45,37 @@ def _load_source_from_path(path: str, name: str = "module") -> Any:
         # raise.
         raise FileNotFoundError
 
+    return spec
+
+
+def load_script_from_path(path: str, name: str = "script") -> Callable[[], None]:
+    """Load the script at path as a function.
+
+    There's a lot of weird stuff going on in this method with type signatures and
+    poorly-documented code that python uses internally for their `import` statement. I
+    got this implementation from https://stackoverflow.com/a/67692 and made only small
+    modifications to it, but I'm not 100% sure I can explain how it works.
+    """
+    spec = _get_spec_from_path(path, name)
     mod = importlib.util.module_from_spec(spec)
+
+    def inner() -> None:
+        spec.loader.exec_module(mod)  # type: ignore
+
+    return inner
+
+
+def _load_source_from_path(path: str, name: str = "module") -> Any:
+    """Load the python source file found at path, absolute or relative, as a module.
+
+    There's a lot of weird stuff going on in this method with type signatures and
+    poorly-documented code that python uses internally for their `import` statement. I
+    got this implementation from https://stackoverflow.com/a/67692 and made only small
+    modifications to it, but I'm not 100% sure I can explain how it works.
+    """
+    spec = _get_spec_from_path(path, name)
+    mod = importlib.util.module_from_spec(spec)
+
     try:
         spec.loader.exec_module(mod)  # type: ignore
     except (SyntaxError, NameError) as err:
