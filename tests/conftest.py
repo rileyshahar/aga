@@ -77,12 +77,19 @@ def hello_world() -> None:
     print("hello, world.")
 """,
     "hello_world_script": 'print("Hello, world!")',
-    "hello_input": """
-name = input()
-print(f"Hello, {name}.")
+    "hello_name": """
+listener = input("Listener? ")
+print(f"Hello, {listener}.")
 
-speaker = input()
+speaker = input("Speaker? ")
+print(f"I'm {speaker}.")
+""",
+    "hello_name_incorrect": """
+listener = input("Listener? ")
+speaker = input("Speaker? ")
+
 print(f"Hello, {speaker}.")
+print(f"I'm {listener}.")
 """,
 }
 
@@ -174,6 +181,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("pos_and_kwd_zip"),
         lazy_fixture("pos_and_kwd_generator_function"),
         lazy_fixture("hello_world"),
+        lazy_fixture("hello_name"),
     ]
 )
 def valid_problem(request):
@@ -505,11 +513,11 @@ def fixture_hello_name() -> Problem[None]:
     @problem(script=True)
     def hello_name() -> None:
         """Print 'Hello, world!'."""
-        name = input()
-        print(f"Hello, {name}.")
+        listener = input("Listener? ")
+        print(f"Hello, {listener}.")
 
-        speaker = input()
-        print(f"Hello, {speaker}.")
+        speaker = input("Speaker ?")
+        print(f"I'm {speaker}.")
 
     return hello_name
 

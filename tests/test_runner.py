@@ -137,9 +137,8 @@ def test_hello_world_failure(
         )
     ]
     assert output.score == 0
-    assert (
-        output.output == "It looks like some tests failed; take a look "
-        "and see if you can fix them!"
+    assert output.output == (
+        "It looks like some tests failed; take a look and see if you can fix them!"
     )
 
 
@@ -162,20 +161,89 @@ def test_hello_world_script(
     assert output.output == "Great work! Looks like you're passing all the tests."
 
 
-def test_hello_name(
-    hello_world_script: Problem[None], source_hello_world_script: str
-) -> None:
-    """Test the output of an incorrect hello name submission."""
-    output = load_and_run(hello_world_script, source_hello_world_script, 20.0)
+def test_hello_name(hello_name: Problem[None], source_hello_name: str) -> None:
+    """Test the output of a correct hello name submission."""
+    output = load_and_run(hello_name, source_hello_name, 20.0)
 
-    assert output.tests == [
+    assert (
         AgaTestCaseOutput(
-            score=20.0,
-            max_score=20.0,
-            name="Test on .",
+            score=10.0,
+            max_score=10.0,
+            name="Test on 'world','me'.",
             output=None,
             hidden=False,
         )
-    ]
+        in output.tests
+    )
+    assert (
+        AgaTestCaseOutput(
+            score=10.0,
+            max_score=10.0,
+            name="Test on 'Alice','Bob'.",
+            output=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+
     assert output.score == 20.0
     assert output.output == "Great work! Looks like you're passing all the tests."
+
+
+# flake8: noqa
+# pylint:disable=line-too-long
+HELLO_NAME_FAILURE_OUT_ME = """Your submission printed something different from what we expected. We checked it with 'world','me'.
+
+Here's a detailed look at the difference between the strings. Lines starting with `-` are what we got from you, lines starting with `+` are what we expected, and `_`s in lines starting with `?` denote characters that are different. Be wary for spaces, which don't show up well in this format.
+
+- Hello, me.
+- I'm world.
++ Hello, world.
++ I'm me.
+"""
+
+# flake8: noqa
+# pylint:disable=line-too-long
+HELLO_NAME_FAILURE_OUT_ALICE = """Your submission printed something different from what we expected. We checked it with 'Alice','Bob'.
+
+Here's a detailed look at the difference between the strings. Lines starting with `-` are what we got from you, lines starting with `+` are what we expected, and `_`s in lines starting with `?` denote characters that are different. Be wary for spaces, which don't show up well in this format.
+
+- Hello, Bob.
+- I'm Alice.
++ Hello, Alice.
++ I'm Bob.
+"""
+
+
+def test_hello_name_incorrect(
+    hello_name: Problem[None], source_hello_name_incorrect: str
+) -> None:
+    """Test the output of an incorrect hello name submission."""
+    output = load_and_run(hello_name, source_hello_name_incorrect, 20.0)
+
+    print(output.tests[0].output)
+    assert (
+        AgaTestCaseOutput(
+            score=0.0,
+            max_score=10.0,
+            name="Test on 'world','me'.",
+            output=HELLO_NAME_FAILURE_OUT_ME,
+            hidden=False,
+        )
+        in output.tests
+    )
+    assert (
+        AgaTestCaseOutput(
+            score=0.0,
+            max_score=10.0,
+            name="Test on 'Alice','Bob'.",
+            output=HELLO_NAME_FAILURE_OUT_ALICE,
+            hidden=False,
+        )
+        == output.tests[1]
+    )
+
+    assert output.score == 0.0
+    assert output.output == (
+        "It looks like some tests failed; take a look and see if you can fix them!"
+    )
