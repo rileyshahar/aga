@@ -242,3 +242,13 @@ def difference(x: int, y: int) -> int:
 
 This will short-circuit when the smaller iterator ends, so this will generate
 three test cases: `(-5, -1)`, `(0, 0)`, and `(1, 2)`.
+
+## Additional Checks
+
+Sometimes, you want to check something about a problem other than the input or
+output. Aga provides additional options for some additional checks:
+
+- Standard output: by setting `check_stdout = True` in
+  [configuration](config.html) or the problem decorator, aga will compare the
+  standard output of the student submission to the standard output of the golden
+  solution.
