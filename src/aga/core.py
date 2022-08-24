@@ -1,39 +1,28 @@
 """The core library functionality."""
 
 from collections.abc import Iterable
+from copy import deepcopy
 from dataclasses import dataclass
 from itertools import product
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
 
-from .config import AgaConfig
+from .checks import with_captured_stdout
+from .config import AgaConfig, AgaTestConfig
 from .score import ScoreInfo, compute_scores
+from .util import text_diff
 
 Output = TypeVar("Output")
 
 
 @dataclass(frozen=True)
 class TestMetadata:
-    """Stores metadata about a specific test case.
-
-    Attributes
-    ----------
-    name : str
-        The test's name.
-    hidden : bool
-        Whether the test should be hidden.
-    max_score : float
-        The test's max score.
-    failure_fmt : str
-        The format string for a test failure.
-    error_fmt : str
-        The format string for a test error.
-    """
+    """Stores metadata about a specific test case."""
 
     name: str
     max_score: float
-    failure_msg: str
-    error_msg: str
+    config: AgaTestConfig
+    check_stdout: bool
     hidden: bool = False
 
 
@@ -70,7 +59,7 @@ class AgaTestCase(TestCase):
 
         This method is called by unittest.
         """
-        return self.metadata().name
+        return self._metadata.name
 
 
 class AgaTestSuite(TestSuite):
@@ -87,6 +76,9 @@ class _TestInputs(TestCase):
     These will be run against the golden solution and the function under test; their
     outputs will be compared, and a unittest failure raised if they differ.
     """
+
+    # this tells unittest not to print their default assertion error messages
+    longMessage = False
 
     def __init__(
         self,
@@ -107,7 +99,9 @@ class _TestInputs(TestCase):
 
     def _eval(self, func: Callable[..., Output]) -> Output:
         """Evaluate func on the arguments."""
-        return func(*self._args, **self._kwargs)
+        # deepcopy in case the student submission mutates arguments; we don't want it to
+        # mess with our copy of the arguments
+        return func(*deepcopy(self._args), **deepcopy(self._kwargs))
 
     def check(
         self,
@@ -121,16 +115,48 @@ class _TestInputs(TestCase):
         if they differ. This means it can be plugged into any unittest TestCase as a
         helper method.
         """
-        golden_output = self._eval(golden)
-        under_test_output = self._eval(under_test)
+        if metadata.check_stdout:
+            golden_stdout, golden_output = self._eval(with_captured_stdout(golden))
+            under_test_stdout, under_test_output = self._eval(
+                with_captured_stdout(under_test)
+            )
+
+            self._assert_eq(
+                golden_stdout,
+                under_test_stdout,
+                metadata,
+                metadata.config.stdout_differ_msg,
+            )
+
+        else:
+            golden_output = self._eval(golden)
+            under_test_output = self._eval(under_test)
+
+        self._assert_eq(
+            golden_output, under_test_output, metadata, metadata.config.failure_msg
+        )
+
+    def _assert_eq(
+        self, expected: Output, got: Output, metadata: TestMetadata, msg_format: str
+    ) -> None:
+        """Assert that expected equals got, formatting `msg_format` if not."""
+        # we can only diff strings
+        if isinstance(expected, str) and isinstance(got, str):
+            diff_explanation = metadata.config.diff_explanation_msg
+            diff = text_diff(got, expected)
+        else:
+            diff_explanation = ""
+            diff = ""
 
         self.assertEqual(
-            golden_output,
-            under_test_output,
-            msg=metadata.failure_msg.format(
+            got,
+            expected,
+            msg=msg_format.format(
                 input=repr(self),
-                expected=repr(golden_output),
-                output=repr(under_test_output),
+                expected=repr(expected),
+                output=repr(got),
+                diff_explanation=diff_explanation,
+                diff=diff,
             ),
         )
 
@@ -153,9 +179,9 @@ class _TestInputs(TestCase):
         metadata = TestMetadata(
             name=name,
             hidden=self._hidden,
-            failure_msg=config.test.failure_msg,
-            error_msg=config.test.error_msg,
+            config=config.test,
             max_score=score,
+            check_stdout=config.problem.check_stdout,
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
@@ -241,15 +267,13 @@ class Problem(Generic[Output]):
     """Stores tests for a single problem."""
 
     def __init__(
-        self,
-        golden: Callable[..., Output],
-        name: str,
+        self, golden: Callable[..., Output], name: str, config: AgaConfig
     ) -> None:
         self._golden: Callable[..., Output] = golden
         self._name = name
+        self._config = config
         self._ungrouped_tests: list[_TestInputs] = []
         self._groups: list[_TestInputGroup] = []
-        self._config: AgaConfig = AgaConfig()
 
     def add_test_case(self, case: _TestInputs) -> None:
         """Add a test case to the problem.
@@ -343,7 +367,7 @@ class Problem(Generic[Output]):
 
 
 def problem(
-    name: Optional[str] = None,
+    name: Optional[str] = None, check_stdout: Optional[bool] = None
 ) -> Callable[[Callable[..., Output]], Problem[Output]]:
     """Declare a function as the golden solution to a problem.
 
@@ -357,17 +381,24 @@ def problem(
     name : Optional[str]
         The problem's name. If None (the default), the wrapped function's name will be
         used.
+    check_stdout : Optional[bool]
+        Overrides the `problem.check_stdout` configuration option. If True, check the
+        golden solution's stdout against the student submission's for all test cases.
 
     Returns
     -------
     Callable[[Callable[..., T]], Problem[T]]
         A decorator which turns a golden solution into a problem.
     """
+    config = AgaConfig()
+    if check_stdout is not None:
+        config.problem.check_stdout = check_stdout
+        config.problem.check_stdout_overridden = True
 
     def outer(func: Callable[..., Output]) -> Problem[Output]:
         problem_name = name or func.__name__
 
-        return Problem(func, problem_name)
+        return Problem(func, problem_name, config)
 
     return outer
 

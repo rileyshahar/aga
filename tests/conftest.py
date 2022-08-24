@@ -77,6 +77,16 @@ def difference(x: int, y: int = 0) -> int:
     return x - y
 """
 
+SOURCE_HELLO_WORLD = """
+def hello_world() -> None:
+    print("Hello, world!")
+"""
+
+SOURCE_HELLO_WORLD_INCORRECT = """
+def hello_world() -> None:
+    print("hello, world.")
+"""
+
 
 def _write_source_to_file(path: Path, source: str) -> str:
     """Write source code to a file, returning a string of its path."""
@@ -152,6 +162,20 @@ def fixture_source_square_problem(tmp_path: Path) -> str:
     return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_PROBLEM)
 
 
+@pytest.fixture(name="source_hello_world")
+def fixture_source_hello_world(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_HELLO_WORLD, returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD)
+
+
+@pytest.fixture(name="source_hello_world_incorrect")
+def fixture_source_hello_world_incorrect(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_HELLO_WORLD_INCORRECT, returning its path."""
+    return _write_source_to_file(
+        tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD_INCORRECT
+    )
+
+
 @pytest.fixture(name="source_dir")
 def fixture_source_dir(tmp_path: Path) -> str:
     """Generate a directory containing numerous valid and invalid source files.
@@ -200,6 +224,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("pos_and_kwd_generated"),
         lazy_fixture("pos_and_kwd_zip"),
         lazy_fixture("pos_and_kwd_generator_function"),
+        lazy_fixture("hello_world"),
     ]
 )
 def valid_problem(request):
@@ -494,6 +519,19 @@ def fixture_pos_and_kwd_generator_function() -> Problem[int]:
         return x - y
 
     return difference
+
+
+@pytest.fixture(name="hello_world")
+def fixture_hello_world() -> Problem[None]:
+    """Generate a problem which tests stdout."""
+
+    @test_case()
+    @problem(check_stdout=True)
+    def hello_world() -> None:
+        """Print 'Hello, world!'."""
+        print("Hello, world!")
+
+    return hello_world
 
 
 @pytest.fixture(name="example_config_file")
