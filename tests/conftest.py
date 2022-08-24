@@ -1,5 +1,6 @@
 """Contains various fixtures, especially pre-written problems."""
 
+import sys
 from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
@@ -14,44 +15,38 @@ from aga import group, problem, test_case, test_cases
 from aga.config import AgaConfig, load_config_from_path
 from aga.core import Problem
 
-SOURCE_SQUARE_PROBLEM = """
+SOURCES = {
+    "square_problem": """
 from aga import problem, test_case
 
 @test_case(2)
 @problem()
 def square(x: int) -> int:
     return x * x
-"""
-
-SOURCE_SQUARE = """
+""",
+    "square": """
 def square(x: int) -> int:
     return x * x
-"""
-
-SOURCE_SQUARE_INCORRECT = """
+""",
+    "square_incorrect": """
 def square(x: int) -> int:
     return x - x
-"""
-
-SOURCE_SQUARE_ERROR = """
+""",
+    "square_error": """
 def square(x: int) -> int:
     return x - y
-"""
-
-SOURCE_SQUARE_WRONG_ON_ZERO = """
+""",
+    "square_wrong_on_zero": """
 def square(x: int) -> int:
     if x == 0:
         return 1
     return x * x
-"""
-
-
-SOURCE_DUPLICATE = """
+""",
+    "duplicate": """
 def duplicate(x: int):
     return (x, x)
-"""
-
-SOURCE_CAR = """
+""",
+    "car": """
 class Car:
     def __init__(self):
         self._distance = 0
@@ -61,33 +56,35 @@ class Car:
 
     def distance(self) -> int:
         return self._distance
-"""
-
-SOURCE_STR_LEN = """
+""",
+    "str_len": """
 def str_len(s: str) -> int:
     return len(s)
-"""
-
-SOURCE_INVALID = """
+""",
+    "invalid": """
 This is not valid python code!
-"""
-
-SOURCE_DIFF = """
+""",
+    "diff": """
 def difference(x: int, y: int = 0) -> int:
     return x - y
-"""
-
-SOURCE_HELLO_WORLD = """
+""",
+    "hello_world": """
 def hello_world() -> None:
     print("Hello, world!")
-"""
-
-SOURCE_HELLO_WORLD_INCORRECT = """
+""",
+    "hello_world_incorrect": """
 def hello_world() -> None:
     print("hello, world.")
-"""
+""",
+    "hello_world_script": 'print("Hello, world!")',
+    "hello_input": """
+name = input()
+print(f"Hello, {name}.")
 
-SOURCE_HELLO_WORLD_SCRIPT = 'print("Hello, world!")'
+speaker = input()
+print(f"Hello, {speaker}.")
+""",
+}
 
 
 def _write_source_to_file(path: Path, source: str) -> str:
@@ -98,6 +95,20 @@ def _write_source_to_file(path: Path, source: str) -> str:
     return str(path)
 
 
+def _make_source_fixture(source: str, name: str) -> None:
+    @pytest.fixture(name="source_" + name)
+    def inner(tmp_path: Path) -> str:
+        """Generate a source file, returning its path."""
+        return _write_source_to_file(tmp_path.joinpath("src.py"), source)
+
+    module = sys.modules[__name__]
+    setattr(module, name, inner)
+
+
+for (_name, _source) in SOURCES.items():
+    _make_source_fixture(_source, _name)
+
+
 def _write_sources_to_files(
     path: Path, sources: Iterable[str], filenames: Iterable[str]
 ) -> str:
@@ -106,82 +117,6 @@ def _write_sources_to_files(
         _write_source_to_file(path.joinpath(file), source)
 
     return str(path)
-
-
-@pytest.fixture(name="source_square")
-def fixture_source_square(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_SQUARE, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE)
-
-
-@pytest.fixture(name="source_square_incorrect")
-def fixture_source_square_incorrect(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_SQUARE_INCORRECT, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_INCORRECT)
-
-
-@pytest.fixture(name="source_square_error")
-def fixture_source_square_error(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_SQUARE_ERROR, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_ERROR)
-
-
-@pytest.fixture(name="source_car")
-def fixture_source_car(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_CAR, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_CAR)
-
-
-@pytest.fixture(name="source_str_len")
-def fixture_source_str_len(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_STR_LEN, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_STR_LEN)
-
-
-@pytest.fixture(name="source_invalid")
-def fixture_source_invalid(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_INVALID, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_INVALID)
-
-
-@pytest.fixture(name="source_square_wrong_on_zero")
-def fixture_source_square_wrong_on_zero(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_SQUARE_WRONG_ON_ZERO, returning its path."""
-    return _write_source_to_file(
-        tmp_path.joinpath("src.py"), SOURCE_SQUARE_WRONG_ON_ZERO
-    )
-
-
-@pytest.fixture(name="source_diff")
-def fixture_source_diff(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_DIFF, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_DIFF)
-
-
-@pytest.fixture(name="source_square_problem")
-def fixture_source_square_problem(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_SQUARE_PROBLEM, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_SQUARE_PROBLEM)
-
-
-@pytest.fixture(name="source_hello_world")
-def fixture_source_hello_world(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_HELLO_WORLD, returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD)
-
-
-@pytest.fixture(name="source_hello_world_incorrect")
-def fixture_source_hello_world_incorrect(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_HELLO_WORLD_INCORRECT, returning its path."""
-    return _write_source_to_file(
-        tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD_INCORRECT
-    )
-
-
-@pytest.fixture(name="source_hello_world_script")
-def fixture_source_hello_world_script(tmp_path: Path) -> str:
-    """Generate a source file with SOURCE_SCRIPT returning its path."""
-    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD_SCRIPT)
 
 
 @pytest.fixture(name="source_dir")
@@ -197,7 +132,13 @@ def fixture_source_dir(tmp_path: Path) -> str:
     """
     return _write_sources_to_files(
         tmp_path,
-        (SOURCE_CAR, SOURCE_INVALID, SOURCE_SQUARE, SOURCE_DUPLICATE, SOURCE_DUPLICATE),
+        (
+            SOURCES["car"],
+            SOURCES["invalid"],
+            SOURCES["square"],
+            SOURCES["duplicate"],
+            SOURCES["duplicate"],
+        ),
         ("car.py", "invalid.txt", "square.py", "duplicate-one.py", "duplicate-two.py"),
     )
 
@@ -553,6 +494,24 @@ def fixture_hello_world_script() -> Problem[None]:
         print("Hello, world!")
 
     return hello_world
+
+
+@pytest.fixture(name="hello_name")
+def fixture_hello_name() -> Problem[None]:
+    """Generate a problem which tests a script with input."""
+
+    @test_case("Alice", "Bob")
+    @test_case("world", "me")
+    @problem(script=True)
+    def hello_name() -> None:
+        """Print 'Hello, world!'."""
+        name = input()
+        print(f"Hello, {name}.")
+
+        speaker = input()
+        print(f"Hello, {speaker}.")
+
+    return hello_name
 
 
 @pytest.fixture(name="example_config_file")

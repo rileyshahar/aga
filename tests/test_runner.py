@@ -146,7 +146,26 @@ def test_hello_world_failure(
 def test_hello_world_script(
     hello_world_script: Problem[None], source_hello_world_script: str
 ) -> None:
-    """Test the output of an incorrect hello world submission."""
+    """Test the output of a correct hello world script submission."""
+    output = load_and_run(hello_world_script, source_hello_world_script, 20.0)
+
+    assert output.tests == [
+        AgaTestCaseOutput(
+            score=20.0,
+            max_score=20.0,
+            name="Test on .",
+            output=None,
+            hidden=False,
+        )
+    ]
+    assert output.score == 20.0
+    assert output.output == "Great work! Looks like you're passing all the tests."
+
+
+def test_hello_name(
+    hello_world_script: Problem[None], source_hello_world_script: str
+) -> None:
+    """Test the output of an incorrect hello name submission."""
     output = load_and_run(hello_world_script, source_hello_world_script, 20.0)
 
     assert output.tests == [

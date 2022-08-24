@@ -375,6 +375,7 @@ def problem(
     name: Optional[str] = None,
     script: bool = False,
     check_stdout: Optional[bool] = None,
+    mock_input: Optional[bool] = None,
 ) -> Callable[[Callable[..., Output]], Problem[Output]]:
     """Declare a function as the golden solution to a problem.
 
@@ -390,10 +391,14 @@ def problem(
         used.
     scropt : bool
         Whether the problem represents a script, as opposed to a function. Implies
-        `check_stdout` by default.
+        `check_stdout` and `mock_input` unless they are passed explicitly.
     check_stdout : Optional[bool]
         Overrides the `problem.check_stdout` configuration option. If True, check the
         golden solution's stdout against the student submission's for all test cases.
+    mock_input : Optional[bool]
+        Overrides the `problem.mock_input` configuration option. If True, test cases for
+        this problem will be interpreted as mocked outputs of `builtins.input`, rather
+        than inputs to the function.
 
     Returns
     -------
@@ -406,13 +411,21 @@ def problem(
         config.problem.check_stdout = check_stdout
         config.problem.check_stdout_overridden = True
 
+    if mock_input is not None:
+        config.problem.mock_input = mock_input
+        config.problem.mock_input_overridden = True
+
     def outer(func: Callable[..., Output]) -> Problem[Output]:
         problem_name = name or func.__name__
 
-        if script and check_stdout is None:
-            # here w want to check stdout
-            config.problem.check_stdout = True
-            config.problem.check_stdout_overridden = True
+        if script:
+            if check_stdout is None:
+                config.problem.check_stdout = True
+                config.problem.check_stdout_overridden = True
+
+            if mock_input is None:
+                config.problem.mock_input = True
+                config.problem.mock_input_overridden = True
 
         return Problem(func, problem_name, config, script)
 
