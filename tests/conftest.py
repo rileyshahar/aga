@@ -87,6 +87,8 @@ def hello_world() -> None:
     print("hello, world.")
 """
 
+SOURCE_HELLO_WORLD_SCRIPT = 'print("Hello, world!")'
+
 
 def _write_source_to_file(path: Path, source: str) -> str:
     """Write source code to a file, returning a string of its path."""
@@ -174,6 +176,12 @@ def fixture_source_hello_world_incorrect(tmp_path: Path) -> str:
     return _write_source_to_file(
         tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD_INCORRECT
     )
+
+
+@pytest.fixture(name="source_hello_world_script")
+def fixture_source_hello_world_script(tmp_path: Path) -> str:
+    """Generate a source file with SOURCE_SCRIPT returning its path."""
+    return _write_source_to_file(tmp_path.joinpath("src.py"), SOURCE_HELLO_WORLD_SCRIPT)
 
 
 @pytest.fixture(name="source_dir")
@@ -527,6 +535,19 @@ def fixture_hello_world() -> Problem[None]:
 
     @test_case()
     @problem(check_stdout=True)
+    def hello_world() -> None:
+        """Print 'Hello, world!'."""
+        print("Hello, world!")
+
+    return hello_world
+
+
+@pytest.fixture(name="hello_world_script")
+def fixture_hello_world_script() -> Problem[None]:
+    """Generate a problem which tests a hello world script."""
+
+    @test_case()
+    @problem(script=True)
     def hello_world() -> None:
         """Print 'Hello, world!'."""
         print("Hello, world!")

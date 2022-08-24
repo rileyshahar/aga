@@ -18,6 +18,7 @@ from .loader import (
     NoMatchingSymbol,
     SubmissionSyntaxError,
     TooManyMatchingSymbols,
+    load_script_from_path,
     load_symbol_from_path,
 )
 from .util import limited_traceback
@@ -173,7 +174,7 @@ class _AgaTestResult(TestResult):
         )
 
 
-def run(suite: AgaTestSuite) -> AgaProblemOutput:
+def _run(suite: AgaTestSuite) -> AgaProblemOutput:
     """Run the suite, returning the output."""
     return suite.run(_AgaTestResult(suite.config)).build()  # type: ignore
 
@@ -188,7 +189,10 @@ def load_and_run(
     submissions.
     """
     try:
-        under_test = load_symbol_from_path(path, problem.expected_symbol())
+        if not problem.is_script:
+            under_test = load_symbol_from_path(path, problem.expected_symbol())
+        else:
+            under_test = load_script_from_path(path)
     except SubmissionSyntaxError as err:
         return AgaProblemOutput(
             output=_submission_syntax_error_msg(
@@ -211,7 +215,7 @@ def load_and_run(
         )
 
     suite = problem.generate_test_suite(under_test, total_points)
-    return run(suite)
+    return _run(suite)
 
 
 def _submission_syntax_error_msg(cause: SyntaxError, config: AgaConfig) -> str:

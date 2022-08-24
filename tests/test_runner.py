@@ -91,6 +91,23 @@ def test_square_failure_output(
     )
 
 
+def test_hello_world(hello_world: Problem[None], source_hello_world: str) -> None:
+    """Test the output of an incorrect hello world submission."""
+    output = load_and_run(hello_world, source_hello_world, 20.0)
+
+    assert output.tests == [
+        AgaTestCaseOutput(
+            score=20.0,
+            max_score=20.0,
+            name="Test on .",
+            output=None,
+            hidden=False,
+        )
+    ]
+    assert output.score == 20.0
+    assert output.output == "Great work! Looks like you're passing all the tests."
+
+
 # flake8: noqa
 # pylint:disable=line-too-long
 HELLO_WORLD_FAILURE_OUT = """Your submission printed something different from what we expected. We checked it with .
@@ -124,3 +141,22 @@ def test_hello_world_failure(
         output.output == "It looks like some tests failed; take a look "
         "and see if you can fix them!"
     )
+
+
+def test_hello_world_script(
+    hello_world_script: Problem[None], source_hello_world_script: str
+) -> None:
+    """Test the output of an incorrect hello world submission."""
+    output = load_and_run(hello_world_script, source_hello_world_script, 20.0)
+
+    assert output.tests == [
+        AgaTestCaseOutput(
+            score=20.0,
+            max_score=20.0,
+            name="Test on .",
+            output=None,
+            hidden=False,
+        )
+    ]
+    assert output.score == 20.0
+    assert output.output == "Great work! Looks like you're passing all the tests."

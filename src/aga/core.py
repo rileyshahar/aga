@@ -267,13 +267,18 @@ class Problem(Generic[Output]):
     """Stores tests for a single problem."""
 
     def __init__(
-        self, golden: Callable[..., Output], name: str, config: AgaConfig
+        self,
+        golden: Callable[..., Output],
+        name: str,
+        config: AgaConfig,
+        is_script: bool,
     ) -> None:
         self._golden: Callable[..., Output] = golden
         self._name = name
         self._config = config
         self._ungrouped_tests: list[_TestInputs] = []
         self._groups: list[_TestInputGroup] = []
+        self.is_script = is_script
 
     def add_test_case(self, case: _TestInputs) -> None:
         """Add a test case to the problem.
@@ -367,7 +372,9 @@ class Problem(Generic[Output]):
 
 
 def problem(
-    name: Optional[str] = None, check_stdout: Optional[bool] = None
+    name: Optional[str] = None,
+    script: bool = False,
+    check_stdout: Optional[bool] = None,
 ) -> Callable[[Callable[..., Output]], Problem[Output]]:
     """Declare a function as the golden solution to a problem.
 
@@ -381,6 +388,9 @@ def problem(
     name : Optional[str]
         The problem's name. If None (the default), the wrapped function's name will be
         used.
+    scropt : bool
+        Whether the problem represents a script, as opposed to a function. Implies
+        `check_stdout` by default.
     check_stdout : Optional[bool]
         Overrides the `problem.check_stdout` configuration option. If True, check the
         golden solution's stdout against the student submission's for all test cases.
@@ -391,6 +401,7 @@ def problem(
         A decorator which turns a golden solution into a problem.
     """
     config = AgaConfig()
+
     if check_stdout is not None:
         config.problem.check_stdout = check_stdout
         config.problem.check_stdout_overridden = True
@@ -398,7 +409,12 @@ def problem(
     def outer(func: Callable[..., Output]) -> Problem[Output]:
         problem_name = name or func.__name__
 
-        return Problem(func, problem_name, config)
+        if script and check_stdout is None:
+            # here w want to check stdout
+            config.problem.check_stdout = True
+            config.problem.check_stdout_overridden = True
+
+        return Problem(func, problem_name, config, script)
 
     return outer
 

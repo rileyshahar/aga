@@ -1,7 +1,9 @@
 """Tests for the `loader` module."""
 
+from io import StringIO
 from os.path import join as pathjoin
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from dill import dump  # type: ignore
@@ -13,6 +15,7 @@ from aga.loader import (
     TooManyMatchingSymbols,
     load_problem,
     load_problems_from_path,
+    load_script_from_path,
     load_symbol_from_path,
 )
 
@@ -98,3 +101,14 @@ def test_load_problems(source_square_problem: str) -> None:
         load_problems_from_path(source_square_problem)
     )
     square_loaded[0].check()  # pylint: disable=no-member
+
+
+def test_load_script(source_hello_world_script: str) -> None:
+    """Test that load_script works correctly."""
+
+    script = load_script_from_path(source_hello_world_script)
+
+    with patch("sys.stdout", new_callable=StringIO) as stdout:
+        script()
+
+    assert stdout.getvalue() == "Hello, world!\n"
