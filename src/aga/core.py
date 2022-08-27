@@ -46,6 +46,10 @@ class SubmissionMetadata:
     total_score: float
     time_since_due: timedelta
 
+    def is_on_time(self) -> bool:
+        """Return true of the submission was on time."""
+        return self.time_since_due <= timedelta()
+
 
 class AgaTestCase(TestCase):
     """A `TestCase` which runs a single test of a `Problem`."""

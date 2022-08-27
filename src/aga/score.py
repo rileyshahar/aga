@@ -1,6 +1,18 @@
 """Compute a problem's score."""
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from .core import SubmissionMetadata
+    from .runner import AgaProblemOutput
+
+ScoreExtra = Callable[["AgaProblemOutput", "SubmissionMetadata"], bool]
+
+
+def prize(output: "AgaProblemOutput", metadata: "SubmissionMetadata") -> bool:
+    """Return true if all tests passed and the submission was on time."""
+    return metadata.is_on_time() and all(t.is_correct() for t in output.tests)
 
 
 @dataclass(frozen=True)
