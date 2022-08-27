@@ -89,7 +89,7 @@ def load_script_from_path(path: str, name: str = "script") -> Callable[[], None]
         return _load_script_from_file(path, name)
 
 
-def _load_source_from_path(path: str, name: str = "module") -> Any:
+def _load_source_from_file(path: str, name: str = "module") -> Any:
     """Load the python source file found at path, absolute or relative, as a module.
 
     There's a lot of weird stuff going on in this method with type signatures and
@@ -134,13 +134,13 @@ def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any]]:
 
 def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
     """Load all problems from the module at path."""
-    mod = _load_source_from_path(path)
+    mod = _load_source_from_file(path)
     yield from _load_problems_from_module(mod)
 
 
 def _load_symbol_from_file(path: str, symbol: str) -> Any:
     """Load a specific symbol from a source file found at path, absolute or relative."""
-    mod = _load_source_from_path(path)
+    mod = _load_source_from_file(path)
     return _load_attr_from_module(symbol, mod)
 
 
