@@ -48,6 +48,18 @@ diff_explanation_msg = "\n\nHere's a detailed look at the difference between the
 [submission]
 # Configuration related to student submissions.
 
+# The global message to show if any tests failed.
+failed_tests_msg = "It looks like some tests failed; take a look and see if you can fix them!"
+
+# The global message to show if any hidden tests failed.
+failed_hidden_tests_msg = "Some of those tests were hidden tests, for which you won't know the inputs. In the real world, we don't always know exactly how or why our code is failing. Try to test edge cases and see if you can find the bugs!"
+
+# The global message to show if no tests failed.
+no_failed_tests_msg = "Great work! Looks like you're passing all the tests."
+
+[loader]
+# Configuration related to rerors loading student submissions.
+
 # The message to show on errors that prevented the submission from being run.
 #
 # Supported format specifiers:
@@ -66,14 +78,12 @@ no_match_msg = "It looks like you didn't include the right object; we were looki
 #  - `name`: the expected symbol name.
 too_many_matches_msg = "It looks like multiple files you submitted have objects named `{name}`; unfortunately, we can't figure out which one is supposed to be the real submission. Please remove all but one of them and resumbit."
 
-# The global message to show if any tests failed.
-failed_tests_msg = "It looks like some tests failed; take a look and see if you can fix them!"
+# The message to show if no script is found.
+no_script_error_msg = "It looks like you didn't upload a python script. Please make sure your script ends in `.py`."
 
-# The global message to show if any hidden tests failed.
-failed_hidden_tests_msg = "Some of those tests were hidden tests, for which you won't know the inputs. In the real world, we don't always know exactly how or why our code is failing. Try to test edge cases and see if you can find the bugs!"
+# The message to show if multiple scripts are found.
+multiple_scripts_error_msg = "It looks like you uploaded multiple python scripts. Please make sure you only upload one file ending in `.py`."
 
-# The global message to show if no tests failed.
-no_failed_tests_msg = "Great work! Looks like you're passing all the tests."
 
 [problem]
 # Configration for problem settings.

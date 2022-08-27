@@ -84,10 +84,10 @@ You can use a similar syntax for multiple arguments, or keyword arguments:
 
 ```python
 @test_case(2, 1)  # defaults work as expected
-@test_case(2, 1, sign=false)
-@test_case(-3, 4, sign=false)
+@test_case(2, 1, sign=False)
+@test_case(-3, 4, sign=False)
 @problem()
-def add_or_subtract(x: int, y: int, sign: bool = true) -> int:
+def add_or_subtract(x: int, y: int, sign: bool = True) -> int:
     """If sign, add x and y; otherwise, subtract them."""
     if sign:
         return x + y
@@ -109,6 +109,7 @@ will also be good test cases for student submissions, hence the following
 syntax:
 
 ```python
+@test_case(-2, aga_expect = 4)
 @test_case(2, aga_expect = 4)
 @problem()
 def square(x: int) -> int:
@@ -134,6 +135,7 @@ and we want the `2` test case to be worth 15 and the `-2` to be worth 5, we can
 do this:
 
 ```python
+@test_case(-2, aga_expect = 4)
 @test_case(2, aga_expect = 4, aga_weight = 3)
 @problem()
 def square(x: int) -> int:
@@ -144,6 +146,7 @@ def square(x: int) -> int:
 It is also possible to directly control the value of test cases:
 
 ```python
+@test_case(-2, aga_expect = 4)  # will get 100% of (total - 15) points
 @test_case(2, aga_expect = 4, aga_weight = 0, aga_value = 15)
 @problem()
 def square(x: int) -> int:

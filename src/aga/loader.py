@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+from glob import glob
 from importlib.machinery import ModuleSpec
 from os.path import isdir
 from os.path import join as pathjoin
@@ -35,6 +36,14 @@ class SubmissionSyntaxError(InvalidSubmissionError, SyntaxError):
         self.file = file
 
 
+class NoScript(InvalidSubmissionError, FileNotFoundError):
+    """No script was found."""
+
+
+class MultipleScripts(InvalidSubmissionError):
+    """Too many scripts were found."""
+
+
 def _get_spec_from_path(path: str, name: str) -> ModuleSpec:
     """Get the spec of the module at path."""
     spec = importlib.util.spec_from_file_location(name, path)
@@ -48,24 +57,39 @@ def _get_spec_from_path(path: str, name: str) -> ModuleSpec:
     return spec
 
 
-def load_script_from_path(path: str, name: str = "script") -> Callable[[], None]:
-    """Load the script at path as a function.
-
-    There's a lot of weird stuff going on in this method with type signatures and
-    poorly-documented code that python uses internally for their `import` statement. I
-    got this implementation from https://stackoverflow.com/a/67692 and made only small
-    modifications to it, but I'm not 100% sure I can explain how it works.
-    """
+def _load_script_from_file(path: str, name: str = "script") -> Callable[[], None]:
+    """Load the python script at path as a function."""
     spec = _get_spec_from_path(path, name)
     mod = importlib.util.module_from_spec(spec)
 
     def inner() -> None:
+        # we don't handle errors here so that they'll show up as runtime issues when we
+        # run the test
         spec.loader.exec_module(mod)  # type: ignore
 
     return inner
 
 
-def _load_source_from_path(path: str, name: str = "module") -> Any:
+def _load_script_from_dir(path: str, name: str = "script") -> Callable[[], None]:
+    """Load the python script in the directory at path."""
+    scripts = glob(pathjoin(path, "*.py"))
+    if not scripts:
+        raise NoScript
+    if len(scripts) > 1:
+        raise MultipleScripts
+
+    return _load_script_from_file(scripts[0], name)
+
+
+def load_script_from_path(path: str, name: str = "script") -> Callable[[], None]:
+    """Load the script at path, either a file or directory."""
+    if isdir(path):
+        return _load_script_from_dir(path, name)
+    else:
+        return _load_script_from_file(path, name)
+
+
+def _load_source_from_file(path: str, name: str = "module") -> Any:
     """Load the python source file found at path, absolute or relative, as a module.
 
     There's a lot of weird stuff going on in this method with type signatures and
@@ -110,13 +134,13 @@ def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any]]:
 
 def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
     """Load all problems from the module at path."""
-    mod = _load_source_from_path(path)
+    mod = _load_source_from_file(path)
     yield from _load_problems_from_module(mod)
 
 
 def _load_symbol_from_file(path: str, symbol: str) -> Any:
     """Load a specific symbol from a source file found at path, absolute or relative."""
-    mod = _load_source_from_path(path)
+    mod = _load_source_from_file(path)
     return _load_attr_from_module(symbol, mod)
 
 
