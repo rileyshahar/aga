@@ -15,7 +15,9 @@ from unittest import TestResult
 from .config import AgaConfig
 from .core import AgaTestCase, AgaTestSuite, Output, Problem
 from .loader import (
+    MultipleScripts,
     NoMatchingSymbol,
+    NoScript,
     SubmissionSyntaxError,
     TooManyMatchingSymbols,
     load_script_from_path,
@@ -49,7 +51,7 @@ class AgaTestCaseOutput:
     output: Optional[str] = None
     hidden: bool = False
 
-    def correct(self) -> bool:
+    def is_correct(self) -> bool:
         """Check whether the problem recieved full credit."""
         return self.score == self.max_score
 
@@ -153,7 +155,7 @@ class _AgaTestResult(TestResult):
         """Build the main output string."""
         config = self._config.submission
 
-        failed_tests = [t for t in self._tests if not t.correct()]
+        failed_tests = [t for t in self._tests if not t.is_correct()]
         if failed_tests:
             # add failed test message
             self._output_msgs.append(config.failed_tests_msg)
@@ -213,22 +215,40 @@ def load_and_run(
             tests=[],
             score=0.0,
         )
+    except NoScript:
+        return AgaProblemOutput(
+            output=_no_script_error_msg(problem),
+            tests=[],
+            score=0.0,
+        )
+    except MultipleScripts:
+        return AgaProblemOutput(
+            output=_multiple_scripts_error_msg(problem),
+            tests=[],
+            score=0.0,
+        )
 
     suite = problem.generate_test_suite(under_test, total_points)
     return _run(suite)
 
 
 def _submission_syntax_error_msg(cause: SyntaxError, config: AgaConfig) -> str:
-    return config.submission.import_error_msg.format(message=str(cause))
+    return config.loader.import_error_msg.format(message=str(cause))
 
 
 def _no_matches_error_msg(problem: Problem[Output]) -> str:
-    return problem.config().submission.no_match_msg.format(
-        name=problem.expected_symbol()
-    )
+    return problem.config().loader.no_match_msg.format(name=problem.expected_symbol())
 
 
 def _too_many_matches_error_msg(problem: Problem[Output]) -> str:
-    return problem.config().submission.too_many_matches_msg.format(
+    return problem.config().loader.too_many_matches_msg.format(
         name=problem.expected_symbol()
     )
+
+
+def _no_script_error_msg(problem: Problem[Output]) -> str:
+    return problem.config().loader.no_script_error_msg
+
+
+def _multiple_scripts_error_msg(problem: Problem[Output]) -> str:
+    return problem.config().loader.multiple_scripts_error_msg

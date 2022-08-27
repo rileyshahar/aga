@@ -221,7 +221,6 @@ def test_hello_name_incorrect(
     """Test the output of an incorrect hello name submission."""
     output = load_and_run(hello_name, source_hello_name_incorrect, 20.0)
 
-    print(output.tests[0].output)
     assert (
         AgaTestCaseOutput(
             score=0.0,
@@ -247,3 +246,27 @@ def test_hello_name_incorrect(
     assert output.output == (
         "It looks like some tests failed; take a look and see if you can fix them!"
     )
+
+
+def test_multiple_scripts(hello_world_script: Problem[None], source_dir: str) -> None:
+    """Test the error message when multiple scripts are uploaded."""
+    output = load_and_run(hello_world_script, source_dir, 20.0)
+
+    assert output.score == 0.0
+    assert (
+        output.output
+        == "It looks like you uploaded multiple python scripts. Please make sure you only upload one file ending in `.py`."
+    )
+    assert output.tests == []
+
+
+def test_no_scripts(hello_world_script: Problem[None], tmpdir: str) -> None:
+    """Test the error message when no scripts are uploaded."""
+    output = load_and_run(hello_world_script, tmpdir, 20.0)
+
+    assert output.score == 0.0
+    assert (
+        output.output
+        == "It looks like you didn't upload a python script. Please make sure your script ends in `.py`."
+    )
+    assert output.tests == []

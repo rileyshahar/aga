@@ -39,14 +39,28 @@ class AgaTestConfig:
 
 
 @dataclass
-class AgaSubmissionConfig:
-    """Aga's student submission-related configuration."""
+class AgaLoaderConfig:
+    """Aga's submission loading configuration."""
 
     # this is pretty gross, we should find an easier way to do this
     # we're doing this so we can single-source-of-truth the defaults in `defults.toml`.
-    import_error_msg: str = _from_default(["submission", "import_error_msg"])
-    no_match_msg: str = _from_default(["submission", "no_match_msg"])
-    too_many_matches_msg: str = _from_default(["submission", "too_many_matches_msg"])
+    import_error_msg: str = _from_default(["loader", "import_error_msg"])
+    no_match_msg: str = _from_default(["loader", "no_match_msg"])
+    too_many_matches_msg: str = _from_default(["loader", "too_many_matches_msg"])
+    no_script_error_msg: str = _from_default(["loader", "no_script_error_msg"])
+    multiple_scripts_error_msg: str = _from_default(
+        ["loader", "multiple_scripts_error_msg"]
+    )
+
+    def update_weak(self, other: "AgaSubmissionConfig") -> None:
+        """Update all default attributes of self to match other."""
+        _update_weak_leaf(self, other)
+
+
+@dataclass
+class AgaSubmissionConfig:
+    """Aga's submission configuration."""
+
     failed_tests_msg: str = _from_default(["submission", "failed_tests_msg"])
     failed_hidden_tests_msg: str = _from_default(
         ["submission", "failed_hidden_tests_msg"]
@@ -79,6 +93,7 @@ class AgaConfig:
 
     test: AgaTestConfig = field(default_factory=AgaTestConfig)
     submission: AgaSubmissionConfig = field(default_factory=AgaSubmissionConfig)
+    loader: AgaLoaderConfig = field(default_factory=AgaLoaderConfig)
     problem: AgaProblemConfig = field(default_factory=AgaProblemConfig)
 
     def update_weak(self, other: "AgaConfig") -> None:

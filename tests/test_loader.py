@@ -1,6 +1,7 @@
 """Tests for the `loader` module."""
 
 from io import StringIO
+from os.path import dirname
 from os.path import join as pathjoin
 from pathlib import Path
 from unittest.mock import patch
@@ -103,10 +104,21 @@ def test_load_problems(source_square_problem: str) -> None:
     square_loaded[0].check()  # pylint: disable=no-member
 
 
-def test_load_script(source_hello_world_script: str) -> None:
-    """Test that load_script works correctly."""
+def test_load_script_from_file(source_hello_world_script: str) -> None:
+    """Test that load_script works correctly on files."""
 
     script = load_script_from_path(source_hello_world_script)
+
+    with patch("sys.stdout", new_callable=StringIO) as stdout:
+        script()
+
+    assert stdout.getvalue() == "Hello, world!\n"
+
+
+def test_load_script_from_dir(source_hello_world_script: str) -> None:
+    """Test that load_script works correctly on directories."""
+
+    script = load_script_from_path(dirname(source_hello_world_script))
 
     with patch("sys.stdout", new_callable=StringIO) as stdout:
         script()

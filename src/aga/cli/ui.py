@@ -29,7 +29,7 @@ def print_fancy_summary(output: AgaProblemOutput) -> None:
             rprint(
                 Panel(
                     test.output,
-                    title="" if test.correct() else "[bright_red]" + test.name,
+                    title=("" if test.is_correct() else "[bright_red]") + test.name,
                     subtitle=f"{test.score}/{test.max_score}",
                     **RICH_PANEL_OPTS,  # type: ignore
                 )
