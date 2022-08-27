@@ -1,11 +1,12 @@
 """The main command-line typer application."""
 
+from datetime import datetime
 from typing import Iterable, Optional, Tuple
 
 import typer
 
 from ..config import AgaConfig, load_config_from_path
-from ..core import Output, Problem
+from ..core import Output, Problem, SubmissionMetadata
 from ..gradescope import into_gradescope_zip
 from ..loader import load_problems_from_path
 from ..runner import load_and_run
@@ -133,6 +134,7 @@ def check(
 
 
 @app.command()
+# pylint: disable=too-many-arguments
 def run(
     source: str = typer.Argument(
         ...,
@@ -147,11 +149,24 @@ def run(
     points: float = typer.Option(
         20.0, "--points", help="The total number of points for the problem."
     ),
+    due: datetime = typer.Option(
+        datetime.now,
+        "--due",
+        help="The problem due date.",
+        show_default="now",  # type: ignore
+    ),
+    submitted: datetime = typer.Option(
+        datetime.now,
+        "--submitted",
+        help="The problem submission date.",
+        show_default="now",  # type: ignore
+    ),
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
     problem: Problem = _load_problem(source, config)  # type: ignore
-    result = load_and_run(problem, submission, points)
+    metadata = SubmissionMetadata(points, due - submitted)
+    result = load_and_run(problem, submission, metadata)
     print_fancy_summary(result)
 
 

@@ -1,6 +1,7 @@
 """Contains various fixtures, especially pre-written problems."""
 
 import sys
+from datetime import timedelta
 from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
@@ -13,7 +14,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 from aga import group, problem, test_case, test_cases
 from aga.config import AgaConfig, load_config_from_path
-from aga.core import Problem
+from aga.core import Problem, SubmissionMetadata
 
 SOURCES = {
     "square_problem": """
@@ -542,3 +543,9 @@ def fixture_example_config(
 ) -> AgaConfig:
     """Get the example metadata file from the gradescope documentation."""
     return load_config_from_path(example_config_file)
+
+
+@pytest.fixture(name="metadata")
+def fixture_metadata() -> SubmissionMetadata:
+    """Get the example metadata file from the gradescope documentation."""
+    return SubmissionMetadata(total_score=20.0, time_since_due=timedelta())

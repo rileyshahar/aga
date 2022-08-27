@@ -1,12 +1,16 @@
 """Tests for the runner module."""
 
-from aga.core import Problem
+from aga.core import Problem, SubmissionMetadata
 from aga.runner import AgaTestCaseOutput, load_and_run
 
 
-def test_square_output(square: Problem[int], source_square: str) -> None:
+def test_square_output(
+    square: Problem[int],
+    source_square: str,
+    metadata: SubmissionMetadata,
+) -> None:
     """Test the output of a typical square problem."""
-    output = load_and_run(square, source_square, 20.0)
+    output = load_and_run(square, source_square, metadata)
 
     assert (
         AgaTestCaseOutput(
@@ -43,10 +47,10 @@ def test_square_output(square: Problem[int], source_square: str) -> None:
 
 
 def test_square_failure_output(
-    square: Problem[int], source_square_incorrect: str
+    square: Problem[int], source_square_incorrect: str, metadata: SubmissionMetadata
 ) -> None:
     """Test the output of an incorrect square problem."""
-    output = load_and_run(square, source_square_incorrect, 20.0)
+    output = load_and_run(square, source_square_incorrect, metadata)
 
     assert (
         AgaTestCaseOutput(
@@ -91,9 +95,11 @@ def test_square_failure_output(
     )
 
 
-def test_hello_world(hello_world: Problem[None], source_hello_world: str) -> None:
+def test_hello_world(
+    hello_world: Problem[None], source_hello_world: str, metadata: SubmissionMetadata
+) -> None:
     """Test the output of an incorrect hello world submission."""
-    output = load_and_run(hello_world, source_hello_world, 20.0)
+    output = load_and_run(hello_world, source_hello_world, metadata)
 
     assert output.tests == [
         AgaTestCaseOutput(
@@ -122,10 +128,12 @@ Here's a detailed look at the difference between the strings. Lines starting wit
 
 
 def test_hello_world_failure(
-    hello_world: Problem[None], source_hello_world_incorrect: str
+    hello_world: Problem[None],
+    source_hello_world_incorrect: str,
+    metadata: SubmissionMetadata,
 ) -> None:
     """Test the output of an incorrect hello world submission."""
-    output = load_and_run(hello_world, source_hello_world_incorrect, 20.0)
+    output = load_and_run(hello_world, source_hello_world_incorrect, metadata)
 
     assert output.tests == [
         AgaTestCaseOutput(
@@ -143,10 +151,12 @@ def test_hello_world_failure(
 
 
 def test_hello_world_script(
-    hello_world_script: Problem[None], source_hello_world_script: str
+    hello_world_script: Problem[None],
+    source_hello_world_script: str,
+    metadata: SubmissionMetadata,
 ) -> None:
     """Test the output of a correct hello world script submission."""
-    output = load_and_run(hello_world_script, source_hello_world_script, 20.0)
+    output = load_and_run(hello_world_script, source_hello_world_script, metadata)
 
     assert output.tests == [
         AgaTestCaseOutput(
@@ -161,9 +171,11 @@ def test_hello_world_script(
     assert output.output == "Great work! Looks like you're passing all the tests."
 
 
-def test_hello_name(hello_name: Problem[None], source_hello_name: str) -> None:
+def test_hello_name(
+    hello_name: Problem[None], source_hello_name: str, metadata: SubmissionMetadata
+) -> None:
     """Test the output of a correct hello name submission."""
-    output = load_and_run(hello_name, source_hello_name, 20.0)
+    output = load_and_run(hello_name, source_hello_name, metadata)
 
     assert (
         AgaTestCaseOutput(
@@ -216,10 +228,12 @@ Here's a detailed look at the difference between the strings. Lines starting wit
 
 
 def test_hello_name_incorrect(
-    hello_name: Problem[None], source_hello_name_incorrect: str
+    hello_name: Problem[None],
+    source_hello_name_incorrect: str,
+    metadata: SubmissionMetadata,
 ) -> None:
     """Test the output of an incorrect hello name submission."""
-    output = load_and_run(hello_name, source_hello_name_incorrect, 20.0)
+    output = load_and_run(hello_name, source_hello_name_incorrect, metadata)
 
     assert (
         AgaTestCaseOutput(
@@ -248,9 +262,11 @@ def test_hello_name_incorrect(
     )
 
 
-def test_multiple_scripts(hello_world_script: Problem[None], source_dir: str) -> None:
+def test_multiple_scripts(
+    hello_world_script: Problem[None], source_dir: str, metadata: SubmissionMetadata
+) -> None:
     """Test the error message when multiple scripts are uploaded."""
-    output = load_and_run(hello_world_script, source_dir, 20.0)
+    output = load_and_run(hello_world_script, source_dir, metadata)
 
     assert output.score == 0.0
     assert (
@@ -260,9 +276,11 @@ def test_multiple_scripts(hello_world_script: Problem[None], source_dir: str) ->
     assert output.tests == []
 
 
-def test_no_scripts(hello_world_script: Problem[None], tmpdir: str) -> None:
+def test_no_scripts(
+    hello_world_script: Problem[None], tmpdir: str, metadata: SubmissionMetadata
+) -> None:
     """Test the error message when no scripts are uploaded."""
-    output = load_and_run(hello_world_script, tmpdir, 20.0)
+    output = load_and_run(hello_world_script, tmpdir, metadata)
 
     assert output.score == 0.0
     assert (

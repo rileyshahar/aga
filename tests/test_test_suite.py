@@ -6,7 +6,7 @@ from unittest import TestCase
 import pytest
 
 from aga import problem, test_case
-from aga.core import Problem
+from aga.core import Problem, SubmissionMetadata
 
 
 def square_wrong(x: int) -> int:
@@ -77,24 +77,24 @@ def diff_wrong(x: int, y: int) -> int:
     return x + y
 
 
-def test_square_wrong(square: Problem[int]) -> None:
+def test_square_wrong(square: Problem[int], metadata: SubmissionMetadata) -> None:
     """Test that the tests fail for the incorrect implementation."""
-    suite = square.generate_test_suite(square_wrong, 1.0)
+    suite = square.generate_test_suite(square_wrong, metadata)
     result = suite.run(TestCase().defaultTestResult())
     assert not result.wasSuccessful()
 
 
-def test_square_right(square: Problem[int]) -> None:
+def test_square_right(square: Problem[int], metadata: SubmissionMetadata) -> None:
     """Test that the tests succeed for the correct implementation."""
-    suite = square.generate_test_suite(square_right, 1.0)
+    suite = square.generate_test_suite(square_right, metadata)
     result = suite.run(TestCase().defaultTestResult())
     assert result.wasSuccessful()
 
 
 @pytest.fixture(name="square_failure")
-def fixture_square_failure() -> list[tuple[TestCase, str]]:
+def fixture_square_failure(metadata: SubmissionMetadata) -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc square problem."""
-    suite = square_one_tc.generate_test_suite(square_wrong, 1.0)
+    suite = square_one_tc.generate_test_suite(square_wrong, metadata)
     result = suite.run(TestCase().defaultTestResult())
 
     return result.failures
@@ -121,9 +121,9 @@ def test_failure_description(square_failure: list[tuple[TestCase, str]]) -> None
 
 
 @pytest.fixture(name="diff_failure")
-def fixture_diff_failure() -> list[tuple[TestCase, str]]:
+def fixture_diff_failure(metadata: SubmissionMetadata) -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc diff problem."""
-    suite = diff_one_tc.generate_test_suite(diff_wrong, 1.0)
+    suite = diff_one_tc.generate_test_suite(diff_wrong, metadata)
     result = suite.run(TestCase().defaultTestResult())
 
     return result.failures
@@ -162,9 +162,11 @@ def test_failure_description_multiple_args(
 
 
 @pytest.fixture(name="square_kwd_failure")
-def fixture_square_kwd_failure() -> list[tuple[TestCase, str]]:
+def fixture_square_kwd_failure(
+    metadata: SubmissionMetadata,
+) -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc square kwd problem."""
-    suite = square_one_tc_kwd.generate_test_suite(square_wrong, 1.0)
+    suite = square_one_tc_kwd.generate_test_suite(square_wrong, metadata)
     result = suite.run(TestCase().defaultTestResult())
 
     return result.failures
@@ -203,9 +205,11 @@ def test_failure_description_kwdargs(
 
 
 @pytest.fixture(name="diff_kwd_failure")
-def fixture_diff_kwd_failure() -> list[tuple[TestCase, str]]:
+def fixture_diff_kwd_failure(
+    metadata: SubmissionMetadata,
+) -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc diff kwd problem."""
-    suite = diff_one_tc_kwd.generate_test_suite(diff_wrong, 1.0)
+    suite = diff_one_tc_kwd.generate_test_suite(diff_wrong, metadata)
     result = suite.run(TestCase().defaultTestResult())
 
     return result.failures

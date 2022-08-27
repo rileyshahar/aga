@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import timedelta
 from itertools import product
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
@@ -26,6 +27,24 @@ class TestMetadata:
     check_stdout: bool
     mock_input: bool
     hidden: bool = False
+
+
+@dataclass(frozen=True)
+class SubmissionMetadata:
+    """Metadata for testing a submission, collected from the frontend.
+
+    Attributes
+    ----------
+    total_score : float
+        The problem's total score.
+    time_since-due : timedelta
+        The delta _from_ the due date _to_ the submission date, i.e. it's negative if
+        the problem was submitted before the due date.
+
+    """
+
+    total_score: float
+    time_since_due: timedelta
 
 
 class AgaTestCase(TestCase):
@@ -321,7 +340,7 @@ class Problem(Generic[Output]):
             grp.check_one(self._golden)
 
     def generate_test_suite(
-        self, under_test: Callable[..., Output], total_score: float
+        self, under_test: Callable[..., Output], metadata: "SubmissionMetadata"
     ) -> AgaTestSuite:
         """Generate a `TestSuite` for the student submitted function.
 
@@ -333,8 +352,8 @@ class Problem(Generic[Output]):
         ----------
         under_test : Callable[..., Output]
             The student submitted function.
-        total_score : float
-            The total score for the problem.
+        metadata : SubmissionMetadata
+            The submission metadata.
 
         Returns
         -------
@@ -348,7 +367,7 @@ class Problem(Generic[Output]):
         groups = self._virtual_groups()
 
         score_infos = [grp.score_info for grp in groups]
-        scores = compute_scores(score_infos, total_score)
+        scores = compute_scores(score_infos, metadata.total_score)
 
         for (score, grp) in zip(scores, groups):
             suite.addTest(

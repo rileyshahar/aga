@@ -28,8 +28,10 @@ def gradescope_main(
     The parameters are to allow overriding the file structure in unit testing.
     """
     problem = load_problem(problem_src)  # type: ignore
-    metadata = load_submission_metadata_from_path(metadata_file)
-    output = load_and_run(problem, submission_dir, metadata.assignment.total_points)
+    metadata = load_submission_metadata_from_path(
+        metadata_file
+    ).to_submission_metadata()
+    output = load_and_run(problem, submission_dir, metadata)
 
     with open(output_file, "w+", encoding="UTF-8") as file:
         write_to(output, file)

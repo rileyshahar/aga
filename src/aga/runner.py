@@ -13,7 +13,7 @@ from typing import Any, Optional
 from unittest import TestResult
 
 from .config import AgaConfig
-from .core import AgaTestCase, AgaTestSuite, Output, Problem
+from .core import AgaTestCase, AgaTestSuite, Output, Problem, SubmissionMetadata
 from .loader import (
     MultipleScripts,
     NoMatchingSymbol,
@@ -182,7 +182,9 @@ def _run(suite: AgaTestSuite) -> AgaProblemOutput:
 
 
 def load_and_run(
-    problem: Problem[Output], path: str, total_points: float
+    problem: Problem[Output],
+    path: str,
+    metadata: SubmissionMetadata,
 ) -> AgaProblemOutput:
     """Load the submission and then run the suite, returning the output.
 
@@ -228,7 +230,7 @@ def load_and_run(
             score=0.0,
         )
 
-    suite = problem.generate_test_suite(under_test, total_points)
+    suite = problem.generate_test_suite(under_test, metadata)
     return _run(suite)
 
 
