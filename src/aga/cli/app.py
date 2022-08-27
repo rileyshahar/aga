@@ -72,6 +72,15 @@ def _handle_invalid_frontend(frontend: str) -> None:
     raise typer.Exit(1)
 
 
+def _check_problem(problem: Problem[Output]) -> None:
+    """Check that problem is valid."""
+    try:
+        problem.check()
+    except AssertionError as err:
+        typer.echo(f"{problem.name()} failed some golden tests: {err}", err=True)
+        raise typer.Exit(1) from err
+
+
 @app.command()
 def gen(
     source: str = typer.Argument(
@@ -98,6 +107,7 @@ def gen(
     """Generate an autograder file for a problem."""
     config = _load_config(config_file)
     problem = _load_problem(source, config)  # type: ignore
+    _check_problem(problem)
 
     if frontend == "gradescope":
         _gen_gradescope(problem, output)
@@ -118,15 +128,8 @@ def check(
     """Check a problem against test cases with an `aga_expect`."""
     config = _load_config(config_file)
     problem = _load_problem(source, config)  # type: ignore
-
-    try:
-        problem.check()
-    except AssertionError as err:
-        typer.echo(f"{problem.name()} failed some golden tests: {err}", err=True)
-        raise typer.Exit(1) from err
-    else:
-        typer.echo(f"{problem.name()} passed golden tests.")
-        raise typer.Exit()
+    _check_problem(problem)
+    typer.echo(f"{problem.name()} passed golden tests.")
 
 
 @app.command()
