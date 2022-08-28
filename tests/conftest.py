@@ -1,7 +1,7 @@
 """Contains various fixtures, especially pre-written problems."""
 
 import sys
-from datetime import timedelta
+from datetime import date, timedelta
 from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
@@ -15,6 +15,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore
 from aga import group, problem, test_case, test_cases
 from aga.config import AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
+from aga.score import correct_and_on_time, prize
 
 SOURCES = {
     "square_problem": """
@@ -523,6 +524,38 @@ def fixture_hello_name() -> Problem[None]:
     return hello_name
 
 
+@pytest.fixture(name="square_prize")
+def fixture_square_prize() -> Problem[int]:
+    """Generate a problem with a prize."""
+
+    @test_case(0)
+    @test_case(2)
+    @prize(correct_and_on_time, name="Prize: correct and on time")
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
+@pytest.fixture(name="square_prize_grouped")
+def fixture_square_prize_grouped() -> Problem[int]:
+    """Generate a problem with a prize in a config group."""
+
+    @group(weight=3)
+    @prize(correct_and_on_time)
+    @group(weight=2)
+    @test_case(0)
+    @test_case(2)
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
 @pytest.fixture(name="example_config_file")
 def fixture_example_config_file(
     tmp_path: Path,
@@ -541,11 +574,23 @@ def fixture_example_config_file(
 def fixture_example_config(
     example_config_file: str,
 ) -> AgaConfig:
-    """Get the example metadata file from the gradescope documentation."""
+    """Get the example config file."""
     return load_config_from_path(example_config_file)
 
 
 @pytest.fixture(name="metadata")
 def fixture_metadata() -> SubmissionMetadata:
-    """Get the example metadata file from the gradescope documentation."""
+    """Make an example submission metadata."""
     return SubmissionMetadata(total_score=20.0, time_since_due=timedelta())
+
+
+@pytest.fixture(name="metadata_late")
+def fixture_metadata_late() -> SubmissionMetadata:
+    """Make an example submission metadata, with late submission."""
+    return SubmissionMetadata(
+        total_score=20.0,
+        # oops! submitted in 2021, but due in 2020!
+        time_since_due=(
+            date.fromisoformat("2021-01-01") - date.fromisoformat("2020-01-01")
+        ),
+    )

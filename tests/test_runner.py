@@ -1,7 +1,9 @@
 """Tests for the runner module."""
 
+from datetime import date
+
 from aga.core import Problem, SubmissionMetadata
-from aga.runner import AgaTestCaseOutput, load_and_run
+from aga.runner import TcOutput, load_and_run
 
 
 def test_square_output(
@@ -13,7 +15,7 @@ def test_square_output(
     output = load_and_run(square, source_square, metadata)
 
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=20 / 3,
             max_score=20 / 3,
             name="Test on 4.",
@@ -23,7 +25,7 @@ def test_square_output(
         in output.tests
     )
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=20 / 3,
             max_score=20 / 3,
             name="Test on 2.",
@@ -33,7 +35,7 @@ def test_square_output(
         in output.tests
     )
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=20 / 3,
             max_score=20 / 3,
             name="Test on -2.",
@@ -53,7 +55,7 @@ def test_square_failure_output(
     output = load_and_run(square, source_square_incorrect, metadata)
 
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=0,
             max_score=20 / 3,
             name="Test on 4.",
@@ -64,7 +66,7 @@ def test_square_failure_output(
         in output.tests
     )
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=0,
             max_score=20 / 3,
             name="Test on 2.",
@@ -75,7 +77,7 @@ def test_square_failure_output(
         in output.tests
     )
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=0,
             max_score=20 / 3,
             name="Test on -2.",
@@ -102,7 +104,7 @@ def test_hello_world(
     output = load_and_run(hello_world, source_hello_world, metadata)
 
     assert output.tests == [
-        AgaTestCaseOutput(
+        TcOutput(
             score=20.0,
             max_score=20.0,
             name="Test on .",
@@ -136,7 +138,7 @@ def test_hello_world_failure(
     output = load_and_run(hello_world, source_hello_world_incorrect, metadata)
 
     assert output.tests == [
-        AgaTestCaseOutput(
+        TcOutput(
             score=0.0,
             max_score=20.0,
             name="Test on .",
@@ -159,7 +161,7 @@ def test_hello_world_script(
     output = load_and_run(hello_world_script, source_hello_world_script, metadata)
 
     assert output.tests == [
-        AgaTestCaseOutput(
+        TcOutput(
             score=20.0,
             max_score=20.0,
             name="Test on .",
@@ -178,7 +180,7 @@ def test_hello_name(
     output = load_and_run(hello_name, source_hello_name, metadata)
 
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=10.0,
             max_score=10.0,
             name="Test on 'world','me'.",
@@ -188,7 +190,7 @@ def test_hello_name(
         in output.tests
     )
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=10.0,
             max_score=10.0,
             name="Test on 'Alice','Bob'.",
@@ -236,7 +238,7 @@ def test_hello_name_incorrect(
     output = load_and_run(hello_name, source_hello_name_incorrect, metadata)
 
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=0.0,
             max_score=10.0,
             name="Test on 'world','me'.",
@@ -246,7 +248,7 @@ def test_hello_name_incorrect(
         in output.tests
     )
     assert (
-        AgaTestCaseOutput(
+        TcOutput(
             score=0.0,
             max_score=10.0,
             name="Test on 'Alice','Bob'.",
@@ -288,3 +290,102 @@ def test_no_scripts(
         == "It looks like you didn't upload a python script. Please make sure your script ends in `.py`."
     )
     assert output.tests == []
+
+
+def test_square_prize(
+    square_prize: Problem[None],
+    source_square: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test the output of a correct submission to the prize square problem."""
+    output = load_and_run(square_prize, source_square, metadata)
+
+    print(output.tests)
+    assert (
+        TcOutput(
+            score=20.0 / 3,
+            max_score=20.0 / 3,
+            name="Test on 0.",
+            output=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+    assert (
+        TcOutput(
+            score=20.0 / 3,
+            max_score=20.0 / 3,
+            name="Test on 2.",
+            output=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+    assert (
+        TcOutput(
+            score=20.0 / 3,
+            max_score=20.0 / 3,
+            name="Prize: correct and on time",
+            output=None,
+            hidden=False,
+        )
+        == output.tests[2]
+    )
+
+    assert output.score == 20.0
+    assert output.output == "Great work! Looks like you're passing all the tests."
+
+
+def test_square_prize_late(
+    square_prize: Problem[None],
+    source_square: str,
+    metadata_late: SubmissionMetadata,
+) -> None:
+    """Test the output of a late submission."""
+    output = load_and_run(square_prize, source_square, metadata_late)
+
+    print(output.tests)
+    assert (
+        TcOutput(
+            score=20.0 / 3,
+            max_score=20.0 / 3,
+            name="Test on 0.",
+            output=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+    assert (
+        TcOutput(
+            score=20.0 / 3,
+            max_score=20.0 / 3,
+            name="Test on 2.",
+            output=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+    assert (
+        TcOutput(
+            score=0.0 / 3,
+            max_score=20.0 / 3,
+            name="Prize: correct and on time",
+            output=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+
+    assert output.score == 20.0 / 3 * 2
+    assert output.output == "Great work! Looks like you're passing all the tests."
+
+
+def test_square_prize_grouped_score(
+    square_prize_grouped: Problem[None],
+    source_square: str,
+    metadata_late: SubmissionMetadata,
+) -> None:
+    """Test that square_prize_grouped assigned points correctly."""
+    output = load_and_run(square_prize_grouped, source_square, metadata_late)
+    # both tests pass, that's 2/5 of the 20 points
+    assert output.score == 8.0

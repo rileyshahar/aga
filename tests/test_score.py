@@ -2,7 +2,9 @@
 
 import pytest
 
-from aga.score import ScoreInfo, compute_scores
+from aga.core import SubmissionMetadata
+from aga.runner import TcOutput
+from aga.score import ScoreInfo, compute_scores, correct_and_on_time
 
 
 @pytest.mark.parametrize(
@@ -26,3 +28,15 @@ def test_compute_scores(
 ) -> None:
     """Test that compute_scores works."""
     assert compute_scores(score_infos, total_score) == expected_out
+
+
+def test_correct_and_on_time(metadata: SubmissionMetadata) -> None:
+    """Test that correct_and_on_time works."""
+    assert correct_and_on_time([], metadata)
+
+
+def test_correct_and_on_time_false(metadata: SubmissionMetadata) -> None:
+    """Test that correct_and_on_time works when wrong."""
+    assert not correct_and_on_time(
+        [TcOutput(score=0.0, max_score=1.0, name="Example")], metadata
+    )

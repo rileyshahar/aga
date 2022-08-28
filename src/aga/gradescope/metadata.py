@@ -151,7 +151,7 @@ class GradescopeSubmissionMetadata:
         """Get the aga submission metadata."""
         return SubmissionMetadata(
             total_score=self.assignment.total_points,
-            time_since_due=self.assignment.due_date - self.created_at,
+            time_since_due=self.created_at - self.assignment.due_date,
         )
 
 
