@@ -1,10 +1,16 @@
 """Tests for the submission metadata parser."""
 
+from importlib.resources import files
+from os.path import join as pathjoin
+from pathlib import Path
+from shutil import copyfileobj
+
 import pytest
 
 from aga.gradescope.metadata import (
     GradescopeAssignmentMetadata,
     GradescopeSubmissionMetadata,
+    load_submission_metadata_from_path,
 )
 
 
@@ -68,8 +74,22 @@ def test_example_assignment_metadata_name(
     assert example_metadata_assignment.title == "Programming Assignment 1"
 
 
-def test_example_assignment_metadata_total_points(
-    example_metadata_assignment: GradescopeAssignmentMetadata,
-) -> None:
-    """Test that the example metadata's assignment's total points are correct."""
-    assert example_metadata_assignment.total_points == 20.0
+@pytest.fixture(name="late_due_date_metadata")
+def fixture_late_due_date_metadata(tmp_path: Path) -> GradescopeSubmissionMetadata:
+    """Get a path with the example metadata file from the gradescope documentation."""
+    path = pathjoin(tmp_path, "metadata.json")
+
+    with files("tests.test_gradescope.resources").joinpath(  # type: ignore
+        "metadata_with_late_due_date.json"
+    ).open() as src:
+        with open(path, "w", encoding="UTF-8") as dest:
+            copyfileobj(src, dest)
+
+    return load_submission_metadata_from_path(path)
+
+
+def test_late_due_date(late_due_date_metadata: GradescopeSubmissionMetadata) -> None:
+    """Test that we properly loda late due dates."""
+    assert late_due_date_metadata.assignment.late_due_date is not None
+    assert late_due_date_metadata.assignment.late_due_date.year == 2022
+    assert late_due_date_metadata.assignment.late_due_date.month == 8

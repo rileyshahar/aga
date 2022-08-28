@@ -51,7 +51,13 @@ class GradescopeAssignmentMetadata:
     group_submission: bool
     id: int
     course_id: int
-    late_due_date: Optional[datetime]
+    late_due_date: Optional[datetime] = field(
+        metadata=config(
+            encoder=lambda s: datetime.isoformat(s) if s else None,
+            decoder=lambda s: datetime.fromisoformat(s) if s else None,  # type: ignore
+            mm_field=fields.DateTime(format="iso"),
+        )
+    )
     release_date: datetime = field(
         metadata=config(
             encoder=datetime.isoformat,

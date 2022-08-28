@@ -1,0 +1,42 @@
+{
+  "id": 131077611,
+  "users": [
+    {
+      "id": 3831249,
+      "email": "dylan@reed.edu",
+      "name": "Dylan McNamee",
+      "sid": null,
+      "assignment": {
+        "release_date": "2022-08-29T19:00:00.000000-07:00",
+        "due_date": "2022-08-31T12:00:00.000000-07:00",
+        "late_due_date": "2022-08-31T23:00:00.000000-07:00"
+      }
+    }
+  ],
+  "created_at": "2022-08-28T12:16:35.878823-07:00",
+  "assignment_id": null,
+  "assignment": {
+    "id": 2203603,
+    "title": "Assignment 0",
+    "release_date": "2022-08-29T19:00:00.000000-07:00",
+    "due_date": "2022-08-31T12:00:00.000000-07:00",
+    "total_points": "20.0",
+    "course_id": 405623,
+    "group_submission": false,
+    "group_size": null,
+    "late_due_date": "2022-08-31T23:00:00.000000-07:00",
+    "outline": [
+      {
+        "id": 17327873,
+        "type": "ProgrammingQuestion",
+        "title": "Autograder",
+        "parent_id": null,
+        "weight": "20.0",
+        "content": [],
+        "index": 1
+      }
+    ]
+  },
+  "submission_method": "upload",
+  "previous_submissions": []
+}
