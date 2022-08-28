@@ -89,7 +89,6 @@ def prize(
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the prize to a problem.
     """
-    # TODO: docs
     to_add = Prize(name, message, criteria, ScoreInfo(weight, value))
 
     def inner(problem: "Problem[Output]") -> "Problem[Output]":
