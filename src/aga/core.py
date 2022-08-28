@@ -628,6 +628,11 @@ def group(
         for details.
     value : int
         The group's absolute score. See :ref:`Determining Score` for details.
+
+    Returns
+    -------
+    Callable[[Problem[T]], Problem[T]]
+        A decorator which adds the group to a problem.
     """
 
     def outer(prob: Problem[Output]) -> Problem[Output]:

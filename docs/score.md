@@ -5,9 +5,10 @@ case. Each test case is scored as all-or-nothing.
 
 Each problem is sorted into a specific group by virtue of the
 [`group`](reference.html#aga.group) decorator. A group consists of every test
-case underneath that group, and before the next group decorator. There is an
-implicit group consisting of all test cases preceding the first decorator. For
-example, in the following setup, there are three groups; one consists of the
+case or prize (prizes and test cases work the same for the purposes of this
+algorithm) underneath that group, and before the next group decorator. There is
+an implicit group consisting of all test cases preceding the first decorator.
+For example, in the following setup, there are three groups; one consists of the
 negative cases, one of `0`, and one of the positive cases.
 
 ```python
