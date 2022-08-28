@@ -1,7 +1,5 @@
 """Tests for the runner module."""
 
-from datetime import date
-
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput, load_and_run
 
