@@ -7,6 +7,7 @@
 
  tutorial
  config
+ advanced
  score
  reference
  cli
