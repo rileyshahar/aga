@@ -59,10 +59,14 @@ source = ["src", "*/site-packages"]
 [tool.coverage.run]
 branch = true
 source = ["aga"]
-omit = ["src/aga/gradescope/resources/setup.py"]
+omit = ["src/aga/gradescope/resources/setup.py", "src/aga/prize.py"]
 
 [tool.coverage.report]
 show_missing = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:"
+]
 
 [tool.mypy]
 mypy_path = "src"

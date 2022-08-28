@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import timedelta
 from itertools import product
 from typing import Any, Callable, Generic, Optional, TypeVar
 from unittest import TestCase, TestSuite
@@ -10,7 +11,7 @@ from unittest.mock import patch
 
 from .checks import with_captured_stdout
 from .config import AgaConfig, AgaTestConfig
-from .score import ScoreInfo, compute_scores
+from .score import Prize, ScoredPrize, ScoreInfo, compute_scores
 from .util import text_diff
 
 Output = TypeVar("Output")
@@ -26,6 +27,28 @@ class TestMetadata:
     check_stdout: bool
     mock_input: bool
     hidden: bool = False
+
+
+@dataclass(frozen=True)
+class SubmissionMetadata:
+    """Metadata for testing a submission, collected from the frontend.
+
+    Attributes
+    ----------
+    total_score : float
+        The problem's total score.
+    time_since-due : timedelta
+        The delta _from_ the due date _to_ the submission date, i.e. it's negative if
+        the problem was submitted before the due date.
+
+    """
+
+    total_score: float
+    time_since_due: timedelta
+
+    def is_on_time(self) -> bool:
+        """Return true of the submission was on time."""
+        return self.time_since_due <= timedelta()
 
 
 class AgaTestCase(TestCase):
@@ -226,11 +249,16 @@ class _TestInputGroup(Generic[Output]):
 
     def __init__(self, weight: int = 1, value: float = 0.0) -> None:
         self._test_cases: list[_TestInputs[Output]] = []
+        self._prizes: list[Prize] = []
         self.score_info = ScoreInfo(weight, value)
 
     def add_test_case(self, case: _TestInputs[Output]) -> None:
         """Add a test case to the group."""
         self._test_cases.append(case)
+
+    def add_prize(self, prize: Prize) -> None:
+        """Add a prize to the group."""
+        self._prizes.append(prize)
 
     def generate_test_suite(
         self,
@@ -238,17 +266,26 @@ class _TestInputGroup(Generic[Output]):
         under_test: Callable[..., Output],
         group_score: float,
         config: AgaConfig,
-    ) -> AgaTestSuite:
+    ) -> tuple[AgaTestSuite, list[ScoredPrize]]:
         """Generate a test suite from all the test cases for this group."""
         suite = AgaTestSuite(config, [])
 
-        score_infos = [case.score_info for case in self._test_cases]
+        score_infos = [case.score_info for case in self._test_cases] + [
+            prize.score_info for prize in self._prizes
+        ]
         scores = compute_scores(score_infos, group_score)
 
         for (score, case) in zip(scores, self._test_cases):
             suite.addTest(case.generate_test_case(golden, under_test, score, config))
 
-        return suite
+        scored_prizes = []
+        for (score, prize) in zip(reversed(scores), reversed(self._prizes)):
+            # reverse scores so we get the ones that correspond to the prizes
+            scored_prizes.append(
+                ScoredPrize(prize=prize, max_score=score)  # type: ignore
+            )
+
+        return suite, scored_prizes
 
     def check_one(self, golden: Callable[..., Output]) -> None:
         """Check the golden solution against all test cases."""
@@ -269,6 +306,7 @@ class Problem(Generic[Output]):
         self._golden: Callable[..., Output] = golden
         self._name = name
         self._config = config
+        self._ungrouped_prizes: list[Prize] = []
         self._ungrouped_tests: list[_TestInputs[Output]] = []
         self._groups: list[_TestInputGroup[Output]] = []
         self.is_script = is_script
@@ -283,7 +321,7 @@ class Problem(Generic[Output]):
         aga_value: float = 0.0,
         **kwargs: Any,
     ) -> None:
-        """Add a test case to the problem.
+        """Add a test case to the current group.
 
         Student solutions will be checked against the golden solution; i.e., this method
         does _not_ produce a test of the golden solution.
@@ -300,13 +338,21 @@ class Problem(Generic[Output]):
         )
         self._ungrouped_tests.append(case)
 
+    def add_prize(self, prize: Prize) -> None:
+        """Add a prize to the current group."""
+        self._ungrouped_prizes.append(prize)
+
     def add_group(self, grp: _TestInputGroup[Output]) -> None:
         """Add a group to the problem."""
         for case in self._ungrouped_tests:
             grp.add_test_case(case)
 
+        for prize in self._ungrouped_prizes:
+            grp.add_prize(prize)
+
         self._groups.append(grp)
         self._ungrouped_tests = []
+        self._ungrouped_prizes = []
 
     def config(self) -> AgaConfig:
         """Get access to the problem's config."""
@@ -321,8 +367,8 @@ class Problem(Generic[Output]):
             grp.check_one(self._golden)
 
     def generate_test_suite(
-        self, under_test: Callable[..., Output], total_score: float
-    ) -> AgaTestSuite:
+        self, under_test: Callable[..., Output], metadata: "SubmissionMetadata"
+    ) -> tuple[AgaTestSuite, list[ScoredPrize]]:
         """Generate a `TestSuite` for the student submitted function.
 
         Neither the generated test suite nor the body of this function will run golden
@@ -333,8 +379,8 @@ class Problem(Generic[Output]):
         ----------
         under_test : Callable[..., Output]
             The student submitted function.
-        total_score : float
-            The total score for the problem.
+        metadata : SubmissionMetadata
+            The submission metadata.
 
         Returns
         -------
@@ -342,20 +388,26 @@ class Problem(Generic[Output]):
             A unittest test suite containing one test for each TestInput in this
             problem, checking the result of the problem's golden solution against
             `under_test`.
+        list[ScorePrize]
+            The prizes for the problem, with scores assigned.
         """
-        suite = AgaTestSuite(self._config, [])
+        ret_suite = AgaTestSuite(self._config, [])
 
         groups = self._virtual_groups()
+        print(groups)
 
         score_infos = [grp.score_info for grp in groups]
-        scores = compute_scores(score_infos, total_score)
+        scores = compute_scores(score_infos, metadata.total_score)
 
+        ret_prizes = []
         for (score, grp) in zip(scores, groups):
-            suite.addTest(
-                grp.generate_test_suite(self._golden, under_test, score, self._config)
+            suite, prizes = grp.generate_test_suite(
+                self._golden, under_test, score, self._config
             )
+            ret_suite.addTest(suite)
+            ret_prizes += prizes
 
-        return suite
+        return ret_suite, ret_prizes
 
     def name(self) -> str:
         """Get the problem's name."""
@@ -375,12 +427,19 @@ class Problem(Generic[Output]):
         We need to do it this way because while the problem is being read we don't know
         the configuration of the last test group yet.
         """
-        virtual_group: _TestInputGroup[Output] = _TestInputGroup()
+        if self._ungrouped_tests or self._ungrouped_prizes:
+            virtual_group: _TestInputGroup[Output] = _TestInputGroup()
 
-        for case in self._ungrouped_tests:
-            virtual_group.add_test_case(case)
+            for case in self._ungrouped_tests:
+                virtual_group.add_test_case(case)
 
-        return self._groups + [virtual_group]
+            for prize in self._ungrouped_prizes:
+                virtual_group.add_prize(prize)
+
+            return self._groups + [virtual_group]
+
+        else:
+            return self._groups
 
 
 def problem(
@@ -569,6 +628,11 @@ def group(
         for details.
     value : int
         The group's absolute score. See :ref:`Determining Score` for details.
+
+    Returns
+    -------
+    Callable[[Problem[T]], Problem[T]]
+        A decorator which adds the group to a problem.
     """
 
     def outer(prob: Problem[Output]) -> Problem[Output]:

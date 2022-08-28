@@ -9,6 +9,7 @@ from typing import List, Optional
 from dataclasses_json import config, dataclass_json
 from marshmallow import fields
 
+from ..core import SubmissionMetadata
 from .schema import GradescopeJson
 
 
@@ -145,6 +146,13 @@ class GradescopeSubmissionMetadata:
     submission_method: str
     users: List[GradescopeAssignmentUser]
     previous_submissions: List[GradescopePreviousSubmission]
+
+    def to_submission_metadata(self) -> SubmissionMetadata:
+        """Get the aga submission metadata."""
+        return SubmissionMetadata(
+            total_score=self.assignment.total_points,
+            time_since_due=self.created_at - self.assignment.due_date,
+        )
 
 
 def load_submission_metadata_from_path(path: str) -> GradescopeSubmissionMetadata:

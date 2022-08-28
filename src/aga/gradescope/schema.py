@@ -9,7 +9,7 @@ from typing import Optional, TextIO
 
 from dataclasses_json import dataclass_json
 
-from ..runner import AgaProblemOutput, AgaTestCaseOutput
+from ..runner import ProblemOutput, TcOutput
 
 
 @dataclass_json
@@ -42,7 +42,7 @@ class GradescopeTestJson:
     visibility: Optional[str] = None
 
     @classmethod
-    def from_test_case_output(cls, output: AgaTestCaseOutput) -> "GradescopeTestJson":
+    def from_test_case_output(cls, output: TcOutput) -> "GradescopeTestJson":
         """Create a test json from a test case output."""
         return cls(
             score=output.score,
@@ -86,7 +86,7 @@ class GradescopeJson:
     stdout_visibility: Optional[str] = None
 
     @classmethod
-    def from_problem_output(cls, output: AgaProblemOutput) -> "GradescopeJson":
+    def from_problem_output(cls, output: ProblemOutput) -> "GradescopeJson":
         """Create a gradescop json from a problem output."""
         return cls(
             tests=[GradescopeTestJson.from_test_case_output(tc) for tc in output.tests],
@@ -95,7 +95,7 @@ class GradescopeJson:
         )
 
 
-def write_to(output: AgaProblemOutput, stream: TextIO) -> None:
+def write_to(output: ProblemOutput, stream: TextIO) -> None:
     """Write the data from output as gradescope json to a text stream."""
     # pylint: disable=no-member
     json = GradescopeJson.from_problem_output(output).to_json()  # type: ignore
