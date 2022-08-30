@@ -323,7 +323,10 @@ def test_square_prize(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Prize: correct and on time",
-            output=None,
+            output=(
+                "Good work! You earned these points since all tests passed and "
+                "you turned in the assignment on time."
+            ),
             hidden=False,
         )
         == output.tests[2]
@@ -366,7 +369,10 @@ def test_square_prize_late(
             score=0.0 / 3,
             max_score=20.0 / 3,
             name="Prize: correct and on time",
-            output=None,
+            output=(
+                "To earn these points next time, "
+                "make sure to turn the assignment in on time."
+            ),
             hidden=False,
         )
         in output.tests

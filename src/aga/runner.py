@@ -166,14 +166,15 @@ class _AgaTestResult(TestResult):
 
         for prize in self._prizes:
             # mypy bug (https://github.com/python/mypy/issues/5485, fixed on main)
-            score = prize.max_score * prize.prize.criteria(  # type: ignore
+            scalar, message = prize.prize.criteria(  # type: ignore
                 self._tests, self._metadata
             )
+            score = scalar * prize.max_score
             prize_out = TcOutput(
                 score=score,
                 max_score=prize.max_score,
                 name=prize.prize.name,
-                output=prize.prize.message,
+                output=message,
             )
 
             # don't append to self._tests immediately so the next prizes don't see this

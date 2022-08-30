@@ -32,11 +32,27 @@ def test_compute_scores(
 
 def test_correct_and_on_time(metadata: SubmissionMetadata) -> None:
     """Test that correct_and_on_time works."""
-    assert correct_and_on_time([], metadata)
+    assert correct_and_on_time([], metadata) == (
+        1.0,
+        "Good work! You earned these points since all tests passed and "
+        "you turned in the assignment on time.",
+    )
 
 
 def test_correct_and_on_time_false(metadata: SubmissionMetadata) -> None:
     """Test that correct_and_on_time works when wrong."""
-    assert not correct_and_on_time(
+    assert correct_and_on_time(
         [TcOutput(score=0.0, max_score=1.0, name="Example")], metadata
+    ) == (0.0, "To earn these points, make sure all tests pass.")
+
+
+def test_correct_and_on_time_both_false(metadata_late: SubmissionMetadata) -> None:
+    """Test that correct_and_on_time works when wrong and late."""
+    # pylint: disable=unsubscriptable-object
+    assert correct_and_on_time(
+        [TcOutput(score=0.0, max_score=1.0, name="Example")], metadata_late
+    ) == (
+        0.0,
+        "To earn these points next time, "
+        "make sure to turn the assignment in on time, and that all tests pass.",
     )
