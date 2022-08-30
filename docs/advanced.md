@@ -10,11 +10,16 @@ completed tests in order to assign points values:
 from aga import problem, test_case
 from aga.prize import prize, TcOutput, SubmissionMetadata
 
-def all_correct(tests: list[TcOutput], _: SubmissionMetadata) -> float:
-    """Check that all tests passed."""
-		return 1.0 if all(t.is_correct() for t in tests) else 0.0
+def all_correct(
+    tests: list[TcOutput], _: SubmissionMetadata
+) -> tuple[float, str]:
+"""Check that all tests passed."""
+    if all(t.is_correct() for t in tests):
+        return 1.0, "Good work! You earned these points since all tests passed."
+    else:
+        return 0.0, "To earn these points, make sure all tests pass."
 
-@prize(all_correct, name="Prize", message="To get these points, make sure all tests pass.")
+@prize(all_correct, name="Prize")
 @test_case(0)
 @test_case(2)
 @problem()

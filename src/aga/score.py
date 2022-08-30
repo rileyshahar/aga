@@ -1,14 +1,14 @@
 """Utilities for easily computing problem score."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from .core import Output, Problem, SubmissionMetadata
     from .runner import TcOutput
 
 
-PrizeCriteria = Callable[[list["TcOutput"], "SubmissionMetadata"], float]
+PrizeCriteria = Callable[[list["TcOutput"], "SubmissionMetadata"], tuple[float, str]]
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,6 @@ class Prize:
     """A points prize, which can be earned by meeting certain problem-wide criteria."""
 
     name: str
-    message: Optional[str]
     criteria: PrizeCriteria
     score_info: ScoreInfo
 
@@ -67,30 +66,28 @@ def prize(
     name: str = "Prize",
     weight: int = 1,
     value: float = 0.0,
-    message: Optional[str] = None,
 ) -> Callable[["Problem[Output]"], "Problem[Output]"]:
     """Add a points prize to the problem.
 
     Parameters
     ----------
-    criteria : Callable[[list[TcOutput], SubmissionMetadata], float]
-        The criteria for awarding the prize's points. It should return a float from 0 to
-        1 which determines the fraction of points to assign.
+    criteria : Callable[[list[TcOutput], SubmissionMetadata], tuple[float, str]
+        The criteria for awarding the prize's points. The first returned value should be
+        a float from 0 to 1 which determines the fraction of points to assign. The
+        second should be a string which will be displayed to the student.
     name : str
         The name of the prize, to be displayed to the student.
     weight : int
         The prize's weight. See :ref:`Determining Score` for details.
     value : int
         The prize's absolute score. See :ref:`Determining Score` for details.
-    message : str
-        An explanation of the prize, to be displayed to the student.
 
     Returns
     -------
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the prize to a problem.
     """
-    to_add = Prize(name, message, criteria, ScoreInfo(weight, value))
+    to_add = Prize(name, criteria, ScoreInfo(weight, value))
 
     def inner(problem: "Problem[Output]") -> "Problem[Output]":
         problem.add_prize(to_add)
@@ -99,27 +96,59 @@ def prize(
     return inner
 
 
-def all_correct(tests: list["TcOutput"], _: "SubmissionMetadata") -> float:
+def all_correct(tests: list["TcOutput"], _: "SubmissionMetadata") -> tuple[float, str]:
     """1.0 if all tests passed, 0.0 otherwise.
 
     For use as a prize.
     """
-    return 1.0 if all(t.is_correct() for t in tests) else 0.0
+    if all(t.is_correct() for t in tests):
+        return 1.0, "Good work! You earned these points since all tests passed."
+    else:
+        return 0.0, "To earn these points, make sure all tests pass."
 
 
-def on_time(_: list["TcOutput"], metadata: "SubmissionMetadata") -> float:
+def on_time(_: list["TcOutput"], metadata: "SubmissionMetadata") -> tuple[float, str]:
     """1.0 if the submission was on time, 0.0 otherwise.
 
     For use as a prize.
     """
-    return 1.0 if metadata.is_on_time() else 0.0
+    if metadata.is_on_time():
+        return (
+            1.0,
+            "Good work! You earned these points by turning the assignment in on time.",
+        )
+    else:
+        return (
+            0.0,
+            "To earn this next time, make sure to turn the assignment in on time!",
+        )
 
 
 def correct_and_on_time(
     tests: list["TcOutput"], metadata: "SubmissionMetadata"
-) -> float:
+) -> tuple[float, str]:
     """1.0 if the submission was correct and passed all tests, 0.0 otherwise.
 
     For use as a prize.
     """
-    return 1.0 if all_correct(tests, metadata) and on_time(tests, metadata) else 0.0
+    match (bool(all_correct(tests, metadata)[0]), bool(on_time(tests, metadata)[0])):
+        case (True, True):
+            return (
+                1.0,
+                "Good work! You earned these points since all tests passed and "
+                "you turned in the assignment on time.",
+            )
+        case (False, True):
+            return 0.0, "To earn these points, make sure all tests pass."
+        case (True, False):
+            return (
+                0.0,
+                "To earn these points next time, "
+                "make sure to turn the assignment in on time.",
+            )
+        case (False, False):
+            return (
+                0.0,
+                "To earn these points next time, "
+                "make sure to turn the assignment in on time, and that all tests pass.",
+            )

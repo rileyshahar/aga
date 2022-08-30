@@ -561,17 +561,33 @@ def fixture_square_prize_grouped() -> Problem[int]:
 def fixture_square_custom_prize() -> Problem[int]:
     """Generate a problem with a custom prize function."""
 
-    def our_prize(tests: list[TcOutput], metadata: SubmissionMetadata) -> float:
+    def our_prize(
+        tests: list[TcOutput], metadata: SubmissionMetadata
+    ) -> tuple[float, str]:
         if not (all(t.is_correct() for t in tests) and metadata.is_on_time()):
             # give no prize if failing tests correct or not on time.
-            return 0.0
+            return (
+                0.0,
+                "To earn these points, make sure that all tests pass and "
+                "the assignment is turned in on time.",
+            )
 
         if metadata.previous_submissions < 3:
-            return 1.0
+            return (1.0, "Great work!")
         elif metadata.previous_submissions < 7:
-            return 0.8
+            return (
+                0.8,
+                "You received 80% of the prize, since you had "
+                f"{metadata.previous_submissions} previous submissions. "
+                "To receive the full prize, try to submit 2 or fewer times.",
+            )
         else:
-            return 0.5
+            return (
+                0.5,
+                "You received 50% of the prize, since you had "
+                f"{metadata.previous_submissions} previous submissions. "
+                "To receive the full prize, try to submit 2 or fewer times.",
+            )
 
     @prize(our_prize)
     @test_case(2)
