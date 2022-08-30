@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .runner import TcOutput
 
 
-PrizeCriteria = Callable[[list["TcOutput"], "SubmissionMetadata"], bool]
+PrizeCriteria = Callable[[list["TcOutput"], "SubmissionMetadata"], float]
 
 
 @dataclass(frozen=True)
@@ -73,8 +73,9 @@ def prize(
 
     Parameters
     ----------
-    criteria : Callable[[list[TcOutput], SubmissionMetadata], bool]
-        The criteria for awarding the prize's points.
+    criteria : Callable[[list[TcOutput], SubmissionMetadata], float]
+        The criteria for awarding the prize's points. It should return a float from 0 to
+        1 which determines the fraction of points to assign.
     name : str
         The name of the prize, to be displayed to the student.
     weight : int
@@ -98,27 +99,27 @@ def prize(
     return inner
 
 
-def all_correct(tests: list["TcOutput"], _: "SubmissionMetadata") -> bool:
-    """Check whether all tests passed.
+def all_correct(tests: list["TcOutput"], _: "SubmissionMetadata") -> float:
+    """1.0 if all tests passed, 0.0 otherwise.
 
     For use as a prize.
     """
-    return all(t.is_correct() for t in tests)
+    return 1.0 if all(t.is_correct() for t in tests) else 0.0
 
 
-def on_time(_: list["TcOutput"], metadata: "SubmissionMetadata") -> bool:
-    """Check whether the submission was on-time.
+def on_time(_: list["TcOutput"], metadata: "SubmissionMetadata") -> float:
+    """1.0 if the submission was on time, 0.0 otherwise.
 
     For use as a prize.
     """
-    return metadata.is_on_time()
+    return 1.0 if metadata.is_on_time() else 0.0
 
 
 def correct_and_on_time(
     tests: list["TcOutput"], metadata: "SubmissionMetadata"
-) -> bool:
-    """Check whether the submission was correct and passed all tests.
+) -> float:
+    """1.0 if the submission was correct and passed all tests, 0.0 otherwise.
 
     For use as a prize.
     """
-    return all_correct(tests, metadata) and on_time(tests, metadata)
+    return 1.0 if all_correct(tests, metadata) and on_time(tests, metadata) else 0.0

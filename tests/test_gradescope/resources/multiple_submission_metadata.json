@@ -1,0 +1,128 @@
+{
+  "id": 130835131,
+  "users": [
+    {
+      "id": 2171733,
+      "email": "rileyshahar@reed.edu",
+      "name": "Riley Sharar",
+      "sid": "",
+      "assignment": {
+        "release_date": "2022-05-10T19:00:00.000000-07:00",
+        "due_date": "2022-05-17T19:00:00.000000-07:00",
+        "late_due_date": null
+      }
+    }
+  ],
+  "created_at": "2022-08-24T16:29:59.923997-07:00",
+  "assignment_id": null,
+  "assignment": {
+    "id": 2057068,
+    "title": "[aga dev] square test 5-10",
+    "release_date": "2022-05-10T19:00:00.000000-07:00",
+    "due_date": "2022-05-17T19:00:00.000000-07:00",
+    "total_points": "20.0",
+    "course_id": 285754,
+    "group_submission": false,
+    "group_size": null,
+    "late_due_date": null,
+    "outline": [
+      {
+        "id": 16166094,
+        "type": "ProgrammingQuestion",
+        "title": "Autograder",
+        "parent_id": null,
+        "weight": "20.0",
+        "content": [],
+        "index": 1
+      }
+    ]
+  },
+  "submission_method": "upload",
+  "previous_submissions": [
+    {
+      "submission_time": "2022-06-18T16:29:10.470873-07:00",
+      "score": "1.0",
+      "results": {
+        "score": 1.0,
+        "tests": [
+          {
+            "name": "Test 2",
+            "tags": null,
+            "score": 1.0,
+            "number": null,
+            "output": null,
+            "status": null,
+            "max_score": 1.0,
+            "extra_data": null,
+            "visibility": "visible"
+          }
+        ],
+        "output": null,
+        "extra_data": null,
+        "visibility": null,
+        "leaderboard": [],
+        "execution_time": null,
+        "stdout_visibility": null
+      }
+    },
+    {
+      "submission_time": "2022-08-19T22:42:39.694856-07:00",
+      "score": "0.0",
+      "results": {
+        "output": "The autograder failed to execute correctly. Contact your course staff for help in debugging this issue. Make sure to include a link to this page so that they can help you most effectively."
+      }
+    },
+    {
+      "submission_time": "2022-08-19T22:43:22.377452-07:00",
+      "score": "0.0",
+      "results": {
+        "score": 0.0,
+        "tests": [
+          {
+            "name": "Test 2",
+            "tags": null,
+            "score": 0.0,
+            "number": null,
+            "output": "Test failed: (<class 'TypeError'>, TypeError(\"'int' object is not callable\"), <traceback object at 0x7f8d77cc8480>).",
+            "status": null,
+            "max_score": 1.0,
+            "extra_data": null,
+            "visibility": "visible"
+          }
+        ],
+        "output": null,
+        "extra_data": null,
+        "visibility": null,
+        "leaderboard": [],
+        "execution_time": null,
+        "stdout_visibility": null
+      }
+    },
+    {
+      "submission_time": "2022-08-19T22:44:01.886390-07:00",
+      "score": "0.0",
+      "results": {
+        "score": 0.0,
+        "tests": [
+          {
+            "name": "Test 2",
+            "tags": null,
+            "score": 0.0,
+            "number": null,
+            "output": "Test failed: (<class 'AssertionError'>, AssertionError('4 != 2 : Checked with 2. Expected 4. Got 2 instead.'), <traceback object at 0x7f749ce08f00>).",
+            "status": null,
+            "max_score": 1.0,
+            "extra_data": null,
+            "visibility": "visible"
+          }
+        ],
+        "output": null,
+        "extra_data": null,
+        "visibility": null,
+        "leaderboard": [],
+        "execution_time": null,
+        "stdout_visibility": null
+      }
+    }
+  ]
+}

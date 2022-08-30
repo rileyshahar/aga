@@ -88,8 +88,31 @@ def fixture_late_due_date_metadata(tmp_path: Path) -> GradescopeSubmissionMetada
     return load_submission_metadata_from_path(path)
 
 
+@pytest.fixture(name="multiple_submission_metadata")
+def fixture_multiple_submission_metadata(
+    tmp_path: Path,
+) -> GradescopeSubmissionMetadata:
+    """Get a path with the example metadata file from the gradescope documentation."""
+    path = pathjoin(tmp_path, "metadata.json")
+
+    with files("tests.test_gradescope.resources").joinpath(  # type: ignore
+        "multiple_submission_metadata.json"
+    ).open() as src:
+        with open(path, "w", encoding="UTF-8") as dest:
+            copyfileobj(src, dest)
+
+    return load_submission_metadata_from_path(path)
+
+
 def test_late_due_date(late_due_date_metadata: GradescopeSubmissionMetadata) -> None:
     """Test that we properly loda late due dates."""
     assert late_due_date_metadata.assignment.late_due_date is not None
     assert late_due_date_metadata.assignment.late_due_date.year == 2022
     assert late_due_date_metadata.assignment.late_due_date.month == 8
+
+
+def test_multiple_submission(
+    multiple_submission_metadata: GradescopeSubmissionMetadata,
+) -> None:
+    """Test that we properly load previous submissions."""
+    assert len(multiple_submission_metadata.previous_submissions) == 4

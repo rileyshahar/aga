@@ -15,6 +15,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore
 from aga import group, problem, test_case, test_cases
 from aga.config import AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
+from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
 
 SOURCES = {
@@ -556,6 +557,32 @@ def fixture_square_prize_grouped() -> Problem[int]:
     return square
 
 
+@pytest.fixture(name="square_custom_prize")
+def fixture_square_custom_prize() -> Problem[int]:
+    """Generate a problem with a custom prize function."""
+
+    def our_prize(tests: list[TcOutput], metadata: SubmissionMetadata) -> float:
+        if not (all(t.is_correct() for t in tests) and metadata.is_on_time()):
+            # give no prize if failing tests correct or not on time.
+            return 0.0
+
+        if metadata.previous_submissions < 3:
+            return 1.0
+        elif metadata.previous_submissions < 7:
+            return 0.8
+        else:
+            return 0.5
+
+    @prize(our_prize)
+    @test_case(2)
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
 @pytest.fixture(name="example_config_file")
 def fixture_example_config_file(
     tmp_path: Path,
@@ -581,7 +608,9 @@ def fixture_example_config(
 @pytest.fixture(name="metadata")
 def fixture_metadata() -> SubmissionMetadata:
     """Make an example submission metadata."""
-    return SubmissionMetadata(total_score=20.0, time_since_due=timedelta())
+    return SubmissionMetadata(
+        total_score=20.0, time_since_due=timedelta(), previous_submissions=0
+    )
 
 
 @pytest.fixture(name="metadata_late")
@@ -593,4 +622,16 @@ def fixture_metadata_late() -> SubmissionMetadata:
         time_since_due=(
             date.fromisoformat("2021-01-01") - date.fromisoformat("2020-01-01")
         ),
+        previous_submissions=0,
+    )
+
+
+@pytest.fixture(name="metadata_previous_submissions")
+def fixture_metadata_previous_submissions() -> SubmissionMetadata:
+    """Make an example submission metadata, with three previous submissions."""
+    return SubmissionMetadata(
+        total_score=20.0,
+        # oops! submitted in 2021, but due in 2020!
+        time_since_due=timedelta(),
+        previous_submissions=3,
     )

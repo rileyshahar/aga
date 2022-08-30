@@ -158,6 +158,7 @@ class GradescopeSubmissionMetadata:
         return SubmissionMetadata(
             total_score=self.assignment.total_points,
             time_since_due=self.created_at - self.assignment.due_date,
+            previous_submissions=len(self.previous_submissions),
         )
 
 

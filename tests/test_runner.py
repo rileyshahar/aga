@@ -291,14 +291,13 @@ def test_no_scripts(
 
 
 def test_square_prize(
-    square_prize: Problem[None],
+    square_prize: Problem[int],
     source_square: str,
     metadata: SubmissionMetadata,
 ) -> None:
     """Test the output of a correct submission to the prize square problem."""
     output = load_and_run(square_prize, source_square, metadata)
 
-    print(output.tests)
     assert (
         TcOutput(
             score=20.0 / 3,
@@ -335,14 +334,13 @@ def test_square_prize(
 
 
 def test_square_prize_late(
-    square_prize: Problem[None],
+    square_prize: Problem[int],
     source_square: str,
     metadata_late: SubmissionMetadata,
 ) -> None:
     """Test the output of a late submission."""
     output = load_and_run(square_prize, source_square, metadata_late)
 
-    print(output.tests)
     assert (
         TcOutput(
             score=20.0 / 3,
@@ -379,7 +377,7 @@ def test_square_prize_late(
 
 
 def test_square_prize_grouped_score(
-    square_prize_grouped: Problem[None],
+    square_prize_grouped: Problem[int],
     source_square: str,
     metadata_late: SubmissionMetadata,
 ) -> None:
@@ -387,3 +385,16 @@ def test_square_prize_grouped_score(
     output = load_and_run(square_prize_grouped, source_square, metadata_late)
     # both tests pass, that's 2/5 of the 20 points
     assert output.score == 8.0
+
+
+def test_square_custom_prize_score(
+    square_custom_prize: Problem[int],
+    source_square: str,
+    metadata_previous_submissions: SubmissionMetadata,
+) -> None:
+    """Test that square_prize_grouped assigned points correctly."""
+    output = load_and_run(
+        square_custom_prize, source_square, metadata_previous_submissions
+    )
+    # test passes, which is 10 points; prize should be 8/10
+    assert output.score == 18.0
