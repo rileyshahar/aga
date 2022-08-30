@@ -40,11 +40,14 @@ class SubmissionMetadata:
     time_since-due : timedelta
         The delta _from_ the due date _to_ the submission date, i.e. it's negative if
         the problem was submitted before the due date.
+    previous_submissions : int
+        The number of previous submissions.
 
     """
 
     total_score: float
     time_since_due: timedelta
+    previous_submissions: int
 
     def is_on_time(self) -> bool:
         """Return true of the submission was on time."""
@@ -394,7 +397,6 @@ class Problem(Generic[Output]):
         ret_suite = AgaTestSuite(self._config, [])
 
         groups = self._virtual_groups()
-        print(groups)
 
         score_infos = [grp.score_info for grp in groups]
         scores = compute_scores(score_infos, metadata.total_score)

@@ -161,11 +161,14 @@ def run(
         help="The problem submission date.",
         show_default="now",  # type: ignore
     ),
+    previous_submissions: int = typer.Option(
+        0, "--previous_submissions", help="The number of previous submissions."
+    ),
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
     problem: Problem = _load_problem(source, config)  # type: ignore
-    metadata = SubmissionMetadata(points, due - submitted)
+    metadata = SubmissionMetadata(points, due - submitted, previous_submissions)
     result = load_and_run(problem, submission, metadata)
     print_fancy_summary(result)
 

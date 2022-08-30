@@ -91,7 +91,7 @@ class _AgaTestResult(TestResult):
         prizes: list[ScoredPrize],
         metadata: SubmissionMetadata,
         *args: Any,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self._tests: list[TcOutput] = []
@@ -165,16 +165,16 @@ class _AgaTestResult(TestResult):
         prize_tests = []
 
         for prize in self._prizes:
+            # mypy bug (https://github.com/python/mypy/issues/5485, fixed on main)
+            score = prize.max_score * prize.prize.criteria(  # type: ignore
+                self._tests, self._metadata
+            )
             prize_out = TcOutput(
-                score=prize.max_score,
+                score=score,
                 max_score=prize.max_score,
                 name=prize.prize.name,
-                output=None,
+                output=prize.prize.message,
             )
-            # mypy bug (https://github.com/python/mypy/issues/5485, fixed on main)
-            if not prize.prize.criteria(self._tests, self._metadata):  # type: ignore
-                prize_out.score = 0.0
-                prize_out.output = prize.prize.message
 
             # don't append to self._tests immediately so the next prizes don't see this
             # one
