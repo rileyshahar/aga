@@ -146,7 +146,7 @@ def correct_and_on_time(
                 "To earn these points next time, "
                 "make sure to turn the assignment in on time.",
             )
-        case (False, False):
+        case _:
             return (
                 0.0,
                 "To earn these points next time, "

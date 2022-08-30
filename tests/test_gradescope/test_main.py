@@ -55,7 +55,7 @@ def fixture_gs_json_square(
 
 def test_json_test_name_square(gs_json_square: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct test names."""
-    assert set(map(lambda x: x["name"], gs_json_square["tests"])) == {
+    assert set(map(lambda x: x["name"], gs_json_square["tests"])) == {  # type: ignore
         "Test on 4.",
         "Test on 2.",
         "Test on -2.",
@@ -70,7 +70,9 @@ def test_json_test_score_square(gs_json_square: Any) -> None:
 
 def test_json_test_visibility_square(gs_json_square: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct visibility."""
-    assert set(map(lambda t: t["visibility"], gs_json_square["tests"])) == {
+    assert set(
+        map(lambda t: t["visibility"], gs_json_square["tests"])  # type: ignore
+    ) == {
         "visible",
         "hidden",
     }
@@ -153,7 +155,9 @@ def fixture_gs_json_square_custom_name(
 
 def test_json_test_name_square_custom_name(gs_json_square_custom_name: Any) -> None:
     """Test that the JSON file produced by gradescope has the correct test names."""
-    assert set(map(lambda x: x["name"], gs_json_square_custom_name["tests"])) == {
+    assert set(
+        map(lambda x: x["name"], gs_json_square_custom_name["tests"])  # type: ignore
+    ) == {
         "Test positive two.",
         "Test minus two.",
         "This is a deliberately silly name!",
@@ -219,7 +223,7 @@ def test_json_square_generated_cases(
     )
 
     # there should
-    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
         "Test on -2.",
         "Test on -1.",
         "Test on 0.",
@@ -245,7 +249,7 @@ def test_json_diff_generated_cases(
     )
 
     # there should
-    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
         "Test on -1,-1.",
         "Test on 0,-1.",
         "Test on 1,-1.",
@@ -275,7 +279,7 @@ def test_json_diff_kwarg_generated_cases_no_product(
     )
 
     # there should
-    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
         "Test on -1,y=-1.",
         "Test on 0,y=0.",
         "Test on 1,y=1.",
@@ -299,7 +303,7 @@ def test_json_diff_kwarg_generated_cases(
     )
 
     # there should
-    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
         "Test on -1,y=-1.",
         "Test on 0,y=-1.",
         "Test on 1,y=-1.",
@@ -329,7 +333,7 @@ def test_json_diff_kwarg_custom_generator(
     )
 
     # there should
-    assert set(map(lambda t: t["name"], gs_json["tests"])) == {
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
         "Test on -1,y=-1.",
         "Test on 0,y=-1.",
         "Test on 1,y=-1.",
