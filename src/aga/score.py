@@ -73,8 +73,9 @@ def prize(
 
     Parameters
     ----------
-    criteria : Callable[[list[TcOutput], SubmissionMetadata], bool]
-        The criteria for awarding the prize's points.
+    criteria : Callable[[list[TcOutput], SubmissionMetadata], float]
+        The criteria for awarding the prize's points. It should return a float from 0 to
+        1 which determines the fraction of points to assign.
     name : str
         The name of the prize, to be displayed to the student.
     weight : int
