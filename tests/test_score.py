@@ -20,7 +20,9 @@ from aga.score import ScoreInfo, compute_scores, correct_and_on_time
             ],
             20.0,
             [4, 2, 8, 4, 2],
-        )
+        ),
+        ([ScoreInfo(1, 1.0)], 1.0, [1.0]),
+        ([ScoreInfo(0, 1.0)], 1.0, [1.0]),
     ],
 )
 def test_compute_scores(

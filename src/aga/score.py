@@ -39,7 +39,10 @@ def compute_scores(score_infos: list[ScoreInfo], total_score: float) -> list[flo
         total_weight += s.weight
 
     for s in score_infos:
-        out.append(s.value + (total_score * s.weight) / total_weight)
+        if total_weight > 0:
+            out.append(s.value + (total_score * s.weight) / total_weight)
+        else:
+            out.append(s.value)
 
     return out
 
