@@ -168,7 +168,7 @@ def run(
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
     problem: Problem = _load_problem(source, config)  # type: ignore
-    metadata = SubmissionMetadata(points, due - submitted, previous_submissions)
+    metadata = SubmissionMetadata(points, submitted - due, previous_submissions)
     result = load_and_run(problem, submission, metadata)
     print_fancy_summary(result)
 
