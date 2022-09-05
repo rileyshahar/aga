@@ -180,6 +180,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("square_grouped"),
         lazy_fixture("square_generated_cases"),
         lazy_fixture("diff_generated"),
+        lazy_fixture("pos_zip"),
         lazy_fixture("pos_and_kwd_generated"),
         lazy_fixture("pos_and_kwd_zip"),
         lazy_fixture("pos_and_kwd_generator_function"),
@@ -418,6 +419,41 @@ def fixture_diff_generator() -> Problem[int]:
     """
 
     @test_cases(range(-1, 2), range(-1, 2))
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
+@pytest.fixture(name="pos_zip")
+def fixture_pos_zip() -> Problem[int]:
+    """"""
+
+    @test_cases([-1, 1], [1, 3], aga_product=False)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
+@pytest.fixture(name="aga_args_in_product")
+def fixture_aga_args_in_product() -> Problem[int]:
+    @test_cases(range(-1, 2), range(1, 3), aga_hidden=[True] * 6, aga_product=True)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
+@pytest.fixture(name="aga_args_singleton")
+def fixture_aga_args_singleton() -> Problem[int]:
+    @test_cases(range(-1, 2), range(1, 3), aga_hidden=True, aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""
