@@ -5,7 +5,17 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 from itertools import product
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Optional,
+    TypeVar,
+    Sequence,
+    Dict,
+    List,
+    overload,
+)
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
@@ -15,6 +25,14 @@ from .score import Prize, ScoredPrize, ScoreInfo, compute_scores
 from .util import text_diff
 
 Output = TypeVar("Output")
+
+AGA_RESERVED_KEYWORDS = {
+    "aga_expect",
+    "aga_hidden",
+    "aga_name",
+    "aga_weight",
+    "aga_value",
+}
 
 
 @dataclass(frozen=True)
@@ -507,17 +525,23 @@ def problem(
 
 def _check_reserved_keyword(kwd: str) -> None:
     """Raise an error if `kwd` is reserved."""
-    if kwd.startswith("aga_") and kwd not in (
-        "aga_expect",
-        "aga_hidden",
-        "aga_name",
-        "aga_weight",
-        "aga_value",
-    ):
+    if kwd.startswith("aga_") and kwd not in AGA_RESERVED_KEYWORDS:
         raise ValueError(
             f'invalid keyword arg "{kwd}" to `test_case`: all keyword args '
             "beginning `aga_` are reserved"
         )
+
+
+@overload
+def test_case(
+    *args: Any,
+    aga_expect: Optional[Any] = ...,
+    aga_hidden: bool = ...,
+    aga_name: Optional[str] = ...,
+    aga_weight: int = ...,
+    aga_value: int = ...,
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    ...
 
 
 def test_case(
@@ -567,12 +591,38 @@ def test_case(
     return outer
 
 
+@overload
+def test_cases(
+    *args: Iterable[Any],
+    aga_expect: Optional[Any] = ...,
+    aga_hidden: bool = ...,
+    aga_name: Optional[str] = ...,
+    aga_weight: int = ...,
+    aga_value: int = ...,
+    aga_product: bool = True,
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    ...
+
+
+@overload
+def test_cases(
+    *args: Iterable[Any],
+    aga_expect: Iterable[Optional[Any]] = ...,
+    aga_hidden: Iterable[bool] = ...,
+    aga_name: Iterable[Optional[str]] = ...,
+    aga_weight: Iterable[int] = ...,
+    aga_value: Iterable[int] = ...,
+    aga_product: bool = True,
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    ...
+
+
 def test_cases(
     *args: Iterable[Any],
     aga_product: bool = True,
-    **kwargs: Iterable[Any],
+    **kwargs: Any,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
-    r"""Generate many test cases programatically, from generators of inputs.
+    r"""Generate many test cases programmatically, from generators of inputs.
 
     Parameters
     ----------
@@ -597,14 +647,78 @@ def test_cases(
     """
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
+        # ok so if the combinator is product
+        # we are taking the cartesian product for all args and kwargs
+        # and if the combinator is zip,
+        # are zipping all the args and kwargs
         combinator = product if aga_product else zip
+        combined_args = list(combinator(*args))
 
-        combined_args = combinator(*args)
-        combined_kwargs = combinator(*kwargs.values())
+        # pop aga keywords out
+        aga_kwargs_iter = {
+            kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
+        }
 
-        for curr_args, curr_kwargs in combinator(combined_args, combined_kwargs):
+        combined_kwargs = list(combinator(*kwargs.values()))
+        if combinator is zip:
+            if len(combined_args) and len(combined_kwargs):
+                if len(combined_args) != len(combined_kwargs):
+                    raise ValueError()
+            elif len(combined_args):
+                combined_kwargs = [()] * len(combined_args)
+            elif len(combined_kwargs):
+                combined_args = [()] * len(combined_kwargs)
+
+        all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
+
+        if all(
+            isinstance(aga_kwarg_iter, Sequence) and not isinstance(aga_kwarg_iter, str)
+            for aga_kwarg_iter in aga_kwargs_iter.values()
+        ):
+            # if all the aga kwargs are sequences, and not strings, we can zip them
+            aga_kwargs_iter = {
+                kwd: list(aga_kwarg_iter)
+                for kwd, aga_kwarg_iter in aga_kwargs_iter.items()
+            }
+        elif all(
+            isinstance(aga_kwarg_iter, str) or not isinstance(aga_kwarg_iter, Iterable)
+            for aga_kwarg_iter in aga_kwargs_iter.values()
+        ):
+            # otherwise, we are assuming the input is singleton
+            # like aga_hidden = True
+            # and we are just repeating it for each test case
+            aga_kwargs_iter = {
+                kwd: [aga_kwarg_iter] * len(all_args_and_kwargs)
+                for kwd, aga_kwarg_iter in aga_kwargs_iter.items()
+            }
+        else:
+            raise ValueError(
+                "invalid aga_ keyword arg: must be a sequence or singleton"
+            )
+
+        if not all(
+            len(aga_kwarg_iter) == len(all_args_and_kwargs)
+            for aga_kwarg_iter in aga_kwargs_iter.values()
+        ):
+            # the length of the kwargs should be equal to the number of test cases
+            # i.e. the length of the combined args
+            raise ValueError(
+                f"all aga_ keyword args must have the same length as the test cases, which is {len(combined_args)}. "
+            )
+        else:
+            aga_kwargs_list: List[Dict[str, Any]] = [
+                dict(zip(aga_kwargs_iter.keys(), values))
+                for values in zip(*aga_kwargs_iter.values())
+            ]
+
+        if not aga_kwargs_list:
+            aga_kwargs_list = [{} for _ in all_args_and_kwargs]
+
+        total_args = list(zip(all_args_and_kwargs, aga_kwargs_list))
+
+        for (curr_args, curr_kwargs), aga_kwargs in total_args:
             # we have to reassemble a kwargs dictionary that actually has keys
-            final_kwargs = dict(zip(kwargs.keys(), curr_kwargs))
+            final_kwargs = dict(zip(kwargs.keys(), curr_kwargs), **aga_kwargs)
 
             # i think we have to enumerate all of the arguments to test_case by
             # hand; we can't capture them separately from the test case kwargs
