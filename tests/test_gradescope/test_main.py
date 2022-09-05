@@ -283,6 +283,27 @@ def test_json_pos_zip(
     }
 
 
+def test_json_pos_zip_with_singleton_aga_args(
+    pos_zip_with_singleton_aga_args: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    gs_json = get_gs_json(
+        pos_zip_with_singleton_aga_args,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
+        "Test on -1,1.",
+        "Test on 1,3.",
+    }
+
+
 def test_json_aga_args_in_product(
     aga_args_in_product: Problem[int],
     source_diff: str,
@@ -305,6 +326,56 @@ def test_json_aga_args_in_product(
         "Test on 0,2.",
         "Test on 1,1.",
         "Test on 1,2.",
+    }
+
+
+def test_json_aga_args_with_kwargs_in_product(
+    aga_args_with_kwargs_in_product: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    gs_json = get_gs_json(
+        aga_args_with_kwargs_in_product,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
+        "Test on -1,y=1.",
+        "Test on -1,y=2.",
+        "Test on 0,y=1.",
+        "Test on 0,y=2.",
+        "Test on 1,y=1.",
+        "Test on 1,y=2.",
+    }
+
+
+def test_json_aga_args_with_kwargs_in_product_singleton(
+    aga_args_with_kwargs_in_product_singleton: Problem[int],
+    source_diff: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    gs_json = get_gs_json(
+        aga_args_with_kwargs_in_product_singleton,
+        source_diff,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+    assert set(map(lambda t: t["name"], gs_json["tests"])) == {  # type: ignore
+        "Test on -1,y=1.",
+        "Test on -1,y=2.",
+        "Test on 0,y=1.",
+        "Test on 0,y=2.",
+        "Test on 1,y=1.",
+        "Test on 1,y=2.",
     }
 
 

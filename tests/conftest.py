@@ -440,6 +440,19 @@ def fixture_pos_zip() -> Problem[int]:
     return difference
 
 
+@pytest.fixture(name="pos_zip_with_singleton_aga_args")
+def fixture_pos_zip_with_singleton_aga_args() -> Problem[int]:
+    """"""
+
+    @test_cases([-1, 1], [1, 3], aga_product=False, aga_hidden=True)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
 @pytest.fixture(name="aga_args_in_product")
 def fixture_aga_args_in_product() -> Problem[int]:
     @test_cases(range(-1, 2), range(1, 3), aga_hidden=[True] * 6, aga_product=True)
@@ -451,9 +464,31 @@ def fixture_aga_args_in_product() -> Problem[int]:
     return difference
 
 
+@pytest.fixture(name="aga_args_with_kwargs_in_product")
+def fixture_aga_args_with_kwargs_in_product() -> Problem[int]:
+    @test_cases(range(-1, 2), y=range(1, 3), aga_hidden=[True] * 6, aga_product=True)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
 @pytest.fixture(name="aga_args_singleton")
 def fixture_aga_args_singleton() -> Problem[int]:
     @test_cases(range(-1, 2), range(1, 3), aga_hidden=True, aga_product=True)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+
+    return difference
+
+
+@pytest.fixture(name="aga_args_with_kwargs_in_product_singleton")
+def fixture_aga_args_with_kwargs_in_product_singleton() -> Problem[int]:
+    @test_cases(range(-1, 2), y=range(1, 3), aga_hidden=True, aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""
