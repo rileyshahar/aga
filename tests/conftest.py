@@ -429,7 +429,7 @@ def fixture_diff_generator() -> Problem[int]:
 
 @pytest.fixture(name="pos_zip")
 def fixture_pos_zip() -> Problem[int]:
-    """"""
+    """Generate a problem which tests zip combinator."""
 
     @test_cases([-1, 1], [1, 3], aga_product=False, aga_hidden=[True] * 2)
     @problem()
@@ -442,7 +442,7 @@ def fixture_pos_zip() -> Problem[int]:
 
 @pytest.fixture(name="pos_zip_with_singleton_aga_args")
 def fixture_pos_zip_with_singleton_aga_args() -> Problem[int]:
-    """"""
+    """Generate a problem which tests zip combinator and singleton aga_ kwargs input."""
 
     @test_cases([-1, 1], [1, 3], aga_product=False, aga_hidden=True)
     @problem()
@@ -455,6 +455,8 @@ def fixture_pos_zip_with_singleton_aga_args() -> Problem[int]:
 
 @pytest.fixture(name="aga_args_in_product")
 def fixture_aga_args_in_product() -> Problem[int]:
+    """Generate a problem which tests product combinator."""
+
     @test_cases(range(-1, 2), range(1, 3), aga_hidden=[True] * 6, aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:
@@ -466,6 +468,8 @@ def fixture_aga_args_in_product() -> Problem[int]:
 
 @pytest.fixture(name="aga_args_with_kwargs_in_product")
 def fixture_aga_args_with_kwargs_in_product() -> Problem[int]:
+    """Generate a problem which tests product combinator with mixed args and kwargs."""
+
     @test_cases(range(-1, 2), y=range(1, 3), aga_hidden=[True] * 6, aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:
@@ -477,6 +481,8 @@ def fixture_aga_args_with_kwargs_in_product() -> Problem[int]:
 
 @pytest.fixture(name="aga_args_singleton")
 def fixture_aga_args_singleton() -> Problem[int]:
+    """Generate a problem which tests product combinator with singleton aga_ kwargs."""
+
     @test_cases(range(-1, 2), range(1, 3), aga_hidden=True, aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:
@@ -488,6 +494,8 @@ def fixture_aga_args_singleton() -> Problem[int]:
 
 @pytest.fixture(name="aga_args_with_kwargs_in_product_singleton")
 def fixture_aga_args_with_kwargs_in_product_singleton() -> Problem[int]:
+    """Generate a problem which tests product with mixed args and kwargs."""
+
     @test_cases(range(-1, 2), y=range(1, 3), aga_hidden=True, aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:

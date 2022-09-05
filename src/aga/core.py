@@ -15,6 +15,7 @@ from typing import (
     Dict,
     List,
     overload,
+    TYPE_CHECKING,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
@@ -532,17 +533,19 @@ def _check_reserved_keyword(kwd: str) -> None:
         )
 
 
-@overload
-def test_case(
-    *args: Any,
-    aga_expect: Optional[Any] = ...,
-    aga_hidden: bool = ...,
-    aga_name: Optional[str] = ...,
-    aga_weight: int = ...,
-    aga_value: float = ...,
-    **kwargs: Any,
-) -> Callable[[Problem[Output]], Problem[Output]]:
-    ...
+if not TYPE_CHECKING:
+    # ugly...
+    @overload
+    def test_case(
+        *args: Any,
+        aga_expect: Optional[Any] = ...,
+        aga_hidden: bool = ...,
+        aga_name: Optional[str] = ...,
+        aga_weight: int = ...,
+        aga_value: float = ...,
+        **kwargs: Any,
+    ) -> Callable[[Problem[Output]], Problem[Output]]:
+        ...
 
 
 def test_case(
@@ -668,14 +671,14 @@ def test_cases(
         # ======= validation checks =======
         if combinator is zip:
             # create empty args for zip if there are no args
-            if len(combined_args) and len(combined_kwargs):
+            if combined_args and combined_kwargs:
                 if len(combined_args) != len(combined_kwargs):
                     raise ValueError(
                         'length of "args" and "kwargs" must match in zip mode'
                     )
-            elif len(combined_args):
+            elif combined_args:
                 combined_kwargs = [()] * len(combined_args)
-            elif len(combined_kwargs):
+            elif combined_kwargs:
                 combined_args = [()] * len(combined_kwargs)
 
         all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
@@ -714,14 +717,15 @@ def test_cases(
             # the length of the kwargs should be equal to the number of test cases
             # i.e. the length of the combined args
             raise ValueError(
-                f"all aga_ keyword args must have the same length as the test cases, which is {len(combined_args)}"
+                f"all aga_ keyword args must have the same length as the test cases, "
+                f"which is {len(combined_args)}"
             )
-        else:
-            # the aga kwargs list we want
-            aga_kwargs_list: List[Dict[str, Any]] = [
-                dict(zip(aga_kwargs_dict.keys(), aga_kwarg_value))
-                for aga_kwarg_value in zip(*aga_kwargs_dict.values())
-            ]
+
+        # the aga kwargs list we want
+        aga_kwargs_list: List[Dict[str, Any]] = [
+            dict(zip(aga_kwargs_dict.keys(), aga_kwarg_value))
+            for aga_kwarg_value in zip(*aga_kwargs_dict.values())
+        ]
 
         if not aga_kwargs_list:
             # generate default aga kwargs dict if there are no aga kwargs
