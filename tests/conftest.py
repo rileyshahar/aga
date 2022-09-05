@@ -431,7 +431,7 @@ def fixture_diff_generator() -> Problem[int]:
 def fixture_pos_zip() -> Problem[int]:
     """"""
 
-    @test_cases([-1, 1], [1, 3], aga_product=False)
+    @test_cases([-1, 1], [1, 3], aga_product=False, aga_hidden=[True] * 2)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""

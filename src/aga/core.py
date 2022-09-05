@@ -654,6 +654,7 @@ def test_cases(
         # and if the combinator is zip,
         # we are zipping all the args and kwargs, if there are any
         combinator = product if aga_product else zip
+
         combined_args = list(combinator(*args))
 
         # pop aga keywords out
@@ -663,6 +664,7 @@ def test_cases(
 
         combined_kwargs = list(combinator(*kwargs.values()))
 
+        # ======= validation checks =======
         if combinator is zip:
             # create empty args for zip if there are no args
             if len(combined_args) and len(combined_kwargs):
@@ -719,8 +721,10 @@ def test_cases(
             ]
 
         if not aga_kwargs_list:
+            # generate default aga kwargs dict if there are no aga kwargs
             aga_kwargs_list = [{} for _ in all_args_and_kwargs]
 
+        # ======= zipping all the args together =======
         total_args = list(zip(all_args_and_kwargs, aga_kwargs_list))
 
         for (curr_args, curr_kwargs), aga_kwargs in total_args:
