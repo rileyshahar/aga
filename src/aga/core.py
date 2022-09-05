@@ -539,7 +539,8 @@ def test_case(
     aga_hidden: bool = ...,
     aga_name: Optional[str] = ...,
     aga_weight: int = ...,
-    aga_value: int = ...,
+    aga_value: float = ...,
+    **kwargs: Any,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     ...
 
@@ -658,7 +659,7 @@ def test_cases(
         combined_args = list(combinator(*args))
 
         # pop aga keywords out
-        aga_kwargs_iter = {
+        aga_kwargs_dict = {
             kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
         }
 
@@ -680,24 +681,26 @@ def test_cases(
         all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
 
         if all(
-            isinstance(aga_kwarg_iter, Sequence) and not isinstance(aga_kwarg_iter, str)
-            for aga_kwarg_iter in aga_kwargs_iter.values()
+            isinstance(aga_kwarg_value, Sequence)
+            and not isinstance(aga_kwarg_value, str)
+            for aga_kwarg_value in aga_kwargs_dict.values()
         ):
             # if all the aga kwargs are sequences, and not strings, we can zip them
-            aga_kwargs_iter = {
+            aga_kwargs_dict = {
                 kwd: list(aga_kwarg_iter)
-                for kwd, aga_kwarg_iter in aga_kwargs_iter.items()
+                for kwd, aga_kwarg_iter in aga_kwargs_dict.items()
             }
         elif all(
-            isinstance(aga_kwarg_iter, str) or not isinstance(aga_kwarg_iter, Iterable)
-            for aga_kwarg_iter in aga_kwargs_iter.values()
+            isinstance(aga_kwarg_value, str)
+            or not isinstance(aga_kwarg_value, Sequence)
+            for aga_kwarg_value in aga_kwargs_dict.values()
         ):
             # otherwise, we are assuming the input is singleton
             # like aga_hidden = True
             # and we are just repeating it for each test case
-            aga_kwargs_iter = {
-                kwd: [aga_kwarg_iter] * len(all_args_and_kwargs)
-                for kwd, aga_kwarg_iter in aga_kwargs_iter.items()
+            aga_kwargs_dict = {
+                kwd: [aga_kwarg_value] * len(all_args_and_kwargs)
+                for kwd, aga_kwarg_value in aga_kwargs_dict.items()
             }
         else:
             raise ValueError(
@@ -705,19 +708,19 @@ def test_cases(
             )
 
         if not all(
-            len(aga_kwarg_iter) == len(all_args_and_kwargs)
-            for aga_kwarg_iter in aga_kwargs_iter.values()
+            len(aga_kwarg_value) == len(all_args_and_kwargs)
+            for aga_kwarg_value in aga_kwargs_dict.values()
         ):
             # the length of the kwargs should be equal to the number of test cases
             # i.e. the length of the combined args
             raise ValueError(
-                f"all aga_ keyword args must have the same length as the test cases, which is {len(combined_args)}. "
+                f"all aga_ keyword args must have the same length as the test cases, which is {len(combined_args)}"
             )
         else:
             # the aga kwargs list we want
             aga_kwargs_list: List[Dict[str, Any]] = [
-                dict(zip(aga_kwargs_iter.keys(), values))
-                for values in zip(*aga_kwargs_iter.values())
+                dict(zip(aga_kwargs_dict.keys(), aga_kwarg_value))
+                for aga_kwarg_value in zip(*aga_kwargs_dict.values())
             ]
 
         if not aga_kwargs_list:
