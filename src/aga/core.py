@@ -600,6 +600,7 @@ def test_cases(
     aga_weight: int = ...,
     aga_value: int = ...,
     aga_product: bool = True,
+    **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     ...
 
@@ -613,6 +614,7 @@ def test_cases(
     aga_weight: Iterable[int] = ...,
     aga_value: Iterable[int] = ...,
     aga_product: bool = True,
+    **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     ...
 
