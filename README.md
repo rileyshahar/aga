@@ -32,7 +32,7 @@ pip install aga
 or with the python dependency manager of your choice (I like [poetry](https://github.com/python-poetry/poetry)), for example:
 
 ```bash
-pip install poetry
+curl -sSL https://install.python-poetry.org | python3 -
 echo "cd into aga repo"
 cd aga
 poetry install && poetry shell
