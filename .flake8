@@ -3,4 +3,4 @@
 max-line-length = 88
 
 # typer uses function calls for argument defaults
-ignore=B008
+ignore=B008,W503
