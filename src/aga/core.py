@@ -652,7 +652,7 @@ def test_cases(
         # ok so if the combinator is product
         # we are taking the cartesian product for all args and kwargs
         # and if the combinator is zip,
-        # are zipping all the args and kwargs
+        # we are zipping all the args and kwargs, if there are any
         combinator = product if aga_product else zip
         combined_args = list(combinator(*args))
 
@@ -662,10 +662,14 @@ def test_cases(
         }
 
         combined_kwargs = list(combinator(*kwargs.values()))
+
         if combinator is zip:
+            # create empty args for zip if there are no args
             if len(combined_args) and len(combined_kwargs):
                 if len(combined_args) != len(combined_kwargs):
-                    raise ValueError()
+                    raise ValueError(
+                        'length of "args" and "kwargs" must match in zip mode'
+                    )
             elif len(combined_args):
                 combined_kwargs = [()] * len(combined_args)
             elif len(combined_kwargs):
@@ -708,6 +712,7 @@ def test_cases(
                 f"all aga_ keyword args must have the same length as the test cases, which is {len(combined_args)}. "
             )
         else:
+            # the aga kwargs list we want
             aga_kwargs_list: List[Dict[str, Any]] = [
                 dict(zip(aga_kwargs_iter.keys(), values))
                 for values in zip(*aga_kwargs_iter.values())
