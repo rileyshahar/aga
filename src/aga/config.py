@@ -1,11 +1,11 @@
 """Utilities for configuring `aga`."""
-
+import pathlib
 from dataclasses import MISSING, dataclass, field, fields
 from importlib.resources import files
-from typing import Any
+from typing import Any, Set
 
 import toml
-from dacite import from_dict  # type: ignore
+from dacite import from_dict, Config  # type: ignore
 
 
 def _default_value(path: list[str]) -> Any:
@@ -87,6 +87,32 @@ class AgaProblemConfig:
         _update_weak_leaf(self, other)
 
 
+# The default base class for injection
+# defaulted to aga src folder
+# TODO: consider using the cwd?
+DEFAULT_INJECTION_BASE_PATH = pathlib.Path().parent
+
+
+@dataclass
+class AgaInjectionConfig:
+    """Aga's injection-related configuration."""
+
+    inject_files: Set[pathlib.Path] = field(default_factory=set)
+    inject_dirs: Set[pathlib.Path] = field(default_factory=set)
+    base_path: pathlib.Path = field(default=DEFAULT_INJECTION_BASE_PATH)
+
+    @property
+    def is_valid(self) -> bool:
+        """Whether this config is valid.
+
+        inject files must but files
+        inject dirs must be directories
+        """
+        return all(file.is_file() for file in self.inject_files) and all(
+            file.is_dir() for file in self.inject_dirs
+        )
+
+
 @dataclass
 class AgaConfig:
     """Aga's configuration."""
@@ -95,6 +121,7 @@ class AgaConfig:
     submission: AgaSubmissionConfig = field(default_factory=AgaSubmissionConfig)
     loader: AgaLoaderConfig = field(default_factory=AgaLoaderConfig)
     problem: AgaProblemConfig = field(default_factory=AgaProblemConfig)
+    injection: AgaInjectionConfig = field(default_factory=AgaInjectionConfig)
 
     def update_weak(self, other: "AgaConfig") -> None:
         """Update all default attributes of self to match other."""
@@ -128,6 +155,7 @@ def load_config_from_path(path: str) -> AgaConfig:
     return from_dict(  # type: ignore
         data_class=AgaConfig,
         data=toml.load(path),
+        config=Config(cast=[pathlib.Path, set]),
     )
 
 
