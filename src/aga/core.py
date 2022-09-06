@@ -462,6 +462,10 @@ class Problem(Generic[Output]):
         else:
             return self._groups
 
+    def __call__(self, *args, **kwargs) -> Output:
+        """Enable the ability to call the golden solution as if the problem were it."""
+        return self._golden(*args, **kwargs)
+
 
 def problem(
     name: Optional[str] = None,
