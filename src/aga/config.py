@@ -6,7 +6,7 @@ import pathlib
 from dataclasses import MISSING, dataclass, field, fields
 from importlib.resources import files
 from types import ModuleType
-from typing import Any, Set, Optional
+from typing import Any, Set, Optional, Iterable
 
 import toml
 from dacite import from_dict, Config  # type: ignore
@@ -122,10 +122,28 @@ class AgaProblemConfig:
         _update_weak_leaf(self, other)
 
 
-# The default base class for injection
-# defaulted to aga src folder
-# TODO: consider using the cwd?
-DEFAULT_INJECTION_BASE_PATH = pathlib.Path().parent
+def _find_injection_dir(
+    injection_dir: str, starting_dir: pathlib.Path = None
+) -> pathlib.Path:
+    """Find the injection directory."""
+    target_folder = current_path = starting_dir or pathlib.Path.cwd()
+
+    # sort of wrong, but it's ok, who will make a folder in the root
+    while current_path != current_path.parent:
+        if (target_folder := current_path / injection_dir).exists():
+            break
+
+        current_path = current_path.parent
+
+    if not target_folder.exists():
+        raise ValueError(
+            "No injection directory found. It's likely to be an config error. "
+        )
+
+    if not target_folder.is_dir():
+        raise ValueError(f"Injection directory ({target_folder}) is not a directory")
+
+    return target_folder
 
 
 @dataclass
@@ -134,8 +152,8 @@ class AgaInjectionConfig:
 
     inject_files: Set[pathlib.Path] = field(default_factory=set)
     inject_dirs: Set[pathlib.Path] = field(default_factory=set)
-    base_path: pathlib.Path = field(default=DEFAULT_INJECTION_BASE_PATH)
     injection_module: Optional[ModuleType] = field(default=None)
+    auto_injection_folder: str = field(default="aga_injection")
 
     @property
     def is_valid(self) -> bool:
@@ -148,7 +166,9 @@ class AgaInjectionConfig:
             file.exists() and file.is_file() for file in self.inject_files
         ) and all(file.exists() and file.is_dir() for file in self.inject_dirs)
 
-    def inject(self, module: ModuleType) -> None:
+    def inject(self, module: ModuleType = None) -> None:
+        module = module or self.injection_module
+
         for file_path in self.inject_files:
             _inject_from_file(module, file_path)
 
@@ -165,6 +185,17 @@ class AgaInjectionConfig:
     def update_weak(self, other: AgaInjectionConfig) -> None:
         """Update all default attributes of self to match other."""
         _update_weak_leaf(self, other)
+
+    def find_auto_injection(self) -> None:
+        """Find the auto injection folder."""
+        self.inject_dirs.add(_find_injection_dir(self.auto_injection_folder))
+
+    def update(
+        self, fls: Iterable[pathlib.Path] = (), dirs: Iterable[pathlib.Path] = ()
+    ) -> None:
+        """Update the injection config."""
+        self.inject_files.update(fls)
+        self.inject_dirs.update(dirs)
 
 
 @dataclass
