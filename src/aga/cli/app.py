@@ -1,7 +1,7 @@
 """The main command-line typer application."""
-
+import pathlib
 from datetime import datetime
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, List
 
 import typer
 
@@ -41,6 +41,25 @@ def _load_config(path: str = "aga.toml") -> AgaConfig:
         config = load_config_from_path(path)
     except FileNotFoundError:
         config = AgaConfig()
+
+    return config
+
+
+def _load_injection_config(
+    config: AgaConfig,
+    injected_files: Iterable[pathlib.Path],
+    injected_dirs: Iterable[pathlib.Path],
+    injection_module: str = "injection",
+) -> AgaConfig:
+    """Load injected files and directories into the config."""
+    config.injection.inject_files.update(injected_files)
+    config.injection.inject_dirs.update(injected_dirs)
+
+    if not config.injection.is_valid:
+        raise ValueError("injection files/dirs are invalid")
+
+    injection_mod = config.injection.create_injection_module(injection_module)
+    config.injection.inject(injection_mod)
 
     return config
 
@@ -104,9 +123,24 @@ def gen(
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
     ),
+    inject: List[pathlib.Path] = typer.Option(
+        [], "--inject", help="Inject a util file into the submission directory."
+    ),
+    inject_all: List[pathlib.Path] = typer.Option(
+        [],
+        "--inject-all",
+        help="Inject all util files in the specified folder "
+        "into the submission directory.",
+    ),
+    injection_module: Optional[str] = typer.Option(
+        "injection",
+        "--injection-module",
+        help="The name of the module to import from the injection directory.",
+    ),
 ) -> None:
     """Generate an autograder file for a problem."""
     config = _load_config(config_file)
+    _load_injection_config(config, inject, inject_all, injection_module)
     problem = _load_problem(source, config)  # type: ignore
     _check_problem(problem)
 
@@ -125,9 +159,24 @@ def check(
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
     ),
+    inject: List[pathlib.Path] = typer.Option(
+        [], "--inject", help="Inject a util file into the submission directory."
+    ),
+    inject_all: List[pathlib.Path] = typer.Option(
+        [],
+        "--inject-all",
+        help="Inject all util files in the specified folder "
+        "into the submission directory.",
+    ),
+    injection_module: Optional[str] = typer.Option(
+        "injection",
+        "--injection-module",
+        help="The name of the module to import from the injection directory.",
+    ),
 ) -> None:
     """Check a problem against test cases with an `aga_expect`."""
     config = _load_config(config_file)
+    _load_injection_config(config, inject, inject_all, injection_module)
     problem = _load_problem(source, config)  # type: ignore
     _check_problem(problem)
     typer.echo(f"{problem.name()} passed golden tests.")
@@ -164,9 +213,24 @@ def run(
     previous_submissions: int = typer.Option(
         0, "--previous_submissions", help="The number of previous submissions."
     ),
+    inject: List[pathlib.Path] = typer.Option(
+        [], "--inject", help="Inject a util file into the submission directory."
+    ),
+    inject_all: List[pathlib.Path] = typer.Option(
+        [],
+        "--inject-all",
+        help="Inject all util files in the specified folder "
+        "into the submission directory.",
+    ),
+    injection_module: Optional[str] = typer.Option(
+        "injection",
+        "--injection-module",
+        help="The name of the module to import from the injection directory.",
+    ),
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
+    _load_injection_config(config, inject, inject_all, injection_module)
     problem: Problem = _load_problem(source, config)  # type: ignore
     metadata = SubmissionMetadata(points, submitted - due, previous_submissions)
     result = load_and_run(problem, submission, metadata)

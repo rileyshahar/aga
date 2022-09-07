@@ -1,8 +1,12 @@
 """Utilities for configuring `aga`."""
+from __future__ import annotations
+
+import importlib.util
 import pathlib
 from dataclasses import MISSING, dataclass, field, fields
 from importlib.resources import files
-from typing import Any, Set
+from types import ModuleType
+from typing import Any, Set, Optional
 
 import toml
 from dacite import from_dict, Config  # type: ignore
@@ -20,6 +24,37 @@ def _default_value(path: list[str]) -> Any:
 def _from_default(path: list[str]) -> Any:
     """Given a path of config names, construct a field which inherits the default."""
     return field(default_factory=lambda: _default_value(path))  # type: ignore
+
+
+def _grab_user_defined_properties(module: ModuleType) -> Set[str]:
+    """Grab all the properties defined in the module."""
+    return {name for name in dir(module) if not name.startswith("_")}
+
+
+def _create_injection_module(module_name: str = "injection") -> ModuleType:
+    import aga
+
+    if hasattr(aga, module_name):
+        raise ValueError(f'Module "aga.{module_name}" already exists.')
+
+    module_full_name = f"aga.{module_name}"
+    setattr(aga, module_name, ModuleType(module_full_name))
+
+    import sys
+
+    sys.modules[module_full_name] = getattr(aga, "injection")
+
+    return getattr(aga, module_name)
+
+
+def _inject_from_file(module: ModuleType, file_path: pathlib.Path) -> None:
+    spec = importlib.util.spec_from_file_location(file_path.name, file_path)
+    temp_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(temp_module)
+    wanted_properties = _grab_user_defined_properties(temp_module)
+
+    for wanted_property in wanted_properties:
+        setattr(module, wanted_property, getattr(temp_module, wanted_property))
 
 
 @dataclass
@@ -100,6 +135,7 @@ class AgaInjectionConfig:
     inject_files: Set[pathlib.Path] = field(default_factory=set)
     inject_dirs: Set[pathlib.Path] = field(default_factory=set)
     base_path: pathlib.Path = field(default=DEFAULT_INJECTION_BASE_PATH)
+    injection_module: Optional[ModuleType] = field(default=None)
 
     @property
     def is_valid(self) -> bool:
@@ -108,9 +144,27 @@ class AgaInjectionConfig:
         inject files must but files
         inject dirs must be directories
         """
-        return all(file.is_file() for file in self.inject_files) and all(
-            file.is_dir() for file in self.inject_dirs
-        )
+        return all(
+            file.exists() and file.is_file() for file in self.inject_files
+        ) and all(file.exists() and file.is_dir() for file in self.inject_dirs)
+
+    def inject(self, module: ModuleType) -> None:
+        for file_path in self.inject_files:
+            _inject_from_file(module, file_path)
+
+        for dir_path in self.inject_dirs:
+            for file_path in dir_path.iterdir():
+                if file_path.is_file() and file_path.suffix == ".py":
+                    _inject_from_file(module, file_path)
+
+    def create_injection_module(self, *args, **kwargs) -> ModuleType:
+        if not self.injection_module:
+            self.injection_module = _create_injection_module(*args, **kwargs)
+        return self.injection_module
+
+    def update_weak(self, other: AgaInjectionConfig) -> None:
+        """Update all default attributes of self to match other."""
+        _update_weak_leaf(self, other)
 
 
 @dataclass
