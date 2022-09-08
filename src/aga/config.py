@@ -36,11 +36,13 @@ INJECTION_MODULE_FLAG = "__aga_injection_module__"
 
 def _create_injection_module(module_name: str = "injection") -> ModuleType:
     import aga
-
-    if hasattr(aga, module_name):
-        raise ValueError(f'Module "aga.{module_name}" already exists.')
+    import sys
 
     module_full_name = f"aga.{module_name}"
+
+    if hasattr(aga, module_name) or module_full_name in sys.modules:
+        raise ValueError(f'Module "{module_full_name}" already exists.')
+
     new_module = ModuleType(module_full_name)
     setattr(new_module, INJECTION_MODULE_FLAG, True)
     setattr(aga, module_name, new_module)

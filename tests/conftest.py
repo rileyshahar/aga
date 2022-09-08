@@ -730,3 +730,17 @@ def fixture_metadata_previous_submissions() -> SubmissionMetadata:
         time_since_due=timedelta(),
         previous_submissions=3,
     )
+
+
+@pytest.fixture(name="injection_tear_down")
+def fixture_injection_tear_down() -> None:
+    yield
+
+    import aga
+    from aga.config import INJECTION_MODULE_FLAG
+
+    for mod_name, mod in list(sys.modules.items()):
+        if mod_name.startswith("aga") and getattr(mod, INJECTION_MODULE_FLAG, None):
+            # ehh
+            del sys.modules[mod_name]
+            delattr(aga, mod_name.split(".")[-1])

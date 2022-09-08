@@ -5,23 +5,15 @@ from types import ModuleType
 from typing import Iterable
 from unittest.mock import MagicMock
 
-import sys
 import pytest
 from pytest_mock import MockerFixture
 
-import aga
 from aga.config import AgaConfig, INJECTION_MODULE_FLAG
 
 
 @pytest.fixture()
-def fake_aga_config() -> AgaConfig:
+def fake_aga_config(injection_tear_down) -> AgaConfig:
     yield AgaConfig()
-
-    for mod_name, mod in list(sys.modules.items()):
-        if mod_name.startswith("aga") and getattr(mod, INJECTION_MODULE_FLAG, None):
-            # ehh
-            del sys.modules[mod_name]
-            delattr(aga, mod_name.split(".")[-1])
 
 
 file_dir = pathlib.Path(__file__).parent
@@ -122,3 +114,41 @@ def test_injecting_from_files() -> None:
     assert "_value_hidden" not in temp_dir
     assert "PrizeClass" in temp_dir
     assert "_PrizeClassHidden" not in temp_dir
+
+
+def test_duplicated_injection(injection_tear_down) -> None:
+    from aga.cli.app import _load_injection_config
+    import aga
+
+    _load_injection_config(
+        AgaConfig(),
+        [],
+        [],
+        "injection_module",
+        False,
+    )
+
+    assert "injection_module" in dir(aga)
+
+    with pytest.raises(ValueError):
+        _load_injection_config(
+            AgaConfig(),
+            [],
+            [],
+            "injection_module",
+            False,
+        )
+
+
+def test_target_folder_not_exist() -> None:
+    from aga.config import _find_injection_dir
+
+    with pytest.raises(ValueError, match="No injection directory found."):
+        _find_injection_dir("not_exist", file_dir)
+
+
+def test_target_folder_is_not_dir() -> None:
+    from aga.config import _find_injection_dir
+
+    with pytest.raises(ValueError, match="is not a directory"):
+        _find_injection_dir("test_injection.py", file_dir)

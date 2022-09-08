@@ -1,8 +1,8 @@
-def prize_fn():
+def prize_fn():  # pragma: no cover
     return "prize"
 
 
-def _hidden_prize_fn():
+def _hidden_prize_fn():  # pragma: no cover
     return "hidden_prize"
 
 

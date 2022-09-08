@@ -17,13 +17,13 @@ runner = CliRunner(mix_stderr=False)
 
 
 @pytest.fixture(name="mocked_lpfp")
-def fixture_mocked_lpfp(mocker: MockerFixture) -> MagicMock:
+def fixture_mocked_lpfp(mocker: MockerFixture, injection_tear_down) -> MagicMock:
     """Generate a mocked `load_problems_from_path`."""
     return mocker.patch("aga.cli.app.load_problems_from_path")
 
 
 @pytest.fixture(name="mocked_igz")
-def fixture_mocked_igz(mocker: MockerFixture) -> MagicMock:
+def fixture_mocked_igz(mocker: MockerFixture, injection_tear_down) -> MagicMock:
     """Generate a mocked `into_gradescope_zip`."""
     return mocker.patch("aga.cli.app.into_gradescope_zip")
 
