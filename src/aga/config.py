@@ -35,8 +35,8 @@ INJECTION_MODULE_FLAG = "__aga_injection_module__"
 
 
 def _create_injection_module(module_name: str = "injection") -> ModuleType:
-    import aga
-    import sys
+    import aga  # pylint: disable=import-outside-toplevel, cyclic-import
+    import sys  # pylint: disable=import-outside-toplevel
 
     module_full_name = f"aga.{module_name}"
 
@@ -47,17 +47,21 @@ def _create_injection_module(module_name: str = "injection") -> ModuleType:
     setattr(new_module, INJECTION_MODULE_FLAG, True)
     setattr(aga, module_name, new_module)
 
-    import sys
-
     sys.modules[module_full_name] = new_module
 
     return new_module
 
 
-def _inject_from_file(module: ModuleType, file_path: pathlib.Path) -> None:
+def _inject_from_file(module: Optional[ModuleType], file_path: pathlib.Path) -> None:
+    if not module:
+        raise ValueError("No module to inject into.")
+
     spec = importlib.util.spec_from_file_location(file_path.name, file_path)
+    if not spec:
+        raise ValueError(f"Unable to load file {file_path} for injection")
+
     temp_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(temp_module)
+    spec.loader.exec_module(temp_module)  # type: ignore
     wanted_properties = _grab_user_defined_properties(temp_module)
 
     for wanted_property in wanted_properties:
@@ -130,7 +134,7 @@ class AgaProblemConfig:
 
 
 def _find_injection_dir(
-    injection_dir: str, starting_dir: pathlib.Path = None
+    injection_dir: str, starting_dir: Optional[pathlib.Path] = None
 ) -> pathlib.Path:
     """Find the injection directory."""
     target_folder = current_path = starting_dir or pathlib.Path.cwd()
@@ -173,7 +177,8 @@ class AgaInjectionConfig:
             file.exists() and file.is_file() for file in self.inject_files
         ) and all(file.exists() and file.is_dir() for file in self.inject_dirs)
 
-    def inject(self, module: ModuleType = None) -> None:
+    def inject(self, module: Optional[ModuleType] = None) -> None:
+        """Inject the specified files and those in dirs into the module."""
         module = module or self.injection_module
 
         for file_path in self.inject_files:
@@ -184,9 +189,10 @@ class AgaInjectionConfig:
                 if file_path.is_file() and file_path.suffix == ".py":
                     _inject_from_file(module, file_path)
 
-    def create_injection_module(self, *args, **kwargs) -> ModuleType:
+    def create_injection_module(self, module_name: str) -> ModuleType:
+        """Create a new module to inject into."""
         if not self.injection_module:
-            self.injection_module = _create_injection_module(*args, **kwargs)
+            self.injection_module = _create_injection_module(module_name)
         return self.injection_module
 
     def update_weak(self, other: AgaInjectionConfig) -> None:

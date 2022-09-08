@@ -6,14 +6,15 @@ from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Iterable, Iterator, List
+from typing import Iterable, Iterator, List, Generator
 
 import pytest
 from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
+import aga
 from aga import group, problem, test_case, test_cases
-from aga.config import AgaConfig, load_config_from_path
+from aga.config import AgaConfig, load_config_from_path, INJECTION_MODULE_FLAG
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
@@ -733,11 +734,9 @@ def fixture_metadata_previous_submissions() -> SubmissionMetadata:
 
 
 @pytest.fixture(name="injection_tear_down")
-def fixture_injection_tear_down() -> None:
+def fixture_injection_tear_down() -> Generator[None, None, None]:
+    """Tear down the injection modules."""
     yield
-
-    import aga
-    from aga.config import INJECTION_MODULE_FLAG
 
     for mod_name, mod in list(sys.modules.items()):
         if mod_name.startswith("aga") and getattr(mod, INJECTION_MODULE_FLAG, None):

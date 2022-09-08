@@ -104,6 +104,7 @@ def _check_problem(problem: Problem[Output]) -> None:
         raise typer.Exit(1) from err
 
 
+# pylint: disable=too-many-arguments
 @app.command()
 def gen(
     source: str = typer.Argument(
@@ -135,7 +136,7 @@ def gen(
         help="Inject all util files in the specified folder "
         "into the submission directory.",
     ),
-    injection_module: Optional[str] = typer.Option(
+    injection_module: str = typer.Option(
         "injection",
         "--injection-module",
         help="The name of the module to import from the injection directory.",
@@ -158,6 +159,7 @@ def gen(
         _handle_invalid_frontend(frontend)
 
 
+# pylint: disable=too-many-arguments
 @app.command()
 def check(
     source: str = typer.Argument(
@@ -176,7 +178,7 @@ def check(
         help="Inject all util files in the specified folder "
         "into the submission directory.",
     ),
-    injection_module: Optional[str] = typer.Option(
+    injection_module: str = typer.Option(
         "injection",
         "--injection-module",
         help="The name of the module to import from the injection directory.",
@@ -235,7 +237,7 @@ def run(
         help="Inject all util files in the specified folder "
         "into the submission directory.",
     ),
-    injection_module: Optional[str] = typer.Option(
+    injection_module: str = typer.Option(
         "injection",
         "--injection-module",
         help="The name of the module to import from the injection directory.",

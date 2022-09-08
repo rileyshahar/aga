@@ -11,7 +11,6 @@ from typing import (
     Generic,
     Optional,
     TypeVar,
-    Sequence,
     Dict,
     List,
     overload,
@@ -462,7 +461,7 @@ class Problem(Generic[Output]):
         else:
             return self._groups
 
-    def __call__(self, *args, **kwargs) -> Output:
+    def __call__(self, *args, **kwargs) -> Output:  # type: ignore
         """Enable the ability to call the golden solution as if the problem were it."""
         return self._golden(*args, **kwargs)
 
@@ -712,7 +711,8 @@ def test_cases(
             }
         else:
             raise ValueError(
-                "invalid aga_ keyword arg: must all be sequences or singletons, not mixed"
+                "invalid aga_* keyword arguments: "
+                "must all be sequences or singletons, not mixed"
             )
 
         if not all(

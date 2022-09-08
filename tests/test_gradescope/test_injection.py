@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pathlib
 from types import ModuleType
-from typing import Iterable
+from typing import Iterable, Generator
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,7 +12,9 @@ from aga.config import AgaConfig, INJECTION_MODULE_FLAG
 
 
 @pytest.fixture()
-def fake_aga_config(injection_tear_down) -> AgaConfig:
+def fake_aga_config(
+    injection_tear_down: Generator[None, None, None]
+) -> Generator[AgaConfig, None, None]:
     yield AgaConfig()
 
 
@@ -116,7 +118,7 @@ def test_injecting_from_files() -> None:
     assert "_PrizeClassHidden" not in temp_dir
 
 
-def test_duplicated_injection(injection_tear_down) -> None:
+def test_duplicated_injection(injection_tear_down: None) -> None:
     from aga.cli.app import _load_injection_config
     import aga
 
