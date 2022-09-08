@@ -169,3 +169,14 @@ def test_complete_frontend_incomplete() -> None:
 def test_complete_frontend_no_match() -> None:
     """Check that complete_frontend works with a non-matching string."""
     assert not tuple(complete_frontend("nonexistent"))
+
+
+@pytest.fixture()
+def mocked_injecting_func(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("aga.cli.app._load_injection_config")
+
+
+def test_injection_is_called(mocked_injecting_func) -> None:
+    """Check that the injection function is called."""
+    runner.invoke(aga_app, ["gen", "square.py"])
+    mocked_injecting_func.assert_called_once()
