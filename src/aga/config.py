@@ -31,6 +31,9 @@ def _grab_user_defined_properties(module: ModuleType) -> Set[str]:
     return {name for name in dir(module) if not name.startswith("_")}
 
 
+INJECTION_MODULE_FLAG = "__aga_injection_module__"
+
+
 def _create_injection_module(module_name: str = "injection") -> ModuleType:
     import aga
 
@@ -38,13 +41,15 @@ def _create_injection_module(module_name: str = "injection") -> ModuleType:
         raise ValueError(f'Module "aga.{module_name}" already exists.')
 
     module_full_name = f"aga.{module_name}"
-    setattr(aga, module_name, ModuleType(module_full_name))
+    new_module = ModuleType(module_full_name)
+    setattr(new_module, INJECTION_MODULE_FLAG, True)
+    setattr(aga, module_name, new_module)
 
     import sys
 
-    sys.modules[module_full_name] = getattr(aga, "injection")
+    sys.modules[module_full_name] = new_module
 
-    return getattr(aga, module_name)
+    return new_module
 
 
 def _inject_from_file(module: ModuleType, file_path: pathlib.Path) -> None:

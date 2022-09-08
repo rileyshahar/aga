@@ -50,12 +50,12 @@ def _load_injection_config(
     injected_files: Iterable[pathlib.Path],
     injected_dirs: Iterable[pathlib.Path],
     injection_module: str,
-    find_injection: bool,
+    auto_inject: bool,
 ) -> AgaConfig:
     """Load injected files and directories into the config."""
     config.injection.update(fls=injected_files, dirs=injected_dirs)
 
-    if find_injection:
+    if auto_inject:
         config.injection.find_auto_injection()
 
     if not config.injection.is_valid:
@@ -140,15 +140,15 @@ def gen(
         "--injection-module",
         help="The name of the module to import from the injection directory.",
     ),
-    find_injection: bool = typer.Option(
+    auto_inject: bool = typer.Option(
         False,
-        "--find-injection",
+        "--auto-inject",
         help="Find the first injection directory recursively and automatically.",
     ),
 ) -> None:
     """Generate an autograder file for a problem."""
     config = _load_config(config_file)
-    _load_injection_config(config, inject, inject_all, injection_module, find_injection)
+    _load_injection_config(config, inject, inject_all, injection_module, auto_inject)
     problem = _load_problem(source, config)  # type: ignore
     _check_problem(problem)
 
@@ -181,15 +181,15 @@ def check(
         "--injection-module",
         help="The name of the module to import from the injection directory.",
     ),
-    find_injection: bool = typer.Option(
+    auto_inject: bool = typer.Option(
         False,
-        "--find-injection",
+        "--auto-inject",
         help="Find the first injection directory recursively and automatically.",
     ),
 ) -> None:
     """Check a problem against test cases with an `aga_expect`."""
     config = _load_config(config_file)
-    _load_injection_config(config, inject, inject_all, injection_module, find_injection)
+    _load_injection_config(config, inject, inject_all, injection_module, auto_inject)
     problem = _load_problem(source, config)  # type: ignore
     _check_problem(problem)
     typer.echo(f"{problem.name()} passed golden tests.")
@@ -240,15 +240,15 @@ def run(
         "--injection-module",
         help="The name of the module to import from the injection directory.",
     ),
-    find_injection: bool = typer.Option(
+    auto_inject: bool = typer.Option(
         False,
-        "--find-injection",
+        "--auto-inject",
         help="Find the first injection directory recursively and automatically.",
     ),
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
-    _load_injection_config(config, inject, inject_all, injection_module, find_injection)
+    _load_injection_config(config, inject, inject_all, injection_module, auto_inject)
     problem: Problem = _load_problem(source, config)  # type: ignore
     metadata = SubmissionMetadata(points, submitted - due, previous_submissions)
     result = load_and_run(problem, submission, metadata)
