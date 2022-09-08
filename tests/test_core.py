@@ -41,7 +41,7 @@ class TestTestCases:
         """Test that invalid aga_* keyword args raise an error."""
         with pytest.raises(
             ValueError,
-            match="invalid aga_ keyword arg: "
+            match="invalid aga_ keyword arguments: "
             "must all be sequences or singletons, not mixed",
         ):
 

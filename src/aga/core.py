@@ -711,7 +711,7 @@ def test_cases(
             }
         else:
             raise ValueError(
-                "invalid aga_* keyword arguments: "
+                "invalid aga_ keyword arguments: "
                 "must all be sequences or singletons, not mixed"
             )
 
