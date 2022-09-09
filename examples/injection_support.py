@@ -24,13 +24,13 @@ from aga.injection import prize_fn
 @test_case(10, 20, aga_expect=200, aga_value=5)
 @prize(prize_fn, value=10.0, weight=0)
 @problem()
-def add(a: int, b: int) -> int:
+def mul(a: int, b: int) -> int:
     """Mul two numbers."""
     res = a * b
     print("the result is", res)
     return res
 
 
-add.check()
+mul.check()
 
 # aga check injection_support.py --auto-inject
