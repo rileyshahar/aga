@@ -646,14 +646,8 @@ def test_case(
 @overload
 def test_cases(
     *args: Iterable[Any],
-    aga_expect: Optional[Any] = ...,
-    aga_hidden: bool = ...,
-    aga_name: Optional[str] = ...,
-    aga_weight: int = ...,
-    aga_value: int = ...,
     aga_product: bool = True,
-    aga_expect_stdout: Optional[str | Sequence[str]] = ...,
-    **kwargs: Iterable[Any],
+    **kwargs: Iterable[Any] | Any,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     ...
 
@@ -661,12 +655,13 @@ def test_cases(
 @overload
 def test_cases(
     *args: Iterable[Any],
-    aga_expect: Iterable[Optional[Any]] = ...,
-    aga_hidden: Iterable[bool] = ...,
-    aga_name: Iterable[Optional[str]] = ...,
-    aga_weight: Iterable[int] = ...,
-    aga_value: Iterable[int] = ...,
-    aga_expect_stdout: Iterable[Optional[str | Sequence[str]]] = ...,
+    aga_expect: Iterable[Optional[Any]] | Optional[Any] = ...,
+    aga_hidden: Iterable[bool] | bool = ...,
+    aga_name: Iterable[Optional[str]] | Optional[str] = ...,
+    aga_weight: Iterable[int] | int = ...,
+    aga_value: Iterable[float] | float = ...,
+    aga_expect_stdout: Iterable[Optional[str | Sequence[str]]]
+    | Optional[str | Sequence[str]] = ...,
     aga_product: bool = True,
     **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
@@ -734,34 +729,18 @@ def test_cases(
 
         all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
 
-        if all(
-            isinstance(aga_kwarg_value, Iterable)
-            and not isinstance(aga_kwarg_value, str)
-            for aga_kwarg_value in aga_kwargs_dict.values()
-        ):
-            # if all the aga kwargs are sequences, and not strings, we can zip them
-            aga_kwargs_dict = {
-                kwd: list(aga_kwarg_iter)
-                for kwd, aga_kwarg_iter in aga_kwargs_dict.items()
-            }
-        elif all(
-            isinstance(aga_kwarg_value, str)
-            or not isinstance(aga_kwarg_value, Iterable)
-            for aga_kwarg_value in aga_kwargs_dict.values()
-        ):
-            # otherwise, we are assuming the input is singleton
-            # like aga_hidden = True
-            # and we are just repeating it for each test case
-            aga_kwargs_dict = {
-                kwd: [aga_kwarg_value] * len(all_args_and_kwargs)
-                for kwd, aga_kwarg_value in aga_kwargs_dict.items()
-            }
-        else:
-            raise ValueError(
-                "invalid aga_ keyword arguments: "
-                "must all be sequences or singletons, not mixed"
-            )
+        # process aga input type
+        for aga_kwarg_key, aga_kwarg_value in aga_kwargs_dict.items():
+            if isinstance(aga_kwarg_value, Iterable) and not isinstance(
+                aga_kwarg_value, str
+            ):
+                aga_kwargs_dict[aga_kwarg_key] = list(aga_kwarg_value)
+            else:
+                aga_kwargs_dict[aga_kwarg_key] = [aga_kwarg_value] * len(
+                    all_args_and_kwargs
+                )
 
+        # validate aga input type
         if not all(
             len(aga_kwarg_value) == len(all_args_and_kwargs)
             for aga_kwarg_value in aga_kwargs_dict.values()
