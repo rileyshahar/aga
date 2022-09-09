@@ -1,3 +1,4 @@
+"""This example shows how to use aga expect and aga product."""
 from aga import problem, test_case, test_cases
 
 

@@ -1,3 +1,4 @@
+"""This example shows how to inject supporting instances into the test cases."""
 from aga import problem, test_case
 from aga.prize import prize
 

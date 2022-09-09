@@ -1,3 +1,4 @@
+"""The example shows how to use script mode."""
 from aga import problem, test_case, test_cases
 
 

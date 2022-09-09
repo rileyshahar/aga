@@ -1,3 +1,4 @@
+"""This example shows how to check the return and the stdout of a function."""
 from aga import problem, test_case
 
 
