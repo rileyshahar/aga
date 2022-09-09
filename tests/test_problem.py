@@ -69,3 +69,30 @@ def test_problem_caller() -> None:
         return i * i
 
     assert test_problem(10) == 10 * 10
+
+
+def test_aga_stdout_check(aga_expect_stdout: Problem[None]) -> None:
+    """Test that the problem decorator returns the function it decorates."""
+    aga_expect_stdout.check()
+
+
+def test_aga_expect_stdout_with_input(
+    script_aga_expect_stdout_with_input: Problem[None],
+    function_aga_expect_stdout_with_input: Problem[None],
+) -> None:
+    """Test that the problem decorator returns the function it decorates."""
+    script_aga_expect_stdout_with_input.check()
+    function_aga_expect_stdout_with_input.check()
+
+
+def test_aga_expect_stdout_bad() -> None:
+    """Test that the problem decorator returns the function it decorates."""
+    with raises(AssertionError):
+
+        @test_case(aga_expect_stdout="foo")
+        @problem()
+        def aga_expect_stdout_bad() -> None:
+            """For testing a reserved keyword argument to `test_case`."""
+            print("foo")
+
+        aga_expect_stdout_bad.check()
