@@ -37,24 +37,21 @@ class TestTestCases:
 
         test_problem.check()
 
-    def test_invalid_aga_kwargs(self) -> None:
+    def test_different_types_of_aga_kwargs(self) -> None:
         """Test that invalid aga_* keyword args raise an error."""
-        with pytest.raises(
-            ValueError,
-            match="invalid aga_ keyword arguments: "
-            "must all be sequences or singletons, not mixed",
-        ):
 
-            @test_cases(
-                x=range(3),
-                y=range(3),
-                aga_product=False,
-                aga_expect=map(lambda x: x * x, range(3)),
-                aga_hidden=True,
-            )
-            @problem()
-            def test_problem(x: int, y: int) -> int:  # pragma: no cover
-                return x * y
+        @test_cases(
+            x=range(3),
+            y=range(3),
+            aga_product=False,
+            aga_expect=map(lambda x: x * x, range(3)),
+            aga_hidden=True,
+        )
+        @problem()
+        def test_problem(x: int, y: int) -> int:  # pragma: no cover
+            return x * y
+
+        test_problem.check()
 
     def test_aga_kwargs_length_not_match(self) -> None:
         """Test that the length of the aga_* keyword args must match."""
