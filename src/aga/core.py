@@ -117,6 +117,18 @@ class AgaTestSuite(TestSuite):
         self.config = config
 
 
+def generate_custom_input(input_list: Iterable[str]) -> Callable[[Any], str]:
+    """Generate a custom input function for a test case."""
+    _iterator = iter(input_list)
+
+    def _custom_input(*args: Any) -> str:
+        print(*args)
+        return next(_iterator)
+
+    return _custom_input
+
+
+# pylint: disable=too-many-instance-attributes
 class _TestInputs(TestCase, Generic[Output]):
     """A single set of test inputs for a problem.
 
@@ -155,7 +167,9 @@ class _TestInputs(TestCase, Generic[Output]):
         # deepcopy in case the student submission mutates arguments; we don't want it to
         # mess with our copy of the arguments
         if self._mock_input:
-            with patch("builtins.input", side_effect=[*deepcopy(self._args)]) as _:
+            with patch(
+                "builtins.input", generate_custom_input(deepcopy(self._args))
+            ) as _:
                 return func()
         else:
             return func(*deepcopy(self._args), **deepcopy(self._kwargs))
@@ -275,8 +289,9 @@ class _TestInputs(TestCase, Generic[Output]):
                 if isinstance(self._expect_stdout, str):
                     self.assertEqual(golden_stdout, self._expect_stdout)
                 elif isinstance(self._expect_stdout, Sequence):
-                    golden_stdout: List[str] = golden_stdout.splitlines()
-                    self.assertEqual(golden_stdout, list(self._expect_stdout))
+                    self.assertEqual(
+                        golden_stdout.splitlines(), list(self._expect_stdout)
+                    )
 
 
 class _TestInputGroup(Generic[Output]):

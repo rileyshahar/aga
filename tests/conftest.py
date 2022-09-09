@@ -182,11 +182,17 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
         lazy_fixture("square_generated_cases"),
         lazy_fixture("diff_generated"),
         lazy_fixture("pos_zip"),
+        lazy_fixture("pos_zip_with_singleton_aga_args"),
+        lazy_fixture("aga_args_in_product"),
+        lazy_fixture("aga_args_with_kwargs_in_product"),
+        lazy_fixture("aga_args_singleton"),
+        lazy_fixture("aga_args_with_kwargs_in_product_singleton"),
         lazy_fixture("pos_and_kwd_generated"),
         lazy_fixture("pos_and_kwd_zip"),
         lazy_fixture("pos_and_kwd_generator_function"),
         lazy_fixture("hello_world"),
         lazy_fixture("hello_name"),
+        lazy_fixture("aga_expect_stdout"),
     ]
 )
 def valid_problem(request):
@@ -599,7 +605,7 @@ def fixture_hello_name() -> Problem[None]:
         listener = input("Listener? ")
         print(f"Hello, {listener}.")
 
-        speaker = input("Speaker ?")
+        speaker = input("Speaker? ")
         print(f"I'm {speaker}.")
 
     return hello_name
@@ -677,6 +683,49 @@ def fixture_square_custom_prize() -> Problem[int]:
         return x * x
 
     return square
+
+
+@pytest.fixture(name="aga_expect_stdout")
+def fixture_aga_expect_stdout() -> Problem[None]:
+    """Generate a problem which tests stdout."""
+
+    @test_case(aga_expect_stdout="Hello, world!\n")
+    @test_case(aga_expect_stdout=["Hello, world!"])
+    @problem(script=True)
+    def hello_world() -> None:
+        """Print 'Hello, world!'."""
+        print("Hello, world!")
+
+    return hello_world
+
+
+@pytest.fixture(name="script_aga_expect_stdout_with_input")
+def fixture_script_aga_expect_stdout_with_input() -> Problem[None]:
+    """Generate a problem which tests stdout with input."""
+
+    @test_case("Bob", aga_expect_stdout=["Hi? ", "Hello, this is Bob."])
+    @test_case("Alice", aga_expect_stdout="Hi? \nHello, this is Alice.\n")
+    @problem(script=True)
+    def hello_world() -> None:
+        """Print 'Hello, world!'."""
+        listener = input("Hi? ")
+        print(f"Hello, this is {listener}.")
+
+    return hello_world
+
+
+@pytest.fixture(name="function_aga_expect_stdout_with_input")
+def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
+    """Generate a problem which tests stdout with input."""
+
+    @test_case("Bob", aga_expect_stdout=["Hello, this is Bob."])
+    @test_case("Alice", aga_expect_stdout="Hello, this is Alice.\n")
+    @problem()
+    def hello_world(listener: str) -> None:
+        """Print 'Hello, world!'."""
+        print(f"Hello, this is {listener}.")
+
+    return hello_world
 
 
 @pytest.fixture(name="example_config_file")
