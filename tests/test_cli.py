@@ -16,14 +16,16 @@ Output = TypeVar("Output")
 runner = CliRunner(mix_stderr=False)
 
 
+# pylint: disable=unused-argument
 @pytest.fixture(name="mocked_lpfp")
-def fixture_mocked_lpfp(mocker: MockerFixture) -> MagicMock:
+def fixture_mocked_lpfp(mocker: MockerFixture, injection_tear_down: None) -> MagicMock:
     """Generate a mocked `load_problems_from_path`."""
     return mocker.patch("aga.cli.app.load_problems_from_path")
 
 
+# pylint: disable=unused-argument
 @pytest.fixture(name="mocked_igz")
-def fixture_mocked_igz(mocker: MockerFixture) -> MagicMock:
+def fixture_mocked_igz(mocker: MockerFixture, injection_tear_down: None) -> MagicMock:
     """Generate a mocked `into_gradescope_zip`."""
     return mocker.patch("aga.cli.app.into_gradescope_zip")
 
@@ -169,3 +171,16 @@ def test_complete_frontend_incomplete() -> None:
 def test_complete_frontend_no_match() -> None:
     """Check that complete_frontend works with a non-matching string."""
     assert not tuple(complete_frontend("nonexistent"))
+
+
+@pytest.fixture()
+def mocked_injecting_func(mocker: MockerFixture) -> MagicMock:
+    """Generate a mocked injecting function."""
+    return mocker.patch("aga.cli.app._load_injection_config")
+
+
+# pylint: disable=unused-argument, redefined-outer-name
+def test_injection_is_called(mocked_injecting_func: MagicMock) -> None:
+    """Check that the injection function is called."""
+    runner.invoke(aga_app, ["gen", "square.py"])
+    mocked_injecting_func.assert_called_once()

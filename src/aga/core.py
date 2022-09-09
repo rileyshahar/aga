@@ -11,7 +11,6 @@ from typing import (
     Generic,
     Optional,
     TypeVar,
-    Sequence,
     Dict,
     List,
     overload,
@@ -462,6 +461,10 @@ class Problem(Generic[Output]):
         else:
             return self._groups
 
+    def __call__(self, *args, **kwargs) -> Output:  # type: ignore
+        """Enable the ability to call the golden solution as if the problem were it."""
+        return self._golden(*args, **kwargs)
+
 
 def problem(
     name: Optional[str] = None,
@@ -612,11 +615,11 @@ def test_cases(
 @overload
 def test_cases(
     *args: Iterable[Any],
-    aga_expect: Sequence[Optional[Any]] = ...,
-    aga_hidden: Sequence[bool] = ...,
-    aga_name: Sequence[Optional[str]] = ...,
-    aga_weight: Sequence[int] = ...,
-    aga_value: Sequence[int] = ...,
+    aga_expect: Iterable[Optional[Any]] = ...,
+    aga_hidden: Iterable[bool] = ...,
+    aga_name: Iterable[Optional[str]] = ...,
+    aga_weight: Iterable[int] = ...,
+    aga_value: Iterable[int] = ...,
     aga_product: bool = True,
     **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
@@ -685,7 +688,7 @@ def test_cases(
         all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
 
         if all(
-            isinstance(aga_kwarg_value, Sequence)
+            isinstance(aga_kwarg_value, Iterable)
             and not isinstance(aga_kwarg_value, str)
             for aga_kwarg_value in aga_kwargs_dict.values()
         ):
@@ -696,7 +699,7 @@ def test_cases(
             }
         elif all(
             isinstance(aga_kwarg_value, str)
-            or not isinstance(aga_kwarg_value, Sequence)
+            or not isinstance(aga_kwarg_value, Iterable)
             for aga_kwarg_value in aga_kwargs_dict.values()
         ):
             # otherwise, we are assuming the input is singleton
@@ -708,7 +711,8 @@ def test_cases(
             }
         else:
             raise ValueError(
-                "invalid aga_ keyword arg: must be a sequence or singleton"
+                "invalid aga_ keyword arguments: "
+                "must all be sequences or singletons, not mixed"
             )
 
         if not all(

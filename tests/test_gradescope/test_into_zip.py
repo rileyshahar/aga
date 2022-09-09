@@ -15,6 +15,7 @@ import pytest
 from dill import load  # type: ignore
 
 import aga  # for source inspection
+from aga.config import INJECTION_MODULE_FLAG
 from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
 
@@ -57,6 +58,9 @@ def test_into_gradescope_zip_source(
         for (name, module) in getmembers(aga, ismodule):
             # don't check gradescope because it's a subdirectory and I'm too lazy to
             # write special handling or recursion right now
+            if getattr(module, INJECTION_MODULE_FLAG, None):
+                continue
+
             if name not in ("gradescope", "cli"):
                 with zip_f.open(pathjoin("aga", name + ".py")) as src:
                     unzipped_core_source = src.read()

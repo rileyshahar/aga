@@ -1,7 +1,7 @@
 """The main command-line typer application."""
-
+import pathlib
 from datetime import datetime
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, List
 
 import typer
 
@@ -45,6 +45,28 @@ def _load_config(path: str = "aga.toml") -> AgaConfig:
     return config
 
 
+def _load_injection_config(
+    config: AgaConfig,
+    injected_files: Iterable[pathlib.Path],
+    injected_dirs: Iterable[pathlib.Path],
+    injection_module: str,
+    auto_inject: bool,
+) -> AgaConfig:
+    """Load injected files and directories into the config."""
+    config.injection.update(fls=injected_files, dirs=injected_dirs)
+
+    if auto_inject:
+        config.injection.find_auto_injection()
+
+    if not config.injection.is_valid:
+        raise ValueError("injection files/dirs are invalid")
+
+    config.injection.create_injection_module(injection_module)
+    config.injection.inject()
+
+    return config
+
+
 def _load_problem(path: str, config: AgaConfig) -> Problem[Output]:
     """Load a problem from the top-level directory."""
     problems = list(load_problems_from_path(path))
@@ -82,6 +104,7 @@ def _check_problem(problem: Problem[Output]) -> None:
         raise typer.Exit(1) from err
 
 
+# pylint: disable=too-many-arguments
 @app.command()
 def gen(
     source: str = typer.Argument(
@@ -104,9 +127,29 @@ def gen(
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
     ),
+    inject: List[pathlib.Path] = typer.Option(
+        [], "--inject", help="Inject a util file into the submission directory."
+    ),
+    inject_all: List[pathlib.Path] = typer.Option(
+        [],
+        "--inject-all",
+        help="Inject all util files in the specified folder "
+        "into the submission directory.",
+    ),
+    injection_module: str = typer.Option(
+        "injection",
+        "--injection-module",
+        help="The name of the module to import from the injection directory.",
+    ),
+    auto_inject: bool = typer.Option(
+        False,
+        "--auto-inject",
+        help="Find the first injection directory recursively and automatically.",
+    ),
 ) -> None:
     """Generate an autograder file for a problem."""
     config = _load_config(config_file)
+    _load_injection_config(config, inject, inject_all, injection_module, auto_inject)
     problem = _load_problem(source, config)  # type: ignore
     _check_problem(problem)
 
@@ -116,6 +159,7 @@ def gen(
         _handle_invalid_frontend(frontend)
 
 
+# pylint: disable=too-many-arguments
 @app.command()
 def check(
     source: str = typer.Argument(
@@ -125,9 +169,29 @@ def check(
     config_file: str = typer.Option(
         "aga.toml", "--config", "-c", help="The path to the aga config file."
     ),
+    inject: List[pathlib.Path] = typer.Option(
+        [], "--inject", help="Inject a util file into the submission directory."
+    ),
+    inject_all: List[pathlib.Path] = typer.Option(
+        [],
+        "--inject-all",
+        help="Inject all util files in the specified folder "
+        "into the submission directory.",
+    ),
+    injection_module: str = typer.Option(
+        "injection",
+        "--injection-module",
+        help="The name of the module to import from the injection directory.",
+    ),
+    auto_inject: bool = typer.Option(
+        False,
+        "--auto-inject",
+        help="Find the first injection directory recursively and automatically.",
+    ),
 ) -> None:
     """Check a problem against test cases with an `aga_expect`."""
     config = _load_config(config_file)
+    _load_injection_config(config, inject, inject_all, injection_module, auto_inject)
     problem = _load_problem(source, config)  # type: ignore
     _check_problem(problem)
     typer.echo(f"{problem.name()} passed golden tests.")
@@ -164,9 +228,29 @@ def run(
     previous_submissions: int = typer.Option(
         0, "--previous_submissions", help="The number of previous submissions."
     ),
+    inject: List[pathlib.Path] = typer.Option(
+        [], "--inject", help="Inject a util file into the submission directory."
+    ),
+    inject_all: List[pathlib.Path] = typer.Option(
+        [],
+        "--inject-all",
+        help="Inject all util files in the specified folder "
+        "into the submission directory.",
+    ),
+    injection_module: str = typer.Option(
+        "injection",
+        "--injection-module",
+        help="The name of the module to import from the injection directory.",
+    ),
+    auto_inject: bool = typer.Option(
+        False,
+        "--auto-inject",
+        help="Find the first injection directory recursively and automatically.",
+    ),
 ) -> None:
     """Run the autograder on an example submission."""
     config = _load_config(config_file)
+    _load_injection_config(config, inject, inject_all, injection_module, auto_inject)
     problem: Problem = _load_problem(source, config)  # type: ignore
     metadata = SubmissionMetadata(points, submitted - due, previous_submissions)
     result = load_and_run(problem, submission, metadata)

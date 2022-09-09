@@ -34,7 +34,7 @@ def test_config_overridden() -> None:
     config = AgaConfig(problem=AgaProblemConfig(check_stdout=True, mock_input=False))
 
     @problem(check_stdout=False, mock_input=True)
-    def dummy() -> None:
+    def dummy() -> None:  # pragma: no cover
         pass
 
     dummy.update_config_weak(config)
@@ -48,7 +48,7 @@ def test_config_script() -> None:
     """Test that script defaults are overrideable."""
 
     @problem(script=True, check_stdout=False, mock_input=False)
-    def dummy() -> None:
+    def dummy() -> None:  # pragma: no cover
         pass
 
     # the problem decorator should override the config

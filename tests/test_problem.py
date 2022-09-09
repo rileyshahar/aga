@@ -6,7 +6,7 @@ from pytest import raises
 
 from aga import problem
 from aga import test_case as case
-from aga.core import Problem
+from aga.core import Problem, test_case
 
 Output = TypeVar("Output")
 
@@ -49,7 +49,7 @@ def test_bad_diff_impl(diff_bad_impl: Problem[int]) -> None:
         diff_bad_impl.check()
 
 
-def test_reserved_kwdarg() -> None:
+def test_reserved_kwarg() -> None:
     """Test that test_cases raises a value error if a reserved keyword is used."""
     with raises(ValueError):
 
@@ -58,3 +58,14 @@ def test_reserved_kwdarg() -> None:
         def reserved_kwd(aga_input: str = "") -> str:
             """For testing a reserved keyword argument to `test_case`."""
             return aga_input
+
+
+def test_problem_caller() -> None:
+    """Test that the problem decorator returns the function it decorates."""
+
+    @test_case(1)
+    @problem()
+    def test_problem(i: int) -> int:
+        return i * i
+
+    assert test_problem(10) == 10 * 10
