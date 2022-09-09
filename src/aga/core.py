@@ -14,7 +14,7 @@ from typing import (
     Dict,
     List,
     overload,
-    TYPE_CHECKING,
+    Sequence,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
@@ -28,6 +28,7 @@ Output = TypeVar("Output")
 
 AGA_RESERVED_KEYWORDS = {
     "aga_expect",
+    "aga_expect_stdout",
     "aga_hidden",
     "aga_name",
     "aga_weight",
@@ -130,6 +131,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self,
         *args: Any,
         aga_expect: Optional[Output],
+        aga_expect_stdout: Optional[str | Sequence[str]],
         aga_hidden: bool,
         aga_name: Optional[str],
         aga_weight: int,
@@ -142,6 +144,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self._hidden = aga_hidden
         self._mock_input = aga_mock_input
         self._expect = aga_expect
+        self._expect_stdout = aga_expect_stdout
         self.score_info = ScoreInfo(aga_weight, aga_value)
 
         self._args = args
@@ -261,8 +264,19 @@ class _TestInputs(TestCase, Generic[Output]):
 
     def check_one(self, golden: Callable[..., Output]) -> None:
         """Check that the golden solution is correct."""
-        if self._expect is not None:
-            self.assertEqual(self._eval(golden), self._expect)
+        if self._expect is not None or self._expect_stdout is not None:
+            golden_stdout, golden_output = self._eval(
+                with_captured_stdout(golden)
+            )  # type: str, Output
+            if self._expect is not None:
+                self.assertEqual(golden_output, self._expect)
+
+            if self._expect_stdout is not None:
+                if isinstance(self._expect_stdout, str):
+                    self.assertEqual(golden_stdout, self._expect_stdout)
+                elif isinstance(self._expect_stdout, Sequence):
+                    golden_stdout: List[str] = golden_stdout.splitlines()
+                    self.assertEqual(golden_stdout, list(self._expect_stdout))
 
 
 class _TestInputGroup(Generic[Output]):
@@ -340,6 +354,7 @@ class Problem(Generic[Output]):
         aga_name: Optional[str] = None,
         aga_weight: int = 1,
         aga_value: float = 0.0,
+        aga_expect_stdout: Optional[str | Sequence[str]] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -350,6 +365,7 @@ class Problem(Generic[Output]):
         case: _TestInputs[Output] = _TestInputs(
             *args,
             aga_expect=aga_expect,
+            aga_expect_stdout=aga_expect_stdout,
             aga_hidden=aga_hidden,
             aga_name=aga_name,
             aga_weight=aga_weight,
@@ -536,19 +552,25 @@ def _check_reserved_keyword(kwd: str) -> None:
         )
 
 
-if not TYPE_CHECKING:
-    # ugly...
-    @overload
-    def test_case(
-        *args: Any,
-        aga_expect: Optional[Any] = ...,
-        aga_hidden: bool = ...,
-        aga_name: Optional[str] = ...,
-        aga_weight: int = ...,
-        aga_value: float = ...,
-        **kwargs: Any,
-    ) -> Callable[[Problem[Output]], Problem[Output]]:
-        ...
+@overload
+def test_case(
+    *args: Any,
+    aga_expect: Optional[Any] = ...,
+    aga_hidden: bool = ...,
+    aga_name: Optional[str] = ...,
+    aga_weight: int = ...,
+    aga_value: float = ...,
+    aga_expect_stdout: Optional[str | Sequence[str]] = ...,
+    **kwargs: Any,
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    ...
+
+
+@overload
+def test_case(
+    *args: Any, **kwargs: Any
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    ...
 
 
 def test_case(
@@ -566,6 +588,14 @@ def test_case(
         the "golden solution" to the problem. If aga_expect is specified, the inputs
         will double as a test _of_ the golden solution; to successfully produce the
         problem grader, the golden solution must return aga_expect from the given input.
+    aga_expect_stdout : Optional[str | Sequence[str]]
+        If aga_expect_stdout is specified, the golden solution's stdout will be checked
+        against the given value(s). If aga_expect_stdout is a string, it will be
+        compared against the golden solution's stdout. If aga_expect_stdout is a
+        sequence of strings, the golden solution's stdout will be split on newlines
+        (with '\n' removed) and the resulting list will be compared against the given
+        sequence. If aga_expect_stdout is None, the golden solution's stdout will not
+        be checked.
     aga_hidden : bool
         If True, hide the problem from students on supported frontends.
     aga_name : Optional[str]
@@ -607,6 +637,7 @@ def test_cases(
     aga_weight: int = ...,
     aga_value: int = ...,
     aga_product: bool = True,
+    aga_expect_stdout: Optional[str | Sequence[str]] = ...,
     **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     ...
@@ -620,6 +651,7 @@ def test_cases(
     aga_name: Iterable[Optional[str]] = ...,
     aga_weight: Iterable[int] = ...,
     aga_value: Iterable[int] = ...,
+    aga_expect_stdout: Iterable[Optional[str | Sequence[str]]] = ...,
     aga_product: bool = True,
     **kwargs: Iterable[Any],
 ) -> Callable[[Problem[Output]], Problem[Output]]:
