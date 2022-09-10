@@ -121,6 +121,30 @@ Note that we prefix all keyword arguments to the `test_case` decorator with
 `aga_`, so that you can still declare test inputs for problems with actual
 keyword arguments.
 
+`aga` can now check golden stdout now as well! Just add `aga_expect_stdout` to the test case(s). The format for the `aga_expect_stdout` is either a `str` or a `Iterable` of `str`. 
+
+When a `str` is given, the given string will be checked against all the captured output. When an `Iterable` is given, the captured output string will be divided using `splitlines`, meaning each string in the `Iterable` should contain NO `\n` characters. 
+
+The following examples will show. 
+
+```python
+@test_case(10, 20, aga_expect_stdout="the result is 30\n", aga_expect=30)
+@problem()
+def add(a: int, b: int) -> int:
+    """Add two numbers."""
+    print("the result is", a + b)
+    return a + b
+```
+
+```python
+@test_case("Bob", aga_expect_stdout=["What is your name? ", "Hello, world! Bob!"])
+@problem(script=True)
+def hello_world() -> None:
+    """Print 'Hello, world!'."""
+    name = input("What is your name? ")
+    print(f"Hello, world! {name}!")
+```
+
 If you run `aga check square`, it will run all golden tests (i.e., all test
 cases with declared `aga_expect`), displaying any which fail. This also happens
 by default when you run `aga gen square.py`, so you don't accidentally upload a
@@ -245,6 +269,21 @@ def difference(x: int, y: int) -> int:
 
 This will short-circuit when the smaller iterator ends, so this will generate
 three test cases: `(-5, -1)`, `(0, 0)`, and `(1, 2)`.
+
+At this point, you might wonder what could be the input to `aga_*` keyword arguments. The good news is that you can do both singletons or iterables. When singleton is given, `aga` will match the number with the number of test cases. When an iterable is given, the number of elements must match the number of test cases and `aga` will check that. 
+
+Foe example, if you want to set a series of tests to hidden and define a bunch of golden outputs for them, we can do 
+
+```python
+
+@test_cases([1, 2, 3], aga_hidden=True, aga_expect=[1, 4, 9])
+@problem()
+def square(x: int) -> int:
+    """Square x."""
+    return x * x
+```
+
+`@test_cases([1, 2, 3], aga_expect=[1, 1, 4, 4, 9, 9])` since the numbers don't match. 
 
 ## Checking Scripts
 
