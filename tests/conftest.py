@@ -6,7 +6,7 @@ from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Iterable, Iterator, List, Generator
+from typing import Generator, Iterable, Iterator, List
 
 import pytest
 from _pytest.config import Config
@@ -14,7 +14,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 import aga
 from aga import group, problem, test_case, test_cases
-from aga.config import AgaConfig, load_config_from_path, INJECTION_MODULE_FLAG
+from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
@@ -95,6 +95,18 @@ speaker = input("Speaker? ")
 print(f"Hello, {speaker}.")
 print(f"I'm {listener}.")
 """,
+    "temp_right": """
+def temperature(f: float) -> float:
+    return (f - 32) * 5.0 / 9.0
+""",
+    "temp_wrong": """
+def temperature(f: float) -> float:
+    return f
+""",
+    "temp_float_issue": """
+def temperature(f: float) -> float:
+    return (f - 32) * (5.0 / 9.0)
+""",
 }
 
 
@@ -170,6 +182,7 @@ def pytest_collection_modifyitems(config: Config, items: List[pytest.Item]) -> N
 @pytest.fixture(
     params=[  # type: ignore
         lazy_fixture("square"),
+        lazy_fixture("temp"),
         lazy_fixture("square_custom_name"),
         lazy_fixture("times"),
         lazy_fixture("diff"),
@@ -213,6 +226,21 @@ def fixture_square() -> Problem[int]:
         return x * x
 
     return square
+
+
+@pytest.fixture(name="temp")
+def fixture_temp() -> Problem[float]:
+    """Generate a problem which tests a temp function which returns float."""
+
+    @test_case(4.0)
+    @test_case(2.8)
+    @test_case(104.9, aga_expect=40.5)
+    @problem()
+    def temperature(temp: float) -> float:
+        """Divide a by b."""
+        return (temp - 32.0) * 5.0 / 9.0
+
+    return temperature
 
 
 @pytest.fixture(name="square_custom_name")
