@@ -8,13 +8,13 @@ from itertools import product
 from typing import (
     Any,
     Callable,
-    Generic,
-    Optional,
-    TypeVar,
     Dict,
+    Generic,
     List,
-    overload,
+    Optional,
     Sequence,
+    TypeVar,
+    overload,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
@@ -219,7 +219,13 @@ class _TestInputs(TestCase, Generic[Output]):
             diff_explanation = ""
             diff = ""
 
-        self.assertEqual(
+        if isinstance(expected, float) and isinstance(got, (float, int)):
+            comparator = self.assertAlmostEqual  # type: ignore
+
+        else:
+            comparator = self.assertEqual  # type: ignore
+
+        comparator(  # type: ignore
             got,
             expected,
             msg=msg_format.format(

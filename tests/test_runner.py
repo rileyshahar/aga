@@ -408,3 +408,27 @@ def test_square_custom_prize_score(
     )
     # test passes, which is 10 points; prize should be 8/10
     assert output.score == 18.0
+
+
+def test_temp_right(
+    temp: Problem[float], source_temp_right: str, metadata: SubmissionMetadata
+) -> None:
+    """Test that temp_right counts as corrrect."""
+    output = load_and_run(temp, source_temp_right, metadata)
+    assert output.score == 20.0
+
+
+def test_temp_float_issue(
+    temp: Problem[float], source_temp_float_issue: str, metadata: SubmissionMetadata
+) -> None:
+    """Test that temp_float_issue counts as corrrect."""
+    output = load_and_run(temp, source_temp_float_issue, metadata)
+    assert output.score == 20.0
+
+
+def test_temp_wrong(
+    temp: Problem[float], source_temp_wrong: str, metadata: SubmissionMetadata
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(temp, source_temp_wrong, metadata)
+    assert output.score == 0.0
