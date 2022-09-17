@@ -671,6 +671,20 @@ def fixture_square_prize_grouped() -> Problem[int]:
     return square
 
 
+@pytest.fixture(name="square_ec")
+def fixture_square_ec() -> Problem[int]:
+    """Generate a problem with a square extra credit problem."""
+
+    @test_case(0, aga_extra_credit=1.5)
+    @test_case(2)
+    @problem()
+    def square(x: int) -> int:
+        """Square x."""
+        return x * x
+
+    return square
+
+
 @pytest.fixture(name="square_custom_prize")
 def fixture_square_custom_prize() -> Problem[int]:
     """Generate a problem with a custom prize function."""

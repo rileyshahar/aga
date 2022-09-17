@@ -21,10 +21,13 @@ class ScoreInfo:
         The object's absolute point value.
     weight : int
         The relative of the remaining score this object will claim.
+    extra_credit : float
+        The absolute extra-credit point value.
     """
 
     weight: int
     value: float
+    extra_credit: float
 
 
 def compute_scores(score_infos: list[ScoreInfo], total_score: float) -> list[float]:
@@ -40,9 +43,11 @@ def compute_scores(score_infos: list[ScoreInfo], total_score: float) -> list[flo
 
     for s in score_infos:
         if total_weight > 0:
-            out.append(s.value + (total_score * s.weight) / total_weight)
+            out.append(
+                s.value + (total_score * s.weight) / total_weight + s.extra_credit
+            )
         else:
-            out.append(s.value)
+            out.append(s.value + s.extra_credit)
 
     return out
 
@@ -69,6 +74,7 @@ def prize(
     name: str = "Prize",
     weight: int = 1,
     value: float = 0.0,
+    extra_credit: float = 0.0,
 ) -> Callable[["Problem[Output]"], "Problem[Output]"]:
     """Add a points prize to the problem.
 
@@ -84,13 +90,15 @@ def prize(
         The prize's weight. See :ref:`Determining Score` for details.
     value : int
         The prize's absolute score. See :ref:`Determining Score` for details.
+    extra_credit : int
+        The prize's extra credit. See :ref:`Determining Score` for details.
 
     Returns
     -------
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the prize to a problem.
     """
-    to_add = Prize(name, criteria, ScoreInfo(weight, value))
+    to_add = Prize(name, criteria, ScoreInfo(weight, value, extra_credit))
 
     def inner(problem: "Problem[Output]") -> "Problem[Output]":
         problem.add_prize(to_add)

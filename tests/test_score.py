@@ -12,17 +12,18 @@ from aga.score import ScoreInfo, compute_scores, correct_and_on_time
     [
         (
             [
-                ScoreInfo(2, 0.0),
-                ScoreInfo(0, 2.0),
-                ScoreInfo(2, 4.0),
-                ScoreInfo(1, 2.0),
-                ScoreInfo(1, 0.0),
+                ScoreInfo(2, 0.0, 0.0),
+                ScoreInfo(0, 2.0, 0.0),
+                ScoreInfo(2, 4.0, 0.0),
+                ScoreInfo(1, 2.0, 0.0),
+                ScoreInfo(1, 0.0, 0.0),
             ],
             20.0,
             [4, 2, 8, 4, 2],
         ),
-        ([ScoreInfo(1, 1.0)], 1.0, [1.0]),
-        ([ScoreInfo(0, 1.0)], 1.0, [1.0]),
+        ([ScoreInfo(1, 1.0, 0.0)], 1.0, [1.0]),
+        ([ScoreInfo(0, 1.0, 0.0)], 1.0, [1.0]),
+        ([ScoreInfo(2, 0.0, 1.0), ScoreInfo(1, 0.0, 0.0)], 18.0, [13.0, 6.0]),
     ],
 )
 def test_compute_scores(
