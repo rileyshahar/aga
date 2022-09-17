@@ -33,6 +33,7 @@ AGA_RESERVED_KEYWORDS = {
     "aga_name",
     "aga_weight",
     "aga_value",
+    "aga_extra_credit",
 }
 
 
@@ -148,6 +149,7 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_name: Optional[str],
         aga_weight: int,
         aga_value: float,
+        aga_extra_credit: float,
         aga_mock_input: bool,
         **kwargs: Any,
     ) -> None:
@@ -157,7 +159,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self._mock_input = aga_mock_input
         self._expect = aga_expect
         self._expect_stdout = aga_expect_stdout
-        self.score_info = ScoreInfo(aga_weight, aga_value)
+        self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
         self._args = args
         self._kwargs = kwargs
@@ -303,10 +305,12 @@ class _TestInputs(TestCase, Generic[Output]):
 class _TestInputGroup(Generic[Output]):
     """A group of test cases with shared configuration."""
 
-    def __init__(self, weight: int = 1, value: float = 0.0) -> None:
+    def __init__(
+        self, weight: int = 1, value: float = 0.0, extra_credit: float = 0.0
+    ) -> None:
         self._test_cases: list[_TestInputs[Output]] = []
         self._prizes: list[Prize] = []
-        self.score_info = ScoreInfo(weight, value)
+        self.score_info = ScoreInfo(weight, value, extra_credit)
 
     def add_test_case(self, case: _TestInputs[Output]) -> None:
         """Add a test case to the group."""
@@ -375,6 +379,7 @@ class Problem(Generic[Output]):
         aga_name: Optional[str] = None,
         aga_weight: int = 1,
         aga_value: float = 0.0,
+        aga_extra_credit: float = 0.0,
         aga_expect_stdout: Optional[str | Sequence[str]] = None,
         **kwargs: Any,
     ) -> None:
@@ -391,6 +396,7 @@ class Problem(Generic[Output]):
             aga_name=aga_name,
             aga_weight=aga_weight,
             aga_value=aga_value,
+            aga_extra_credit=aga_extra_credit,
             aga_mock_input=self._config.problem.mock_input,
             **kwargs,
         )
@@ -581,6 +587,7 @@ def test_case(
     aga_name: Optional[str] = ...,
     aga_weight: int = ...,
     aga_value: float = ...,
+    aga_extra_credit: float = ...,
     aga_expect_stdout: Optional[str | Sequence[str]] = ...,
     **kwargs: Any,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
@@ -627,6 +634,9 @@ def test_case(
         Score` for details.
     aga_value : float
         The test case's absolute score. See :ref:`Determining Score` for details.
+    aga_extra_credit : float
+        The test case's absolute extra credit score. See :ref:`Determining Score` for
+        details.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
@@ -666,6 +676,7 @@ def test_cases(
     aga_name: Iterable[Optional[str]] | Optional[str] = ...,
     aga_weight: Iterable[int] | int = ...,
     aga_value: Iterable[float] | float = ...,
+    aga_extra_credit: Iterable[float] | float = ...,
     aga_expect_stdout: Iterable[Optional[str | Sequence[str]]]
     | Optional[str | Sequence[str]] = ...,
     aga_product: bool = True,
@@ -788,7 +799,9 @@ def test_cases(
 
 
 def group(
-    weight: int = 1, value: float = 0.0
+    weight: int = 1,
+    value: float = 0.0,
+    extra_credit: float = 0.0,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     """Declare a group of problems.
 
@@ -807,7 +820,7 @@ def group(
     """
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
-        prob.add_group(_TestInputGroup(weight, value))
+        prob.add_group(_TestInputGroup(weight, value, extra_credit))
         return prob
 
     return outer
