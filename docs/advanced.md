@@ -33,3 +33,31 @@ credit for this problem. If both pass, they will receive full credit.
 
 We provide more details and several pre-written prize functions in the
 `prize`(reference.html#module-aga.prize) documentation.
+
+## Overriding the Equality Check
+
+By default, `aga` uses unittest's `assertEqual`, or `assertAlmostEqual` for
+floats, to test equality. This can be overridden with the `aga_override_check`
+argument to `test_case`. This function takes three arguments: a
+`unittest.TestCase` object (which you should use to make assertions), the golden
+solution's output, and the student submission output. For example, to test a
+higher-order function:
+
+```python
+from aga import problem, test_case
+
+def _make_n_check(case, golden, student):
+    # here `golden` and `student` are the inner functions returned by the
+    # submissions, so they have type int -> int`
+    for i in range(10):
+        case.assertEqual(golden(i), student(i), f"Solutions differed on input {i}.")
+
+@test_cases([-3, -2, 16, 20], aga_override_check=_make_n_check)
+@test_case(0, aga_override_check=_make_n_check)
+@test_case(2, aga_override_check=_make_n_check)
+@problem()
+def make_n_adder(n: int) -> Callable[[int], int]:
+    def inner(x: int) -> int:
+        return x + n
+    return inner
+```

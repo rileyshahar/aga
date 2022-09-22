@@ -432,3 +432,43 @@ def test_temp_wrong(
     """Test that temp_wrong is wrong."""
     output = load_and_run(temp, source_temp_wrong, metadata)
     assert output.score == 0.0
+
+
+def test_make_n_adder_right(
+    higher_order: Problem[float],
+    source_make_n_adder_right: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(higher_order, source_make_n_adder_right, metadata)
+    assert output.score == 20.0
+
+
+def test_make_n_adder_wrong(
+    higher_order: Problem[float],
+    source_make_n_adder_wrong: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(higher_order, source_make_n_adder_wrong, metadata)
+    assert output.score == 0.0
+
+
+def test_make_n_adder_slightly_wrong(
+    higher_order: Problem[float],
+    source_make_n_adder_slightly_wrong: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(higher_order, source_make_n_adder_slightly_wrong, metadata)
+    assert output.score == 20.0 / 6 * 5
+
+
+def test_make_n_adder_type_error(
+    higher_order: Problem[float],
+    source_make_n_adder_type_error: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(higher_order, source_make_n_adder_type_error, metadata)
+    assert output.score == 0.0
