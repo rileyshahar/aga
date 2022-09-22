@@ -6,7 +6,7 @@ from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Generator, Iterable, Iterator, List
+from typing import Callable, Generator, Iterable, Iterator, List
 
 import pytest
 from _pytest.config import Config
@@ -106,6 +106,24 @@ def temperature(f: float) -> float:
     "temp_float_issue": """
 def temperature(f: float) -> float:
     return (f - 32) * (5.0 / 9.0)
+""",
+    "make_n_adder_right": """
+def make_n_adder(n):
+    return lambda x: n + x
+""",
+    "make_n_adder_wrong": """
+def make_n_adder(n):
+    return lambda x: n - x
+""",
+    "make_n_adder_slightly_wrong": """
+def make_n_adder(n):
+    if n == -3:
+        return lambda x: n - x
+    return lambda x: n + x
+""",
+    "make_n_adder_type_error": """
+def make_n_adder(n):
+    return n + 3
 """,
 }
 
@@ -768,6 +786,29 @@ def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
         print(f"Hello, this is {listener}.")
 
     return hello_world
+
+
+@pytest.fixture(name="higher_order")
+def fixture_higher_order() -> Problem[Callable[[int], int]]:
+    """Generate a problem which tests a higher-order function."""
+
+    def _make_n_check(case, golden, student):  # type: ignore
+        # here `golden` and `student` are the inner functions returned by the
+        # submissions, so they have type int -> int`
+        for i in range(10):
+            case.assertEqual(golden(i), student(i), f"Solutions differed on input {i}.")
+
+    @test_cases([-3, -2, 16, 20], aga_override_check=_make_n_check)
+    @test_case(0, aga_override_check=_make_n_check)
+    @test_case(2, aga_override_check=_make_n_check)
+    @problem()
+    def make_n_adder(num: int) -> Callable[[int], int]:
+        def inner(x: int) -> int:
+            return x + num
+
+        return inner
+
+    return make_n_adder
 
 
 @pytest.fixture(name="example_config_file")

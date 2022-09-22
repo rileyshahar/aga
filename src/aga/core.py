@@ -5,17 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 from itertools import product
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Sequence,
-    TypeVar,
-    overload,
-)
+from typing import Any, Callable, Dict, Generic, List, Optional, Sequence, TypeVar
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
@@ -34,6 +24,7 @@ AGA_RESERVED_KEYWORDS = {
     "aga_weight",
     "aga_value",
     "aga_extra_credit",
+    "aga_override_check",
 }
 
 
@@ -151,6 +142,7 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_value: float,
         aga_extra_credit: float,
         aga_mock_input: bool,
+        aga_override_check: Optional[Callable[[TestCase, Output, Output], None]],
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -159,6 +151,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self._mock_input = aga_mock_input
         self._expect = aga_expect
         self._expect_stdout = aga_expect_stdout
+        self._override_check = aga_override_check
         self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
         self._args = args
@@ -188,6 +181,10 @@ class _TestInputs(TestCase, Generic[Output]):
         if they differ. This means it can be plugged into any unittest TestCase as a
         helper method.
         """
+        if self._override_check:
+            self._override_check(self, self._eval(golden), self._eval(under_test))
+            return
+
         if metadata.check_stdout:
             golden_stdout, golden_output = self._eval(with_captured_stdout(golden))
             under_test_stdout, under_test_output = self._eval(
@@ -381,6 +378,7 @@ class Problem(Generic[Output]):
         aga_value: float = 0.0,
         aga_extra_credit: float = 0.0,
         aga_expect_stdout: Optional[str | Sequence[str]] = None,
+        aga_override_check: Optional[Callable[[TestCase, Output, Output], None]] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -397,6 +395,7 @@ class Problem(Generic[Output]):
             aga_weight=aga_weight,
             aga_value=aga_value,
             aga_extra_credit=aga_extra_credit,
+            aga_override_check=aga_override_check,
             aga_mock_input=self._config.problem.mock_input,
             **kwargs,
         )
@@ -579,28 +578,6 @@ def _check_reserved_keyword(kwd: str) -> None:
         )
 
 
-@overload
-def test_case(
-    *args: Any,
-    aga_expect: Optional[Any] = ...,
-    aga_hidden: bool = ...,
-    aga_name: Optional[str] = ...,
-    aga_weight: int = ...,
-    aga_value: float = ...,
-    aga_extra_credit: float = ...,
-    aga_expect_stdout: Optional[str | Sequence[str]] = ...,
-    **kwargs: Any,
-) -> Callable[[Problem[Output]], Problem[Output]]:
-    ...
-
-
-@overload
-def test_case(
-    *args: Any, **kwargs: Any
-) -> Callable[[Problem[Output]], Problem[Output]]:
-    ...
-
-
 def test_case(
     *args: Any,
     **kwargs: Any,
@@ -637,6 +614,9 @@ def test_case(
     aga_extra_credit : float
         The test case's absolute extra credit score. See :ref:`Determining Score` for
         details.
+    aga_override_check : Optional[Callable[[TestCase, Output, T], None]]
+        A function which overrides the equality assertions made by the library. See
+        :ref:`Overriding the Equality Check` for more.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
@@ -657,32 +637,6 @@ def test_case(
         return prob
 
     return outer
-
-
-@overload
-def test_cases(
-    *args: Iterable[Any],
-    aga_product: bool = True,
-    **kwargs: Iterable[Any] | Any,
-) -> Callable[[Problem[Output]], Problem[Output]]:
-    ...
-
-
-@overload
-def test_cases(
-    *args: Iterable[Any],
-    aga_expect: Iterable[Optional[Any]] | Optional[Any] = ...,
-    aga_hidden: Iterable[bool] | bool = ...,
-    aga_name: Iterable[Optional[str]] | Optional[str] = ...,
-    aga_weight: Iterable[int] | int = ...,
-    aga_value: Iterable[float] | float = ...,
-    aga_extra_credit: Iterable[float] | float = ...,
-    aga_expect_stdout: Iterable[Optional[str | Sequence[str]]]
-    | Optional[str | Sequence[str]] = ...,
-    aga_product: bool = True,
-    **kwargs: Iterable[Any],
-) -> Callable[[Problem[Output]], Problem[Output]]:
-    ...
 
 
 def test_cases(
