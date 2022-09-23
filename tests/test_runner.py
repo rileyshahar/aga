@@ -492,3 +492,28 @@ def test_is_even_def(
     """Test that temp_wrong is wrong."""
     output = load_and_run(override_test, source_is_even_def, metadata)
     assert output.score == 0.0
+
+
+def test_disallow_lambda(
+    disallow_test: Problem[float],
+    source_is_even_lambda: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(disallow_test, source_is_even_lambda, metadata)
+    assert output.score == 20.0
+
+
+def test_disallow_def(
+    disallow_test: Problem[float],
+    source_is_even_def: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(disallow_test, source_is_even_def, metadata)
+    assert output.score == 0.0
+    assert output.tests[0].output == (
+        """Looks like use you used some disallowed constructs:
+  - FunctionDef on line 1
+"""
+    )

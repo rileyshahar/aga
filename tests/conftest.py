@@ -1,5 +1,6 @@
 """Contains various fixtures, especially pre-written problems."""
 
+import ast
 import inspect
 import sys
 from datetime import date, timedelta
@@ -15,6 +16,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 import aga
 from aga import group, problem, test_case, test_cases
+from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput
@@ -821,7 +823,7 @@ def fixture_higher_order() -> Problem[Callable[[int], int]]:
 
 @pytest.fixture(name="override_test")
 def fixture_override_test() -> Problem[bool]:
-    """Generate a problem which tests `aga_override_test."""
+    """Generate a problem which tests `aga_override_test`."""
 
     def _my_func_checker(aga_hook, golden, student):  # type: ignore
         aga_hook.assertEqual(True, inspect.getsource(student).find("def") < 0)
@@ -830,6 +832,18 @@ def fixture_override_test() -> Problem[bool]:
             aga_hook.assertEqual(golden(i), student(i), f"mismatch on {i}")
 
     @test_case(aga_override_test=_my_func_checker)
+    @problem()
+    def is_even(x: int) -> bool:
+        return x % 2 == 0
+
+    return is_even
+
+
+@pytest.fixture(name="disallow_test")
+def fixture_disallow_test() -> Problem[bool]:
+    """Generate a problem which tests `Disallow`."""
+
+    @test_case(aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test())
     @problem()
     def is_even(x: int) -> bool:
         return x % 2 == 0
