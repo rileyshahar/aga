@@ -65,7 +65,6 @@ def make_n_adder(n: int) -> Callable[[int], int]:
 ```
 
 ## Overriding the Entire Test
-
 If you want even more granular control, you can also override the entire test.
 The `aga_override_test` argument to `test_case` takes a function of three
 arguments: the same `unittest.TestCase` object, the golden solution (the
@@ -100,7 +99,11 @@ import ast
 from aga import problem, test_case
 from aga.checks import Disallow
 
-@test_case(aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test())
+# I recommend you use `aga_name` here, because the generated one won't be very good
+@test_case(
+    aga_name="Use lambda, not def!",
+    aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test()
+)
 @problem()
 def is_even_lambda(x: int) -> bool:
     return x % 2 == 0
