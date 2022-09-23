@@ -7,6 +7,8 @@ from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 from unittest import TestCase
 from unittest.mock import patch
 
+__all__ = ("Site", "Disallow")
+
 Output = TypeVar("Output")
 
 Site = tuple[str, int]
@@ -30,6 +32,8 @@ def with_captured_stdout(
 class Disallow:
     """A list of items to disallow in code.
 
+    Attributes
+    ----------
     functions : list[str]
         The names of functions which the student should not be able to call.
     binops : list[type]
@@ -41,6 +45,16 @@ class Disallow:
         E.x., to forbid for loops, use `ast.For`. See
         `the docs <https://docs.python.org/3/library/ast.html#node-classes>`_ for a
         list.
+
+    Examples
+    --------
+    To disallow the built-in `map` function: `Disallow(functions=["map"])`.
+
+    To disallow the built-in `str.map` function: `Disallow(functions=["count"])`.
+    Note that for class method names, you just use the name of the function.
+
+    Note that there is no way to disallow `+=` without also disallowing `+` with this
+    API.
     """
 
     def __init__(
@@ -56,7 +70,9 @@ class Disallow:
     def to_test(
         self,
     ) -> Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]:
-        """Generate a test method which for `aga_override_test` of `test_case.
+        """Generate a test method suitable for `aga_override_test` of `test_case`.
+
+        You can pass the output of this method directly to `aga_override_test`.
 
         You can also use the lower-level methods `search_on_object` or `search_on_src`
         if you want to generate your own error message.

@@ -14,4 +14,6 @@ extensions = [
     "sphinx_click",
 ]
 
+default_role = "code"
+
 html_theme = "sphinx_rtd_theme"

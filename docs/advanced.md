@@ -38,12 +38,14 @@ We provide more details and several pre-written prize functions in the
 
 By default, `aga` uses unittest's `assertEqual`, or `assertAlmostEqual` for
 floats, to test equality. This can be overridden with the `aga_override_check`
-argument to `test_case`. This function takes three arguments: a
+argument to `test_case`. This argument takes a function of three arguments: a
 `unittest.TestCase` object (which you should use to make assertions), the golden
 solution's output, and the student submission output. For example, to test a
 higher-order function:
 
 ```python
+from typing import Callable
+
 from aga import problem, test_case
 
 def _make_n_check(case, golden, student):
@@ -61,3 +63,45 @@ def make_n_adder(n: int) -> Callable[[int], int]:
         return x + n
     return inner
 ```
+
+## Overriding the Entire Test
+
+If you want even more granular control, you can also override the entire test.
+The `aga_override_test` argument to `test_case` takes a function of three
+arguments: the same `unittest.TestCase` object, the golden solution (the
+solution itself, _not_ its output), and the student solution (ditto). For
+example, to mock some library:
+
+```python
+from unittest.mock import patch
+
+from aga import problem, test_case
+
+
+def mocked_test(case, golden, student):
+    with patch("foo") as mocked_foo:
+        case.assertEqual(golden(0), student(0), "test failed")
+
+
+@test_case(aga_override_test=mocked_test)
+@problem()
+def call_foo(n):
+    foo(n)
+```
+
+A common use-case is to disallow the use of certain constructs. For
+convenience, `aga` provides the
+[`Disallow`](reference.html#aga.checks.Disallow) class. For example, to force
+the student to use a `lambda` instead of a `def`:
+
+```python
+from aga import problem, test_case
+from aga.checks import Disallow
+
+@test_case(aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test())
+@problem()
+def is_even_lambda(x: int) -> bool:
+    return x % 2 == 0
+```
+
+For full details on `Disallow`, see the reference.
