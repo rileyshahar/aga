@@ -11,3 +11,10 @@
 .. automodule:: aga.prize
    :members:
 ```
+
+## Checks
+
+```{eval-rst}
+.. automodule:: aga.checks
+   :members:
+```
