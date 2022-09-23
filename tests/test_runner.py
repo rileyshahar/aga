@@ -472,3 +472,23 @@ def test_make_n_adder_type_error(
     """Test that temp_wrong is wrong."""
     output = load_and_run(higher_order, source_make_n_adder_type_error, metadata)
     assert output.score == 0.0
+
+
+def test_is_even_lambda(
+    override_test: Problem[float],
+    source_is_even_lambda: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(override_test, source_is_even_lambda, metadata)
+    assert output.score == 20.0
+
+
+def test_is_even_def(
+    override_test: Problem[float],
+    source_is_even_def: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that temp_wrong is wrong."""
+    output = load_and_run(override_test, source_is_even_def, metadata)
+    assert output.score == 0.0
