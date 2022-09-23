@@ -95,6 +95,8 @@ convenience, `aga` provides the
 the student to use a `lambda` instead of a `def`:
 
 ```python
+import ast
+
 from aga import problem, test_case
 from aga.checks import Disallow
 
