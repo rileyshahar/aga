@@ -25,6 +25,7 @@ AGA_RESERVED_KEYWORDS = {
     "aga_value",
     "aga_extra_credit",
     "aga_override_check",
+    "aga_override_test",
 }
 
 
@@ -143,6 +144,9 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_extra_credit: float,
         aga_mock_input: bool,
         aga_override_check: Optional[Callable[[TestCase, Output, Output], None]],
+        aga_override_test: Optional[
+            Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
+        ],
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -152,6 +156,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self._expect = aga_expect
         self._expect_stdout = aga_expect_stdout
         self._override_check = aga_override_check
+        self._override_test = aga_override_test
         self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
         self._args = args
@@ -181,6 +186,10 @@ class _TestInputs(TestCase, Generic[Output]):
         if they differ. This means it can be plugged into any unittest TestCase as a
         helper method.
         """
+        if self._override_test:
+            self._override_test(self, golden, under_test)
+            return
+
         if self._override_check:
             self._override_check(self, self._eval(golden), self._eval(under_test))
             return
@@ -379,6 +388,9 @@ class Problem(Generic[Output]):
         aga_extra_credit: float = 0.0,
         aga_expect_stdout: Optional[str | Sequence[str]] = None,
         aga_override_check: Optional[Callable[[TestCase, Output, Output], None]] = None,
+        aga_override_test: Optional[
+            Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
+        ] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -396,6 +408,7 @@ class Problem(Generic[Output]):
             aga_value=aga_value,
             aga_extra_credit=aga_extra_credit,
             aga_override_check=aga_override_check,
+            aga_override_test=aga_override_test,
             aga_mock_input=self._config.problem.mock_input,
             **kwargs,
         )
@@ -617,6 +630,9 @@ def test_case(
     aga_override_check : Optional[Callable[[TestCase, Output, T], None]]
         A function which overrides the equality assertions made by the library. See
         :ref:`Overriding the Equality Check` for more.
+    aga_override_test : Optional[Callable[[TestCase, Callable[T], Callable[T]], None]]
+        A function which overrides the entire test behavior of the library. See
+        :ref:`Overriding the Entire Test` for more.
     kwargs :
         Keyword arguments to be passed to the functions under test. Any keyword starting
         with aga\_ is reserved.
