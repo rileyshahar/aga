@@ -858,7 +858,8 @@ def fixture_disallow_test() -> Problem[bool]:
         lazy_fixture("disallow_test"),
     ]
 )
-def overrided_problem(request):
+def overrided_problem(request):  # type: ignore
+    """Make a collection of problems with overridden tests/checks."""
     return request.param
 
 

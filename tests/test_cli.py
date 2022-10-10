@@ -160,7 +160,8 @@ def test_check_invalid_problem(
 
 def test_check_with_override(
     mocked_lpfp: MagicMock, overrided_problem: Problem[Output]
-):
+) -> None:
+    """Test that check succeeds with a valid problem."""
     mocked_lpfp.return_value = [overrided_problem]
 
     result = runner.invoke(aga_app, ["check", overrided_problem.name()])
