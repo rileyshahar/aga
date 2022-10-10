@@ -104,6 +104,11 @@ def _load_source_from_file(path: str, name: str = "module") -> Any:
         spec.loader.exec_module(mod)  # type: ignore
     except (SyntaxError, NameError) as err:
         raise SubmissionSyntaxError(path) from err  # group all parse errors
+    except ImportError as err:
+        raise InvalidSubmissionError(
+            "The problem submission file has invalid imports. "
+            "Did you forget to use injection options? "
+        ) from err
 
     return mod
 
