@@ -851,6 +851,17 @@ def fixture_disallow_test() -> Problem[bool]:
     return is_even
 
 
+@pytest.fixture(
+    params=[
+        lazy_fixture("higher_order"),
+        lazy_fixture("override_test"),
+        lazy_fixture("disallow_test"),
+    ]
+)
+def overrided_problem(request):
+    return request.param
+
+
 @pytest.fixture(name="example_config_file")
 def fixture_example_config_file(
     tmp_path: Path,

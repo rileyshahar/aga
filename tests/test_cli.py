@@ -158,6 +158,19 @@ def test_check_invalid_problem(
     assert result.exit_code == 1
 
 
+def test_check_with_override(
+    mocked_lpfp: MagicMock, overrided_problem: Problem[Output]
+):
+    mocked_lpfp.return_value = [overrided_problem]
+
+    result = runner.invoke(aga_app, ["check", overrided_problem.name()])
+
+    mocked_lpfp.assert_called_once()
+
+    assert "passed golden tests" in result.stdout
+    assert result.exit_code == 0
+
+
 def test_complete_frontend_empty() -> None:
     """Check that complete_frontend works with an empty string."""
     assert tuple(complete_frontend("")) == FRONTENDS
