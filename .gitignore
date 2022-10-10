@@ -1,3 +1,4 @@
+.idea/
 **/.mypy_cache
 **/.pytest_cache
 **/__pycache__
@@ -7,3 +8,4 @@ poetry.lock
 .nox
 .coverage
 coverage.xml
+tmp/
