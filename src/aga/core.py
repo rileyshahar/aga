@@ -162,6 +162,14 @@ class _TestInputs(TestCase, Generic[Output]):
         self._args = args
         self._kwargs = kwargs
 
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def kwargs(self):
+        return self._kwargs
+
     def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
         # deepcopy in case the student submission mutates arguments; we don't want it to
@@ -293,19 +301,33 @@ class _TestInputs(TestCase, Generic[Output]):
     def check_one(self, golden: Callable[..., Output]) -> None:
         """Check that the golden solution is correct."""
         if self._expect is not None or self._expect_stdout is not None:
-            golden_stdout, golden_output = self._eval(
-                with_captured_stdout(golden)
-            )  # type: str, Output
-            if self._expect is not None:
-                self.assertEqual(golden_output, self._expect)
+            if self._override_test:
 
-            if self._expect_stdout is not None:
-                if isinstance(self._expect_stdout, str):
-                    self.assertEqual(golden_stdout, self._expect_stdout)
-                elif isinstance(self._expect_stdout, Sequence):
-                    self.assertEqual(
-                        golden_stdout.splitlines(), list(self._expect_stdout)
-                    )
+                def dummy_tester(*_, **__):
+                    return self._expect
+
+                self._override_test(
+                    self,
+                    dummy_tester,
+                    golden,
+                )
+            else:
+                golden_stdout, golden_output = self._eval(
+                    with_captured_stdout(golden)
+                )  # type: str, Output
+                if self._expect is not None:
+                    if self._override_check:
+                        self._override_test(self, self._expect, golden_output)
+                    else:
+                        self.assertEqual(golden_output, self._expect)
+
+                if self._expect_stdout is not None:
+                    if isinstance(self._expect_stdout, str):
+                        self.assertEqual(golden_stdout, self._expect_stdout)
+                    elif isinstance(self._expect_stdout, Sequence):
+                        self.assertEqual(
+                            golden_stdout.splitlines(), list(self._expect_stdout)
+                        )
 
 
 class _TestInputGroup(Generic[Output]):
