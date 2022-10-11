@@ -6,7 +6,23 @@ only exposed for testing, the CLI, and type hinting.
 
 from importlib.metadata import version
 
-from .core import group, problem, test_case, test_cases
+from .core import (
+    group,
+    problem,
+    test_case,
+    test_cases,
+    test_cases_params,
+    test_cases_product,
+    test_cases_zip,
+)
 
-__all__ = ("problem", "test_case", "test_cases", "group")
+__all__ = (
+    "problem",
+    "test_case",
+    "test_cases",
+    "test_cases_params",
+    "test_cases_product",
+    "test_cases_zip",
+    "group",
+)
 __version__ = version(__name__)  # type: ignore

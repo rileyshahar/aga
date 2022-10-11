@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 from unittest import TestCase
 from unittest.mock import patch
 
-__all__ = ("Site", "Disallow")
+__all__ = ("with_captured_stdout", "Site", "Disallow")
 
 Output = TypeVar("Output")
 

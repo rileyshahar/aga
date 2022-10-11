@@ -465,7 +465,7 @@ def fixture_square_grouped() -> Problem[int]:
 def fixture_square_generated_cases() -> Problem[int]:
     """Generate a problem which tests a square function using generated test cases."""
 
-    @test_cases(range(-2, 3))
+    @test_cases(range(-2, 3), aga_product=True)
     @problem()
     def square(x: int) -> int:
         """Square x."""
@@ -481,7 +481,7 @@ def fixture_diff_generator() -> Problem[int]:
     This function has generator-created test cases for two positional arguments.
     """
 
-    @test_cases(range(-1, 2), range(-1, 2))
+    @test_cases(range(-1, 2), range(-1, 2), aga_product=True)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""
@@ -494,7 +494,7 @@ def fixture_diff_generator() -> Problem[int]:
 def fixture_pos_zip() -> Problem[int]:
     """Generate a problem which tests zip combinator."""
 
-    @test_cases([-1, 1], [1, 3], aga_product=False, aga_hidden=[True] * 2)
+    @test_cases([-1, 1], [1, 3], aga_zip=True, aga_hidden=[True] * 2)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""
@@ -507,7 +507,7 @@ def fixture_pos_zip() -> Problem[int]:
 def fixture_pos_zip_with_singleton_aga_args() -> Problem[int]:
     """Generate a problem which tests zip combinator and singleton aga_ kwargs input."""
 
-    @test_cases([-1, 1], [1, 3], aga_product=False, aga_hidden=True)
+    @test_cases([-1, 1], [1, 3], aga_zip=True, aga_hidden=True)
     @problem()
     def difference(x: int, y: int) -> int:
         """Compute x - y."""
@@ -576,7 +576,7 @@ def fixture_pos_and_kwd_generated() -> Problem[int]:
     arguments.
     """
 
-    @test_cases(range(-1, 2), y=range(-1, 2))
+    @test_cases(range(-1, 2), y=range(-1, 2), aga_product=True)
     @problem()
     def difference(x: int, y: int = 0) -> int:
         """Compute x - y."""
@@ -593,7 +593,7 @@ def fixture_pos_and_kwd_zip() -> Problem[int]:
     arguments.
     """
 
-    @test_cases([-1, 0, 1], y=range(-1, 2), aga_product=False)
+    @test_cases([-1, 0, 1], y=range(-1, 2), aga_zip=True)
     @problem()
     def difference(x: int, y: int = 0) -> int:
         """Compute x - y."""
@@ -614,7 +614,7 @@ def fixture_pos_and_kwd_generator_function() -> Problem[int]:
         for i in range(-1, 2):
             yield i
 
-    @test_cases(generator(), y=generator())
+    @test_cases(generator(), y=generator(), aga_product=True)
     @problem()
     def difference(x: int, y: int = 0) -> int:
         """Compute x - y."""
@@ -808,7 +808,7 @@ def fixture_higher_order() -> Problem[Callable[[int], int]]:
         for i in range(10):
             case.assertEqual(golden(i), student(i), f"Solutions differed on input {i}.")
 
-    @test_cases([-3, -2, 16, 20], aga_override_check=_make_n_check)
+    @test_cases([-3, -2, 16, 20], aga_override_check=_make_n_check, aga_product=True)
     @test_case(0, aga_override_check=_make_n_check)
     @test_case(2, aga_override_check=_make_n_check)
     @problem()

@@ -1,9 +1,11 @@
 """The core library functionality."""
+from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 from itertools import product
 from typing import (
     Any,
@@ -15,6 +17,7 @@ from typing import (
     Sequence,
     TypeVar,
     Tuple,
+    Type,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
@@ -37,6 +40,24 @@ AGA_RESERVED_KEYWORDS = {
     "aga_override_check",
     "aga_override_test",
 }
+
+
+__all__ = [
+    "TestMetadata",
+    "SubmissionMetadata",
+    "AgaTestCase",
+    "AgaTestSuite",
+    "Problem",
+    "problem",
+    "test_case",
+    "Param",
+    "param",
+    "test_cases",
+    "test_cases_params",
+    "test_cases_zip",
+    "test_cases_product",
+    "group",
+]
 
 
 @dataclass(frozen=True)
@@ -690,9 +711,134 @@ def test_case(
     return outer
 
 
+class Param:
+    """A wrapper for parameters."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        """Initialize a Param."""
+        self._args = args
+        self._kwargs = kwargs
+
+    @property
+    def args(self) -> Tuple[Any, ...]:
+        """Return the arguments to be passed to the functions under test."""
+        return self._args
+
+    @property
+    def kwargs(self) -> Dict[str, Any]:
+        """Return the keyword arguments to be passed to the functions under test."""
+        return self._kwargs
+
+    def update_kwargs(self, **kwargs: Any) -> Param:
+        """Update the keyword arguments to be passed to the functions under test."""
+        self._kwargs.update(kwargs)
+        return self
+
+    def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
+        """Generate a test case for the given problem."""
+        return test_case(*self.args, **self.kwargs)(prob)
+
+
+param = Param  # pylint: disable=invalid-name
+
+
+def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[Param]:
+    """Parse the parameters for param sequence."""
+    if kwargs:
+        raise ValueError("aga_params=True ignores non-aga kwargs")
+
+    if len(args) != 1:
+        raise ValueError(
+            "aga_params=True requires exactly one iterable of sets of parameters"
+        )
+
+    return list(arg if isinstance(arg, Param) else param(*arg) for arg in args[0])
+
+
+def _parse_zip_or_product(
+    *args: Iterable[Any],
+    aga_product: bool = False,
+    aga_zip: bool = False,
+    **kwargs: Any,
+) -> List[Param]:
+    """Parse parameters for zip or product."""
+    if aga_product:
+        combinator: Type[product[Any]] | Type[zip[Any]] = product
+    elif aga_zip:
+        combinator = zip
+    else:
+        raise ValueError("aga_zip or aga_product must be True")
+
+    # ok so if the combinator is product
+    # we are taking the cartesian product for all args and kwargs
+    # and if the combinator is zip,
+    # we are zipping all the args and kwargs, if there are any
+    combined_args = list(combinator(*args))
+
+    combined_kwargs = list(combinator(*kwargs.values()))
+
+    # ======= validation checks =======
+    if combinator is zip:
+        # create empty args for zip if there are no args
+        if combined_args and combined_kwargs:
+            if len(combined_args) != len(combined_kwargs):
+                raise ValueError('length of "args" and "kwargs" must match in zip mode')
+        elif combined_args:
+            combined_kwargs = [()] * len(combined_args)
+        elif combined_kwargs:
+            combined_args = [()] * len(combined_kwargs)
+
+    all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
+
+    # ======= zipping all the args together =======
+    return list(
+        param(*curr_args, **dict(zip(kwargs.keys(), curr_kwargs)))
+        for (curr_args, curr_kwargs) in all_args_and_kwargs
+    )
+
+
+def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[Param]) -> None:
+    """Add aga_kwargs to the finalized parameters."""
+    # process aga input type
+    for aga_kwarg_key, aga_kwarg_value in aga_kwargs.items():
+        if isinstance(aga_kwarg_value, Iterable) and not isinstance(
+            aga_kwarg_value, str
+        ):
+            aga_kwargs[aga_kwarg_key] = list(aga_kwarg_value)
+        else:
+            aga_kwargs[aga_kwarg_key] = [aga_kwarg_value] * len(final_params)
+
+    # validate aga input type
+    if not all(
+        len(aga_kwarg_value) == len(final_params)
+        for aga_kwarg_value in aga_kwargs.values()
+    ):
+        # the length of the kwargs should be equal to the number of test cases
+        # i.e. the length of the combined args
+        raise ValueError(
+            f"all aga_ keyword args must have the same length as the test cases, "
+            f"which is {len(final_params)}"
+        )
+
+    # the aga kwargs list we want
+    aga_kwargs_list: List[Dict[str, Any]] = [
+        dict(zip(aga_kwargs.keys(), aga_kwarg_value))
+        for aga_kwarg_value in zip(*aga_kwargs.values())
+    ]
+
+    if not aga_kwargs_list:
+        # generate default aga kwargs dict if there are no aga kwargs
+        aga_kwargs_list = [{} for _ in final_params]
+
+    for final_param, kwargs in zip(final_params, aga_kwargs_list):
+        final_param.update_kwargs(**kwargs)
+
+
 def test_cases(
     *args: Iterable[Any],
-    aga_product: bool = True,
+    aga_product: bool = False,
+    aga_zip: bool = False,
+    aga_params: bool = False,
     **kwargs: Any,
 ) -> Callable[[Problem[Output]], Problem[Output]]:
     r"""Generate many test cases programmatically, from generators of inputs.
@@ -704,7 +850,9 @@ def test_cases(
     aga_product : bool
         Whether to take a cartesian product of the generators (creating one test case
         for each set of inputs in the product), or to zip them (iterate through each
-        generator in sequence). Default `True`.
+        generator in sequence). Default `False`.
+    aga_zip : bool
+    aga_params : bool
     kwargs :
         `aga_` keywords have their meaning inherited from `test_case`, and are
         applied to each test case generated by this function. Singleton value and
@@ -719,88 +867,50 @@ def test_cases(
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the test cases to a problem.
     """
+    if not (aga_product ^ aga_zip ^ aga_params) or (
+        aga_product and aga_zip and aga_params
+    ):
+        raise ValueError(
+            "Exactly one of aga_product, aga_zip, or aga_params must be True. \n"
+            f"You got: "
+            f"aga_product={aga_product}, aga_zip={aga_zip}, aga_params={aga_params}"
+        )
+
+    # pop aga keywords out
+    aga_kwargs_dict = {
+        kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
+    }
+
+    final_params: List[Param]
+
+    if aga_params:
+        # build final params
+        # So we're allowing [param(1, 2), [3, 4]] as a valid input
+        final_params = _parse_params(*args, **kwargs)
+    else:
+        final_params = _parse_zip_or_product(
+            *args, aga_zip=aga_zip, aga_product=aga_product, **kwargs
+        )
+
+    _add_aga_kwargs(aga_kwargs_dict, final_params)
 
     def outer(prob: Problem[Output]) -> Problem[Output]:
-        # ok so if the combinator is product
-        # we are taking the cartesian product for all args and kwargs
-        # and if the combinator is zip,
-        # we are zipping all the args and kwargs, if there are any
-        combinator = product if aga_product else zip
-
-        combined_args = list(combinator(*args))
-
-        # pop aga keywords out
-        aga_kwargs_dict = {
-            kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
-        }
-
-        combined_kwargs = list(combinator(*kwargs.values()))
-
-        # ======= validation checks =======
-        if combinator is zip:
-            # create empty args for zip if there are no args
-            if combined_args and combined_kwargs:
-                if len(combined_args) != len(combined_kwargs):
-                    raise ValueError(
-                        'length of "args" and "kwargs" must match in zip mode'
-                    )
-            elif combined_args:
-                combined_kwargs = [()] * len(combined_args)
-            elif combined_kwargs:
-                combined_args = [()] * len(combined_kwargs)
-
-        all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
-
-        # process aga input type
-        for aga_kwarg_key, aga_kwarg_value in aga_kwargs_dict.items():
-            if isinstance(aga_kwarg_value, Iterable) and not isinstance(
-                aga_kwarg_value, str
-            ):
-                aga_kwargs_dict[aga_kwarg_key] = list(aga_kwarg_value)
-            else:
-                aga_kwargs_dict[aga_kwarg_key] = [aga_kwarg_value] * len(
-                    all_args_and_kwargs
-                )
-
-        # validate aga input type
-        if not all(
-            len(aga_kwarg_value) == len(all_args_and_kwargs)
-            for aga_kwarg_value in aga_kwargs_dict.values()
-        ):
-            # the length of the kwargs should be equal to the number of test cases
-            # i.e. the length of the combined args
-            raise ValueError(
-                f"all aga_ keyword args must have the same length as the test cases, "
-                f"which is {len(combined_args)}"
-            )
-
-        # the aga kwargs list we want
-        aga_kwargs_list: List[Dict[str, Any]] = [
-            dict(zip(aga_kwargs_dict.keys(), aga_kwarg_value))
-            for aga_kwarg_value in zip(*aga_kwargs_dict.values())
-        ]
-
-        if not aga_kwargs_list:
-            # generate default aga kwargs dict if there are no aga kwargs
-            aga_kwargs_list = [{} for _ in all_args_and_kwargs]
-
-        # ======= zipping all the args together =======
-        total_args = list(zip(all_args_and_kwargs, aga_kwargs_list))
-
-        for (curr_args, curr_kwargs), aga_kwargs in total_args:
-            # we have to reassemble a kwargs dictionary that actually has keys
-            final_kwargs = dict(zip(kwargs.keys(), curr_kwargs), **aga_kwargs)
-
-            # i think we have to enumerate all of the arguments to test_case by
-            # hand; we can't capture them separately from the test case kwargs
-            prob = test_case(
-                *curr_args,
-                **final_kwargs,
-            )(prob)
+        """Add the test cases to the problem."""
+        for final_param in final_params:
+            prob = final_param.generate_test_case(prob)
 
         return prob
 
     return outer
+
+
+test_cases_params = partial(test_cases, aga_params=True)
+test_cases_zip = partial(test_cases, aga_zip=True)
+test_cases_product = partial(test_cases, aga_product=True)
+
+test_cases.params = test_cases_params  # type: ignore
+test_cases.product = test_cases_product  # type: ignore
+test_cases.zip = test_cases_zip  # type: ignore
 
 
 def group(
@@ -815,8 +925,10 @@ def group(
     weight : int
         The group's relative weight to the problem's score. See :ref:`Determining Score`
         for details.
-    value : int
+    value : float
         The group's absolute score. See :ref:`Determining Score` for details.
+    extra_credit : float
+        The group's extra credit. See :ref:`Determining Score` for details.
 
     Returns
     -------
