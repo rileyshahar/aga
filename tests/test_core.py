@@ -2,18 +2,61 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Any
 
 import pytest
 from aga import test_cases as _test_cases
 from aga import problem
-from aga.core import param
+from aga.core import param, _TestInputs
 from aga.cli.app import _check_problem
 
 
 # pylint: disable=no-self-use
 class TestTestCases:
     """Test the test_cases decorator."""
+
+    def test_test_input_with_param_and_arguments(self) -> None:
+        """Test that test_input cannot be used with param and arguments."""
+
+        def tester(*_: Any) -> None:
+            """Dummy Tester."""
+
+        with pytest.raises(
+            ValueError, match="aga_param must be used without any positional or keyword"
+        ):
+            _TestInputs(
+                3,
+                4,  # additional *args
+                aga_param=param(1, 2),  # with aga_param
+                aga_expect=True,
+                aga_expect_stdout="1",
+                aga_hidden=True,
+                aga_name="test",
+                aga_weight=True,
+                aga_value=True,
+                aga_extra_credit=True,
+                aga_mock_input=True,
+                aga_override_check=tester,
+                aga_override_test=tester,
+            )
+
+        with pytest.raises(
+            ValueError, match="aga_param must be used without any positional or keyword"
+        ):
+            _TestInputs(
+                aga_param=param(1, 2),  # aga_param
+                aga_expect=True,
+                aga_expect_stdout="1",
+                aga_hidden=True,
+                aga_name="test",
+                aga_weight=True,
+                aga_value=True,
+                aga_extra_credit=True,
+                aga_mock_input=True,
+                aga_override_check=tester,
+                aga_override_test=tester,
+                some_arg=10,  # with additional keyword args
+            )
 
     def test_zip_arg_length_and_kwargs_length_not_match(self) -> None:
         """Test that the length of the zipped args and kwargs must match."""

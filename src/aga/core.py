@@ -173,9 +173,14 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_value: float,
         aga_extra_credit: float,
         aga_mock_input: bool,
-        aga_override_check: Optional[Callable[[TestCase, Output, Output], None]],
+        aga_override_check: Optional[
+            Callable[[_TestInputs[Output], Output, Output], None]
+        ],
         aga_override_test: Optional[
-            Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
+            Callable[
+                [_TestInputs[Output], Callable[..., Output], Callable[..., Output]],
+                None,
+            ]
         ],
         aga_param: Optional[_TestParam] = None,
         **kwargs: Any,
@@ -878,7 +883,6 @@ class _TestParams:
         """Parse parameters for zip or product."""
         if not aga_zip ^ aga_product:
             raise ValueError("exactly one of aga_zip or aga_product must be True")
-
         combinator = product if aga_product else zip
 
         # ok so if the combinator is product
@@ -886,7 +890,6 @@ class _TestParams:
         # and if the combinator is zip,
         # we are zipping all the args and kwargs, if there are any
         combined_args = list(combinator(*args))
-
         combined_kwargs = list(combinator(*kwargs.values()))
 
         # ======= validation checks =======
@@ -957,11 +960,9 @@ class _TestParams:
 
 
 test_cases = _TestParams  # pylint: disable=invalid-name
-
 test_cases_params = partial(test_cases, aga_params=True)
 test_cases_zip = partial(test_cases, aga_zip=True)
 test_cases_product = partial(test_cases, aga_product=True)
-
 test_cases.params = test_cases_params
 test_cases.product = test_cases_product
 test_cases.zip = test_cases_zip
