@@ -49,7 +49,6 @@ __all__ = [
     "Problem",
     "problem",
     "test_case",
-    "Param",
     "param",
     "test_cases",
     "test_cases_params",
@@ -646,10 +645,7 @@ def _check_reserved_keyword(kwd: str) -> None:
         )
 
 
-def test_case(
-    *args: Any,
-    **kwargs: Any,
-) -> Callable[[Problem[Output]], Problem[Output]]:
+class _TestCase:
     r"""Declare a specific test case for some problem.
 
     Parameters
@@ -697,21 +693,6 @@ def test_case(
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the test case to a problem.
     """
-    for kwd, _ in kwargs.items():
-        _check_reserved_keyword(kwd)
-
-    def outer(prob: Problem[Output]) -> Problem[Output]:
-        prob.add_test_case(
-            *args,
-            **kwargs,
-        )
-        return prob
-
-    return outer
-
-
-class Param:
-    """A wrapper for parameters."""
 
     def __init__(self, *args: Any, **kwargs: Any):
         """Initialize a Param."""
@@ -728,20 +709,33 @@ class Param:
         """Return the keyword arguments to be passed to the functions under test."""
         return self._kwargs
 
-    def update_kwargs(self, **kwargs: Any) -> Param:
+    def update_kwargs(self, **kwargs: Any) -> _TestCase:
         """Update the keyword arguments to be passed to the functions under test."""
         self._kwargs.update(kwargs)
         return self
 
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
         """Generate a test case for the given problem."""
-        return test_case(*self.args, **self.kwargs)(prob)
+        return self(prob)
+
+    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
+        """Add the test case to the given problem."""
+        for kwd, _ in self.kwargs.items():
+            _check_reserved_keyword(kwd)
+
+        prob.add_test_case(
+            *self.args,
+            **self.kwargs,
+        )
+
+        return prob
 
 
-param = Param  # pylint: disable=invalid-name
+param = _TestCase  # pylint: disable=invalid-name
+test_case = _TestCase  # pylint: disable=invalid-name
 
 
-def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[Param]:
+def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestCase]:
     """Parse the parameters for param sequence."""
     if kwargs:
         raise ValueError("aga_params=True ignores non-aga kwargs")
@@ -751,7 +745,7 @@ def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[Param]:
             "aga_params=True requires exactly one iterable of sets of parameters"
         )
 
-    return list(arg if isinstance(arg, Param) else param(*arg) for arg in args[0])
+    return list(arg if isinstance(arg, _TestCase) else param(*arg) for arg in args[0])
 
 
 def _parse_zip_or_product(
@@ -759,7 +753,7 @@ def _parse_zip_or_product(
     aga_product: bool = False,
     aga_zip: bool = False,
     **kwargs: Any,
-) -> List[Param]:
+) -> List[_TestCase]:
     """Parse parameters for zip or product."""
     if not aga_zip ^ aga_product:
         raise ValueError("exactly one of aga_zip or aga_product must be True")
@@ -794,7 +788,7 @@ def _parse_zip_or_product(
     )
 
 
-def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[Param]) -> None:
+def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[_TestCase]) -> None:
     """Add aga_kwargs to the finalized parameters."""
     # process aga input type
     for aga_kwarg_key, aga_kwarg_value in aga_kwargs.items():
@@ -881,7 +875,7 @@ def test_cases(
         kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
     }
 
-    final_params: List[Param]
+    final_params: List[_TestCase]
 
     if aga_params:
         # build final params
