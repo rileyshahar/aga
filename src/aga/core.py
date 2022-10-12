@@ -176,6 +176,7 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ],
+        aga_param: Optional[_TestParam] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -188,18 +189,32 @@ class _TestInputs(TestCase, Generic[Output]):
         self._override_test = aga_override_test
         self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
-        self._args = args
-        self._kwargs = kwargs
+        if aga_param:
+            if args or kwargs:
+                raise ValueError(
+                    "aga_param must be used without any positional or keyword "
+                    "argument, but got \n"
+                    f"    args: {args}\n"
+                    f"    kwargs: {kwargs}"
+                )
+            self._param: _TestParam = aga_param
+        else:
+            self._param = _TestParam(*args, **kwargs)
 
     @property
     def args(self) -> Tuple[Any, ...]:
         """Get the positional arguments for the test case."""
-        return self._args
+        return self._param.args
 
     @property
     def kwargs(self) -> Dict[str, Any]:
         """Get the keyword arguments for the test case."""
-        return self._kwargs
+        return self._param.kwargs
+
+    @property
+    def param(self) -> _TestParam:
+        """Get the test parameter."""
+        return self._param
 
     def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
@@ -207,11 +222,11 @@ class _TestInputs(TestCase, Generic[Output]):
         # mess with our copy of the arguments
         if self._mock_input:
             with patch(
-                "builtins.input", generate_custom_input(deepcopy(self._args))
+                "builtins.input", generate_custom_input(deepcopy(self.args))
             ) as _:
                 return func()
         else:
-            return func(*deepcopy(self._args), **deepcopy(self._kwargs))
+            return func(*deepcopy(self.args), **deepcopy(self.kwargs))
 
     def check(
         self,
@@ -311,16 +326,16 @@ class _TestInputs(TestCase, Generic[Output]):
         return AgaTestCase(self, golden, under_test, metadata)
 
     def _args_repr(self, sep: str) -> str:
-        return sep.join(repr(x) for x in self._args)
+        return sep.join(repr(x) for x in self.args)
 
     def _kwargs_repr(self, sep: str) -> str:
         # we use k instead of repr(k) so we don't get quotes around it
-        return sep.join(k + "=" + repr(v) for k, v in self._kwargs.items())
+        return sep.join(k + "=" + repr(v) for k, v in self.kwargs.items())
 
     def _sep(self, sep: str) -> str:
         """Return sep if both exist, "" otherwise."""
         assert sep == ","
-        return self._args and self._kwargs and sep or ""
+        return self.args and self.kwargs and sep or ""
 
     def __repr__(self) -> str:
         args_repr = self._args_repr(",")
@@ -338,18 +353,32 @@ class _TestInputs(TestCase, Generic[Output]):
                     # https://github.com/python/mypy/issues/4805 ehh
                     return self._expect  # type: ignore
 
-                self._override_test(
-                    self,
-                    dummy_tester,
-                    golden,
-                )
+                try:
+                    self._override_test(
+                        self,
+                        dummy_tester,
+                        golden,
+                    )
+                except AssertionError as e:
+                    raise AssertionError(
+                        "Your solution doesn't pass the overridden test. \n"
+                        "Test parameters: \n"
+                        f"{self._param}"
+                    ) from e
             else:
                 golden_stdout, golden_output = self._eval(
                     with_captured_stdout(golden)
                 )  # type: str, Output
                 if self._expect is not None:
                     if self._override_check is not None:
-                        self._override_check(self, self._expect, golden_output)
+                        try:
+                            self._override_check(self, self._expect, golden_output)
+                        except AssertionError as e:
+                            raise AssertionError(
+                                "Your solution doesn't pass the overridden check. \n"
+                                "Test parameters: \n"
+                                f"{self._param}"
+                            ) from e
                     else:
                         self.assertEqual(golden_output, self._expect)
 
@@ -445,6 +474,7 @@ class Problem(Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ] = None,
+        aga_param: Optional[_TestParam] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -464,6 +494,7 @@ class Problem(Generic[Output]):
             aga_override_check=aga_override_check,
             aga_override_test=aga_override_test,
             aga_mock_input=self._config.problem.mock_input,
+            aga_param=aga_param,
             **kwargs,
         )
         self._ungrouped_tests.append(case)
@@ -645,59 +676,60 @@ def _check_reserved_keyword(kwd: str) -> None:
         )
 
 
-class _TestCase:
-    r"""Declare a specific test case for some problem.
-
-    Parameters
-    ----------
-    args :
-        The arguments to be passed to the functions under test.
-    aga_expect : Optional[T]
-        If aga_expect is None, the inputs will be tested against the wrapped function,
-        the "golden solution" to the problem. If aga_expect is specified, the inputs
-        will double as a test _of_ the golden solution; to successfully produce the
-        problem grader, the golden solution must return aga_expect from the given input.
-    aga_expect_stdout : Optional[str | Sequence[str]]
-        If aga_expect_stdout is specified, the golden solution's stdout will be checked
-        against the given value(s). If aga_expect_stdout is a string, it will be
-        compared against the golden solution's stdout. If aga_expect_stdout is a
-        sequence of strings, the golden solution's stdout will be split on newlines
-        (with '\n' removed) and the resulting list will be compared against the given
-        sequence. If aga_expect_stdout is None, the golden solution's stdout will not
-        be checked.
-    aga_hidden : bool
-        If True, hide the problem from students on supported frontends.
-    aga_name : Optional[str]
-        The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
-        a comma-separated list of args and kwargs.
-    aga_weight : int
-        The test case's relative weight to the group's score. See :ref:`Determining
-        Score` for details.
-    aga_value : float
-        The test case's absolute score. See :ref:`Determining Score` for details.
-    aga_extra_credit : float
-        The test case's absolute extra credit score. See :ref:`Determining Score` for
-        details.
-    aga_override_check : Optional[Callable[[TestCase, Output, T], None]]
-        A function which overrides the equality assertions made by the library. See
-        :ref:`Overriding the Equality Check` for more.
-    aga_override_test : Optional[Callable[[TestCase, Callable[T], Callable[T]], None]]
-        A function which overrides the entire test behavior of the library. See
-        :ref:`Overriding the Entire Test` for more.
-    kwargs :
-        Keyword arguments to be passed to the functions under test. Any keyword starting
-        with aga\_ is reserved.
-
-    Returns
-    -------
-    Callable[[Problem[T]], Problem[T]]
-        A decorator which adds the test case to a problem.
-    """
-
+class _TestParam:
     def __init__(self, *args: Any, **kwargs: Any):
-        """Initialize a Param."""
+        r"""Declare a specific test case/param for some problem.
+
+        Parameters
+        ----------
+        args :
+            The arguments to be passed to the functions under test.
+        aga_expect : Optional[T]
+            If aga_expect is None, the inputs will be tested against the wrapped function,
+            the "golden solution" to the problem. If aga_expect is specified, the inputs
+            will double as a test _of_ the golden solution; to successfully produce the
+            problem grader, the golden solution must return aga_expect from the given input.
+        aga_expect_stdout : Optional[str | Sequence[str]]
+            If aga_expect_stdout is specified, the golden solution's stdout will be checked
+            against the given value(s). If aga_expect_stdout is a string, it will be
+            compared against the golden solution's stdout. If aga_expect_stdout is a
+            sequence of strings, the golden solution's stdout will be split on newlines
+            (with '\n' removed) and the resulting list will be compared against the given
+            sequence. If aga_expect_stdout is None, the golden solution's stdout will not
+            be checked.
+        aga_hidden : bool
+            If True, hide the problem from students on supported frontends.
+        aga_name : Optional[str]
+            The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
+            a comma-separated list of args and kwargs.
+        aga_weight : int
+            The test case's relative weight to the group's score. See :ref:`Determining
+            Score` for details.
+        aga_value : float
+            The test case's absolute score. See :ref:`Determining Score` for details.
+        aga_extra_credit : float
+            The test case's absolute extra credit score. See :ref:`Determining Score` for
+            details.
+        aga_override_check : Optional[Callable[[TestCase, Output, T], None]]
+            A function which overrides the equality assertions made by the library. See
+            :ref:`Overriding the Equality Check` for more.
+        aga_override_test : Optional[Callable[[TestCase, Callable[T], Callable[T]], None]]
+            A function which overrides the entire test behavior of the library. See
+            :ref:`Overriding the Entire Test` for more.
+        kwargs :
+            Keyword arguments to be passed to the functions under test. Any keyword starting
+            with aga\_ is reserved.
+
+        Returns
+        -------
+        Callable[[Problem[T]], Problem[T]]
+            A decorator which adds the test case to a problem.
+        """
         self._args = args
         self._kwargs = kwargs
+        self._aga_kwargs = {
+            k: kwargs.pop(k) for k in AGA_RESERVED_KEYWORDS if k in kwargs
+        }
 
     @property
     def args(self) -> Tuple[Any, ...]:
@@ -709,9 +741,13 @@ class _TestCase:
         """Return the keyword arguments to be passed to the functions under test."""
         return self._kwargs
 
-    def update_kwargs(self, **kwargs: Any) -> _TestCase:
+    @property
+    def aga_kwargs(self) -> Dict[str, Any]:
+        return self._aga_kwargs
+
+    def update_aga_kwargs(self, **kwargs: Any) -> _TestParam:
         """Update the keyword arguments to be passed to the functions under test."""
-        self._kwargs.update(kwargs)
+        self._aga_kwargs.update(kwargs)
         return self
 
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
@@ -724,18 +760,26 @@ class _TestCase:
             _check_reserved_keyword(kwd)
 
         prob.add_test_case(
-            *self.args,
-            **self.kwargs,
+            aga_param=self,
+            **self._aga_kwargs,
         )
 
         return prob
 
+    def __str__(self) -> str:
+        """Return a string representation of the test case."""
+        return f"TestCase({self.args}, {self.kwargs})"
 
-param = _TestCase  # pylint: disable=invalid-name
-test_case = _TestCase  # pylint: disable=invalid-name
+    def __repr__(self) -> str:
+        """Return a string representation of the test case."""
+        return f"TestCase({self.args}, {self.kwargs})"
 
 
-def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestCase]:
+param = _TestParam  # pylint: disable=invalid-name
+test_case = _TestParam  # pylint: disable=invalid-name
+
+
+def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestParam]:
     """Parse the parameters for param sequence."""
     if kwargs:
         raise ValueError("aga_params=True ignores non-aga kwargs")
@@ -745,7 +789,7 @@ def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestCase]:
             "aga_params=True requires exactly one iterable of sets of parameters"
         )
 
-    return list(arg if isinstance(arg, _TestCase) else param(*arg) for arg in args[0])
+    return list(arg if isinstance(arg, _TestParam) else param(*arg) for arg in args[0])
 
 
 def _parse_zip_or_product(
@@ -753,7 +797,7 @@ def _parse_zip_or_product(
     aga_product: bool = False,
     aga_zip: bool = False,
     **kwargs: Any,
-) -> List[_TestCase]:
+) -> List[_TestParam]:
     """Parse parameters for zip or product."""
     if not aga_zip ^ aga_product:
         raise ValueError("exactly one of aga_zip or aga_product must be True")
@@ -788,7 +832,7 @@ def _parse_zip_or_product(
     )
 
 
-def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[_TestCase]) -> None:
+def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[_TestParam]) -> None:
     """Add aga_kwargs to the finalized parameters."""
     # process aga input type
     for aga_kwarg_key, aga_kwarg_value in aga_kwargs.items():
@@ -822,7 +866,7 @@ def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[_TestCase]) -
         aga_kwargs_list = [{} for _ in final_params]
 
     for final_param, kwargs in zip(final_params, aga_kwargs_list):
-        final_param.update_kwargs(**kwargs)
+        final_param.update_aga_kwargs(**kwargs)
 
 
 def test_cases(
@@ -875,7 +919,7 @@ def test_cases(
         kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
     }
 
-    final_params: List[_TestCase]
+    final_params: List[_TestParam]
 
     if aga_params:
         # build final params
