@@ -132,3 +132,30 @@ class TestTestCases:
             def test_problem(x: int) -> int:
                 """Test problem."""
                 return x
+
+    def test_aga_params_with_kwargs(self) -> None:
+        """Test that aga_params can be used with kwargs."""
+        with pytest.raises(ValueError, match="aga_params=True ignores non-aga kwargs"):
+
+            @_test_cases_params(
+                [param(1, 2, c=3), param(4, 5, c=6)], k=10, aga_expect=[6, 15]
+            )
+            @problem()
+            def add_two(x: int, y: int) -> int:
+                """Add two numbers."""
+                return x + y
+
+    def test_aga_params_with_multiple_args(self) -> None:
+        """Test that aga_params can be used with multiple args."""
+        with pytest.raises(
+            ValueError,
+            match="aga_params=True requires exactly one iterable of sets of parameters",
+        ):
+
+            @_test_cases_params(
+                [param(1, 2, c=3)], [param(4, 5, c=6)], aga_expect=[6, 15]
+            )
+            @problem()
+            def add_two(x: int, y: int) -> int:
+                """Add two numbers."""
+                return x + y

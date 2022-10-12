@@ -162,14 +162,7 @@ def test_check_with_override(
     mocked_lpfp: MagicMock, overrided_problem: Problem[Output]
 ) -> None:
     """Test that check succeeds with a valid problem."""
-    mocked_lpfp.return_value = [overrided_problem]
-
-    result = runner.invoke(aga_app, ["check", overrided_problem.name()])
-
-    mocked_lpfp.assert_called_once()
-
-    assert "passed golden tests" in result.stdout
-    assert result.exit_code == 0
+    overrided_problem.check()
 
 
 def test_complete_frontend_empty() -> None:

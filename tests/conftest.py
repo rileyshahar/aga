@@ -9,6 +9,7 @@ from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
 from typing import Callable, Generator, Iterable, Iterator, List
+from unittest import TestCase
 
 import pytest
 from _pytest.config import Config
@@ -18,7 +19,7 @@ import aga
 from aga import group, problem, test_case, test_cases
 from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
-from aga.core import Problem, SubmissionMetadata
+from aga.core import Problem, SubmissionMetadata, _TestInputs
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
 
@@ -831,7 +832,7 @@ def fixture_override_test() -> Problem[bool]:
         for i in range(-10, 10):
             aga_hook.assertEqual(golden(i), student(i), f"mismatch on {i}")
 
-    @test_case(aga_override_test=_my_func_checker)
+    @test_case(10, aga_override_test=_my_func_checker)
     @problem()
     def is_even(x: int) -> bool:
         return x % 2 == 0
@@ -843,9 +844,49 @@ def fixture_override_test() -> Problem[bool]:
 def fixture_disallow_test() -> Problem[bool]:
     """Generate a problem which tests `Disallow`."""
 
-    @test_case(aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test())
+    @test_case(10, aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test())
     @problem()
     def is_even(x: int) -> bool:
+        return x % 2 == 0
+
+    return is_even
+
+
+@pytest.fixture(name="override_test_with_expect")
+def test_override_test_with_expect() -> Problem[bool]:
+    """Generate a problem which tests `aga_override_test`."""
+
+    def dummy_tester(
+        test_input: _TestInputs[bool],
+        golden: Callable[[int], bool],
+        student: Callable[[int], bool],
+    ) -> None:
+        """Be a dummy tester."""
+        test_input.assertEqual(golden(*test_input.args), student(*test_input.args))
+
+    @test_case(10, aga_override_test=dummy_tester, aga_expect=True)
+    @test_case(3, aga_override_test=dummy_tester, aga_expect=False)
+    @problem()
+    def is_even(x: int) -> bool:
+        """Return True if x is even."""
+        return x % 2 == 0
+
+    return is_even
+
+
+@pytest.fixture(name="override_check_with_expect")
+def test_override_check_with_expect() -> Problem[bool]:
+    """Generate a problem which tests `aga_override_check`."""
+
+    def dummy_comparing(test_input: TestCase, golden: bool, student: bool) -> None:
+        """Be a dummy comparing function."""
+        test_input.assertEqual(golden, student)
+
+    @test_case(10, aga_override_check=dummy_comparing, aga_expect=True)
+    @test_case(3, aga_override_check=dummy_comparing, aga_expect=False)
+    @problem()
+    def is_even(x: int) -> bool:
+        """Return True if x is even."""
         return x % 2 == 0
 
     return is_even
@@ -856,6 +897,8 @@ def fixture_disallow_test() -> Problem[bool]:
         lazy_fixture("higher_order"),
         lazy_fixture("override_test"),
         lazy_fixture("disallow_test"),
+        lazy_fixture("override_test_with_expect"),
+        lazy_fixture("override_check_with_expect"),
     ]
 )
 def overrided_problem(request):  # type: ignore
