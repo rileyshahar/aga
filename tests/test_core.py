@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Dict
+
 import pytest
 from aga import test_cases as _test_cases, test_cases_params as _test_cases_params
 from aga import problem
@@ -95,3 +97,38 @@ class TestTestCases:
             return a + b + c
 
         _check_problem(add_three)
+
+    def test_aga_test_cases_no_flag_fail(self) -> None:
+        """Test that aga_test_cases without a combination flag raises an error."""
+        with pytest.raises(
+            ValueError,
+            match="Exactly one of aga_product, aga_zip, or aga_params must be True.",
+        ):
+
+            @_test_cases([1, 2])
+            @problem()
+            def test_problem(x: int) -> int:
+                """Test problem."""
+                return x
+
+    @pytest.mark.parametrize(
+        "flags",
+        [
+            {"aga_product": True, "aga_zip": True, "aga_params": True},
+            {"aga_zip": True, "aga_params": True},
+            {"aga_product": True, "aga_params": True},
+            {"aga_product": True, "aga_zip": True},
+        ],
+    )
+    def test_aga_test_cases_multiple_flags_fail(self, flags: Dict[str, bool]) -> None:
+        """Test that aga_test_cases with multiple combination flags raises an error."""
+        with pytest.raises(
+            ValueError,
+            match="Exactly one of aga_product, aga_zip, or aga_params must be True.",
+        ):
+
+            @_test_cases([1, 2], **flags)
+            @problem()
+            def test_problem(x: int) -> int:
+                """Test problem."""
+                return x

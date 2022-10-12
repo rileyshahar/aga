@@ -17,7 +17,6 @@ from typing import (
     Sequence,
     TypeVar,
     Tuple,
-    Type,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
@@ -762,12 +761,10 @@ def _parse_zip_or_product(
     **kwargs: Any,
 ) -> List[Param]:
     """Parse parameters for zip or product."""
-    if aga_product:
-        combinator: Type[product[Any]] | Type[zip[Any]] = product
-    elif aga_zip:
-        combinator = zip
-    else:
-        raise ValueError("aga_zip or aga_product must be True")
+    if not aga_zip ^ aga_product:
+        raise ValueError("exactly one of aga_zip or aga_product must be True")
+
+    combinator = product if aga_product else zip
 
     # ok so if the combinator is product
     # we are taking the cartesian product for all args and kwargs

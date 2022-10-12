@@ -243,7 +243,7 @@ rely on resources (network, files, etc) not available in the Gradescope
 environment.
 
 ### Multiple Arguments
-
+#### Basics of Multiple Arguments
 Say we want to generate inputs for multiple arguments (or keyword arguments),
 e.x. for a difference function. We can use the natural syntax:
 
@@ -257,7 +257,17 @@ def difference(x: int, y: int) -> int:
 
 There are four ways you can specify a batch of test cases: `params`, `zip` and `product`.
 
-- `aga_params` will only take one iterable object, and each element in the iterable object will be unfolded when applied to the function. The example above will generate 3 tests, each to be `difference(-3, 2)`, `difference(-2, 1)` and `difference(0, 0)`. 
+- `aga_params` will only take one iterable object, and each element in the iterable object will be unfolded when applied to the function. The example above will generate 3 tests, each to be `difference(-3, 2)`, `difference(-2, 1)` and `difference(0, 0)`. In the case where you want to add keyword arguments, you can use the `param` directive. 
+
+```python
+from aga import problem, test_cases, param
+@test_cases([param(-3, y=2), param(-2, y=1), param(0, y=0)], aga_params=True)
+@problem()
+def difference(x: int, y: int) -> int:
+    """Compute x - y."""
+    return x - y
+```
+
 - `<no-flag>` Note that this is different from the one above with `aga_params` flag. The example blow will generate 3 tests as well, but each to be `difference((-3, 2))`, `difference((-2, 1))` and `difference((0, 0))`.
 
 ```python
@@ -282,13 +292,69 @@ def difference(x: int, y: int) -> int:
 three test cases: `(-5, -1)`, `(0, 0)`, and `(1, 2)`.
 
 ```python
-@test_cases([-5, 0, 1, 3, 4], [-1, 0, 2], aga_zip = True)
+@test_cases([-5, 0, 1, 3, 4], [-1, 0, 2], aga_zip=True)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""
     return x - y
 ```
 
+#### Shorthands 
+You will find typing all the `aga_product` etc. to be tedious. In that case, you can use the shorthands provided. There are two ways you can write it simpler. 
+
+- 
+   ```python
+   from aga import problem, test_cases
+  
+   @test_cases([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(...)
+      ...
+
+   @test_cases.params([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_params=True)
+      ...
+
+   @test_cases.product([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_product=True)
+      ...
+
+   @test_cases.zip([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_zip=True)
+      ...
+   ```
+
+- 
+   ```python
+   from aga import problem, test_cases_params, test_cases_product, test_cases_zip
+
+   @test_cases_params([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_params=True)
+      ...
+
+   @test_cases_product([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_product=True)
+      ...
+
+   @test_cases_zip([-5, 0, 1, 3, 4], [-1, 0, 2])
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_zip=True)
+      ...
+   ```
+
+#### Note on `aga_*` keyword arguments
 At this point, you might wonder what could be the input to `aga_*` keyword arguments. The good news is that you can do both singletons or iterables. When singleton is given, `aga` will match the number with the number of test cases. When an iterable is given, the number of elements must match the number of test cases and `aga` will check that. 
 
 Foe example, if you want to set a series of tests to hidden and define a bunch of golden outputs for them, we can do 

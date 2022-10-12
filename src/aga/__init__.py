@@ -9,6 +9,7 @@ from importlib.metadata import version
 from .core import (
     group,
     problem,
+    param,
     test_case,
     test_cases,
     test_cases_params,
@@ -18,6 +19,7 @@ from .core import (
 
 __all__ = (
     "problem",
+    "param",
     "test_case",
     "test_cases",
     "test_cases_params",
