@@ -248,34 +248,52 @@ Say we want to generate inputs for multiple arguments (or keyword arguments),
 e.x. for a difference function. We can use the natural syntax:
 
 ```python
-@test_cases([-5, 0, 1, 3, 4], [-1, 0, 2])
+@test_cases([(-3, 2), (-2, 1), (0, 0)], aga_params=True)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""
     return x - y
 ```
 
-By default, this will take the cartesian product (`itertools.product`) of both
-lists, so it'll generate 15 test cases. If you want it to zip them (the
-built-in `zip` function), set `aga_product` to `False`:
+There are four ways you can specify a batch of test cases: `params`, `zip` and `product`.
+
+- `aga_params` will only take one iterable object, and each element in the iterable object will be unfolded when applied to the function. The example above will generate 3 tests, each to be `difference(-3, 2)`, `difference(-2, 1)` and `difference(0, 0)`. 
+- `<no-flag>` Note that this is different from the one above with `aga_params` flag. The example blow will generate 3 tests as well, but each to be `difference((-3, 2))`, `difference((-2, 1))` and `difference((0, 0))`.
 
 ```python
-@test_cases([-5, 0, 1, 3, 4], [-1, 0, 2], aga_product = False)
+@test_cases([(-3, 2), (-2, 1), (0, 0)])
+@problem()
+def difference(t) -> int:
+    """Compute x - y."""
+    return t[0] - t[1]
+```
+
+- `aga_product` will take the cartesian product of all the arguments. In the above example, there will be 15 test cases, one for each combination of the arguments.
+
+```python
+@test_cases([-5, 0, 1, 3, 4], [-1, 0, 2], aga_product=True)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""
     return x - y
 ```
 
-This will short-circuit when the smaller iterator ends, so this will generate
+- `aga_zip` will take the zip of all the arguments. In the example below, there will be 3 test cases, one for each pair of the arguments. This will short-circuit when the smaller iterator ends, so this will generate
 three test cases: `(-5, -1)`, `(0, 0)`, and `(1, 2)`.
+
+```python
+@test_cases([-5, 0, 1, 3, 4], [-1, 0, 2], aga_zip = True)
+@problem()
+def difference(x: int, y: int) -> int:
+    """Compute x - y."""
+    return x - y
+```
 
 At this point, you might wonder what could be the input to `aga_*` keyword arguments. The good news is that you can do both singletons or iterables. When singleton is given, `aga` will match the number with the number of test cases. When an iterable is given, the number of elements must match the number of test cases and `aga` will check that. 
 
 Foe example, if you want to set a series of tests to hidden and define a bunch of golden outputs for them, we can do 
 
 ```python
-
 @test_cases([1, 2, 3], aga_hidden=True, aga_expect=[1, 4, 9])
 @problem()
 def square(x: int) -> int:
