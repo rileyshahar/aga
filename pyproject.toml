@@ -78,7 +78,7 @@ disable = ["no-else-return"]
 
 [tool.pylint.format]
 max-line-length = 88
-good-names = ["i", "j", "k", "s", "x", "y", "_", "ui"]
+good-names = ["i", "j", "k", "s", "x", "y", "_", "ui", "e"]
 
 [tool.pydocstyle]
 convention = "numpy"
