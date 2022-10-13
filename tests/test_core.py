@@ -7,7 +7,8 @@ from typing import Dict, Any
 import pytest
 from aga import test_cases as _test_cases
 from aga import problem
-from aga.core import param, _TestInputs
+from aga.core import param
+from aga.core.suite import _TestInputs
 from aga.cli.app import _check_problem
 
 

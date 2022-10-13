@@ -20,7 +20,8 @@ import aga
 from aga import group, problem, test_case, test_cases
 from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
-from aga.core import Problem, SubmissionMetadata, _TestInputs
+from aga.core import Problem, SubmissionMetadata
+from aga.core.suite import _TestInputs
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
 

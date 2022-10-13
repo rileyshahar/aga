@@ -1,16 +1,18 @@
 """The main command-line typer application."""
 import pathlib
 from datetime import datetime
-from typing import Iterable, Optional, Tuple, List
+from typing import Iterable, Optional, Tuple, List, TypeVar
 
 import typer
 
 from ..config import AgaConfig, load_config_from_path
-from ..core import Output, Problem, SubmissionMetadata
+from ..core import Problem, SubmissionMetadata
 from ..gradescope import into_gradescope_zip
 from ..loader import load_problems_from_path
 from ..runner import load_and_run
 from .ui import print_fancy_summary
+
+Output = TypeVar("Output")
 
 app = typer.Typer()
 

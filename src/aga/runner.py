@@ -9,11 +9,11 @@ submission and then runs it.
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 from unittest import TestResult
 
 from .config import AgaConfig
-from .core import AgaTestCase, AgaTestSuite, Output, Problem, SubmissionMetadata
+from .core import AgaTestCase, AgaTestSuite, Problem, SubmissionMetadata
 from .loader import (
     MultipleScripts,
     NoMatchingSymbol,
@@ -25,6 +25,8 @@ from .loader import (
 )
 from .score import ScoredPrize
 from .util import limited_traceback
+
+Output = TypeVar("Output")
 
 
 @dataclass

@@ -9,12 +9,15 @@ from os import makedirs
 from os.path import join as pathjoin
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import Iterable, Optional
+from typing import Iterable, Optional, TypeVar
 from zipfile import ZipFile
 
 from dill import dump  # type: ignore
 
-from ..core import Output, Problem
+from ..core import Problem
+
+Output = TypeVar("Output")
+
 
 # don't zip resources because we handle them manually
 _ZIP_IGNORES = ("__pycache__", "resources")

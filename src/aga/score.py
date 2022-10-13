@@ -1,13 +1,14 @@
 """Utilities for easily computing problem score."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, TypeVar
 
 if TYPE_CHECKING:
-    from .core import Output, Problem, SubmissionMetadata
+    from .core import Problem, SubmissionMetadata
     from .runner import TcOutput
 
 
+Output = TypeVar("Output")
 PrizeCriteria = Callable[[list["TcOutput"], "SubmissionMetadata"], tuple[float, str]]
 
 
