@@ -317,9 +317,9 @@ class _TestInputs(TestCase, Generic[Output]):
         name_sep = config.test.name_sep
 
         name = self._name or name_fmt.format(
-            args=self._args_repr(name_sep),
-            kwargs=self._kwargs_repr(name_sep),
-            sep=self._sep(name_sep),
+            args=self._param.args_repr(name_sep),
+            kwargs=self._param.kwargs_repr(name_sep),
+            sep=self._param.sep_repr(name_sep),
         )
         metadata = TestMetadata(
             name=name,
@@ -331,22 +331,11 @@ class _TestInputs(TestCase, Generic[Output]):
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
-    def _args_repr(self, sep: str) -> str:
-        return sep.join(repr(x) for x in self.args)
-
-    def _kwargs_repr(self, sep: str) -> str:
-        # we use k instead of repr(k) so we don't get quotes around it
-        return sep.join(k + "=" + repr(v) for k, v in self.kwargs.items())
-
-    def _sep(self, sep: str) -> str:
-        """Return sep if both exist, "" otherwise."""
-        assert sep == ","
-        return self.args and self.kwargs and sep or ""
-
     def __repr__(self) -> str:
-        args_repr = self._args_repr(",")
-        kwargs_repr = self._kwargs_repr(",")
-        sep = self._sep(",")
+        """Get a string representation of the test case."""
+        args_repr = self._param.args_repr(",")
+        kwargs_repr = self._param.kwargs_repr(",")
+        sep = self._param.sep_repr(",")
 
         return args_repr + sep + kwargs_repr
 
@@ -430,7 +419,7 @@ class _TestInputGroup(Generic[Output]):
         ]
         scores = compute_scores(score_infos, group_score)
 
-        for (score, case) in zip(scores, self._test_cases):
+        for (score, case) in zip(scores, self._test_cases):  # type: float, _TestInputs
             suite.addTest(case.generate_test_case(golden, under_test, score, config))
 
         scored_prizes = []
@@ -683,6 +672,8 @@ def _check_reserved_keyword(kwd: str) -> None:
 
 
 class _TestParam:
+    __slots__ = ["_args", "_kwargs", "_aga_kwargs"]
+
     def __init__(self, *args: Any, **kwargs: Any):
         r"""Declare a specific test case/param for some problem.
 
@@ -758,14 +749,21 @@ class _TestParam:
         self._aga_kwargs.update(kwargs)
         return self
 
+    def args_repr(self, sep: str = ",") -> str:
+        """Return a string representation of the test's arguments."""
+        return sep.join(repr(x) for x in self.args)
+
+    def kwargs_repr(self, sep: str = ",") -> str:
+        # we use k instead of repr(k) so we don't get quotes around it
+        return sep.join(k + "=" + repr(v) for k, v in self.kwargs.items())
+
+    def sep_repr(self, sep: str = ",") -> str:
+        """Return sep if both exist, "" otherwise."""
+        return self.args and self.kwargs and sep or ""
+
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
         """Generate a test case for the given problem."""
-        return self(prob)
-
-    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
-        """Add the test case to the given problem."""
-        for kwd, _ in self.kwargs.items():
-            _check_reserved_keyword(kwd)
+        self.check_validity()
 
         prob.add_test_case(
             aga_param=self,
@@ -774,13 +772,24 @@ class _TestParam:
 
         return prob
 
+    def check_validity(self) -> None:
+        """Check if the test case is valid."""
+
+        # check that kwd doesn't contain any reserved keywords
+        for kwd in self.kwargs.keys():
+            _check_reserved_keyword(kwd)
+
+    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
+        """Add the test case to the given problem."""
+        return self.generate_test_case(prob)
+
     def __str__(self) -> str:
         """Return a string representation of the test case."""
         return f"TestCase({self.args}, {self.kwargs})"
 
     def __repr__(self) -> str:
         """Return a string representation of the test case."""
-        return f"TestCase({self.args}, {self.kwargs})"
+        return f"TestCase({self.args}, {self.kwargs}, {self.aga_kwargs})"
 
 
 param = _TestParam  # pylint: disable=invalid-name
@@ -789,6 +798,8 @@ test_case = _TestParam  # pylint: disable=invalid-name
 
 class _TestParams:
     """A class to store the parameters for a test."""
+
+    __slots__ = ["final_params"]
 
     params: ClassVar[partial[_TestParams]]
     zip: ClassVar[partial[_TestParams]]

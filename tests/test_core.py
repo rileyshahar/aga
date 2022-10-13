@@ -11,15 +11,37 @@ from aga.core import param, _TestInputs
 from aga.cli.app import _check_problem
 
 
+def tester(*_: Any) -> None:
+    """Dummy Tester."""
+
+
 # pylint: disable=no-self-use
 class TestTestCases:
     """Test the test_cases decorator."""
 
+    def test_test_input_with_arguments(self) -> None:
+        test_input = _TestInputs(
+            3,
+            4,
+            y=4,
+            aga_expect=True,
+            aga_expect_stdout="1",
+            aga_hidden=True,
+            aga_name="test",
+            aga_weight=True,
+            aga_value=True,
+            aga_extra_credit=True,
+            aga_mock_input=True,
+            aga_override_check=tester,
+            aga_override_test=tester,
+        )
+        assert test_input.param
+        assert test_input.args == (3, 4)
+        assert test_input.kwargs == {"y": 4}
+        assert not test_input.param.aga_kwargs
+
     def test_test_input_with_param_and_arguments(self) -> None:
         """Test that test_input cannot be used with param and arguments."""
-
-        def tester(*_: Any) -> None:
-            """Dummy Tester."""
 
         with pytest.raises(
             ValueError, match="aga_param must be used without any positional or keyword"
