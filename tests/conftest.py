@@ -1,5 +1,4 @@
 """Contains various fixtures, especially pre-written problems."""
-# pylint: disable=too-many-lines
 
 import ast
 import inspect
@@ -902,58 +901,7 @@ def test_override_check_with_expect() -> Problem[bool]:
         lazy_fixture("override_check_with_expect"),
     ]
 )
-def overridden_problem(request):  # type: ignore
-    """Make a collection of problems with overridden tests/checks."""
-    return request.param
-
-
-@pytest.fixture(name="invalid_override_test_with_expect")
-def test_invalid_override_test_with_expect() -> Problem[bool]:
-    """Generate a invalid problem which tests `aga_override_test`."""
-
-    def dummy_tester(
-        test_input: _TestInputs[bool],
-        golden: Callable[[int], bool],
-        student: Callable[[int], bool],
-    ) -> None:
-        """Be a dummy tester."""
-        test_input.assertEqual(golden(*test_input.args), student(*test_input.args))
-
-    @test_case(10, aga_override_test=dummy_tester, aga_expect=False)
-    @test_case(3, aga_override_test=dummy_tester, aga_expect=True)
-    @problem()
-    def is_even(x: int) -> bool:
-        """Return True if x is even."""
-        return x % 2 == 0
-
-    return is_even
-
-
-@pytest.fixture(name="invalid_override_check_with_expect")
-def test_invalid_override_check_with_expect() -> Problem[bool]:
-    """Generate a problem which tests `aga_override_check`."""
-
-    def dummy_comparing(test_input: TestCase, golden: bool, student: bool) -> None:
-        """Be a dummy comparing function."""
-        test_input.assertEqual(golden, student)
-
-    @test_case(10, aga_override_check=dummy_comparing, aga_expect=False)
-    @test_case(3, aga_override_check=dummy_comparing, aga_expect=True)
-    @problem()
-    def is_even(x: int) -> bool:
-        """Return True if x is even."""
-        return x % 2 == 0
-
-    return is_even
-
-
-@pytest.fixture(
-    params=[
-        lazy_fixture("invalid_override_test_with_expect"),
-        lazy_fixture("invalid_override_check_with_expect"),
-    ]
-)
-def invalid_overridden_problem(request):  # type: ignore
+def overrided_problem(request):  # type: ignore
     """Make a collection of problems with overridden tests/checks."""
     return request.param
 

@@ -17,7 +17,6 @@ from typing import (
     Sequence,
     TypeVar,
     Tuple,
-    ClassVar,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
@@ -173,16 +172,10 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_value: float,
         aga_extra_credit: float,
         aga_mock_input: bool,
-        aga_override_check: Optional[
-            Callable[[_TestInputs[Output], Output, Output], None]
-        ],
+        aga_override_check: Optional[Callable[[TestCase, Output, Output], None]],
         aga_override_test: Optional[
-            Callable[
-                [_TestInputs[Output], Callable[..., Output], Callable[..., Output]],
-                None,
-            ]
+            Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ],
-        aga_param: Optional[_TestParam] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -195,32 +188,18 @@ class _TestInputs(TestCase, Generic[Output]):
         self._override_test = aga_override_test
         self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
-        if aga_param:
-            if args or kwargs:
-                raise ValueError(
-                    "aga_param must be used without any positional or keyword "
-                    "argument, but got \n"
-                    f"    args: {args}\n"
-                    f"    kwargs: {kwargs}"
-                )
-            self._param: _TestParam = aga_param
-        else:
-            self._param = _TestParam(*args, **kwargs)
+        self._args = args
+        self._kwargs = kwargs
 
     @property
     def args(self) -> Tuple[Any, ...]:
         """Get the positional arguments for the test case."""
-        return self._param.args
+        return self._args
 
     @property
     def kwargs(self) -> Dict[str, Any]:
         """Get the keyword arguments for the test case."""
-        return self._param.kwargs
-
-    @property
-    def param(self) -> _TestParam:
-        """Get the test parameter."""
-        return self._param
+        return self._kwargs
 
     def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
@@ -228,11 +207,11 @@ class _TestInputs(TestCase, Generic[Output]):
         # mess with our copy of the arguments
         if self._mock_input:
             with patch(
-                "builtins.input", generate_custom_input(deepcopy(self.args))
+                "builtins.input", generate_custom_input(deepcopy(self._args))
             ) as _:
                 return func()
         else:
-            return func(*deepcopy(self.args), **deepcopy(self.kwargs))
+            return func(*deepcopy(self._args), **deepcopy(self._kwargs))
 
     def check(
         self,
@@ -317,9 +296,9 @@ class _TestInputs(TestCase, Generic[Output]):
         name_sep = config.test.name_sep
 
         name = self._name or name_fmt.format(
-            args=self._param.args_repr(name_sep),
-            kwargs=self._param.kwargs_repr(name_sep),
-            sep=self._param.sep_repr(name_sep),
+            args=self._args_repr(name_sep),
+            kwargs=self._kwargs_repr(name_sep),
+            sep=self._sep(name_sep),
         )
         metadata = TestMetadata(
             name=name,
@@ -331,11 +310,22 @@ class _TestInputs(TestCase, Generic[Output]):
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
+    def _args_repr(self, sep: str) -> str:
+        return sep.join(repr(x) for x in self._args)
+
+    def _kwargs_repr(self, sep: str) -> str:
+        # we use k instead of repr(k) so we don't get quotes around it
+        return sep.join(k + "=" + repr(v) for k, v in self._kwargs.items())
+
+    def _sep(self, sep: str) -> str:
+        """Return sep if both exist, "" otherwise."""
+        assert sep == ","
+        return self._args and self._kwargs and sep or ""
+
     def __repr__(self) -> str:
-        """Get a string representation of the test case."""
-        args_repr = self._param.args_repr(",")
-        kwargs_repr = self._param.kwargs_repr(",")
-        sep = self._param.sep_repr(",")
+        args_repr = self._args_repr(",")
+        kwargs_repr = self._kwargs_repr(",")
+        sep = self._sep(",")
 
         return args_repr + sep + kwargs_repr
 
@@ -348,32 +338,18 @@ class _TestInputs(TestCase, Generic[Output]):
                     # https://github.com/python/mypy/issues/4805 ehh
                     return self._expect  # type: ignore
 
-                try:
-                    self._override_test(
-                        self,
-                        dummy_tester,
-                        golden,
-                    )
-                except AssertionError as e:
-                    raise AssertionError(
-                        "Your solution doesn't pass the overridden test. \n"
-                        "Test parameters: \n"
-                        f"{self._param}"
-                    ) from e
+                self._override_test(
+                    self,
+                    dummy_tester,
+                    golden,
+                )
             else:
                 golden_stdout, golden_output = self._eval(
                     with_captured_stdout(golden)
                 )  # type: str, Output
                 if self._expect is not None:
                     if self._override_check is not None:
-                        try:
-                            self._override_check(self, self._expect, golden_output)
-                        except AssertionError as e:
-                            raise AssertionError(
-                                "Your solution doesn't pass the overridden check. \n"
-                                "Test parameters: \n"
-                                f"{self._param}"
-                            ) from e
+                        self._override_check(self, self._expect, golden_output)
                     else:
                         self.assertEqual(golden_output, self._expect)
 
@@ -419,7 +395,7 @@ class _TestInputGroup(Generic[Output]):
         ]
         scores = compute_scores(score_infos, group_score)
 
-        for (score, case) in zip(scores, self._test_cases):  # type: float, _TestInputs
+        for (score, case) in zip(scores, self._test_cases):
             suite.addTest(case.generate_test_case(golden, under_test, score, config))
 
         scored_prizes = []
@@ -469,7 +445,6 @@ class Problem(Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ] = None,
-        aga_param: Optional[_TestParam] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -489,7 +464,6 @@ class Problem(Generic[Output]):
             aga_override_check=aga_override_check,
             aga_override_test=aga_override_test,
             aga_mock_input=self._config.problem.mock_input,
-            aga_param=aga_param,
             **kwargs,
         )
         self._ungrouped_tests.append(case)
@@ -671,63 +645,59 @@ def _check_reserved_keyword(kwd: str) -> None:
         )
 
 
-class _TestParam:
-    __slots__ = ["_args", "_kwargs", "_aga_kwargs"]
+class _TestCase:
+    r"""Declare a specific test case for some problem.
+
+    Parameters
+    ----------
+    args :
+        The arguments to be passed to the functions under test.
+    aga_expect : Optional[T]
+        If aga_expect is None, the inputs will be tested against the wrapped function,
+        the "golden solution" to the problem. If aga_expect is specified, the inputs
+        will double as a test _of_ the golden solution; to successfully produce the
+        problem grader, the golden solution must return aga_expect from the given input.
+    aga_expect_stdout : Optional[str | Sequence[str]]
+        If aga_expect_stdout is specified, the golden solution's stdout will be checked
+        against the given value(s). If aga_expect_stdout is a string, it will be
+        compared against the golden solution's stdout. If aga_expect_stdout is a
+        sequence of strings, the golden solution's stdout will be split on newlines
+        (with '\n' removed) and the resulting list will be compared against the given
+        sequence. If aga_expect_stdout is None, the golden solution's stdout will not
+        be checked.
+    aga_hidden : bool
+        If True, hide the problem from students on supported frontends.
+    aga_name : Optional[str]
+        The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
+        a comma-separated list of args and kwargs.
+    aga_weight : int
+        The test case's relative weight to the group's score. See :ref:`Determining
+        Score` for details.
+    aga_value : float
+        The test case's absolute score. See :ref:`Determining Score` for details.
+    aga_extra_credit : float
+        The test case's absolute extra credit score. See :ref:`Determining Score` for
+        details.
+    aga_override_check : Optional[Callable[[TestCase, Output, T], None]]
+        A function which overrides the equality assertions made by the library. See
+        :ref:`Overriding the Equality Check` for more.
+    aga_override_test : Optional[Callable[[TestCase, Callable[T], Callable[T]], None]]
+        A function which overrides the entire test behavior of the library. See
+        :ref:`Overriding the Entire Test` for more.
+    kwargs :
+        Keyword arguments to be passed to the functions under test. Any keyword starting
+        with aga\_ is reserved.
+
+    Returns
+    -------
+    Callable[[Problem[T]], Problem[T]]
+        A decorator which adds the test case to a problem.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any):
-        r"""Declare a specific test case/param for some problem.
-
-        Parameters
-        ----------
-        args :
-            The arguments to be passed to the functions under test.
-        aga_expect : Optional[T]
-            If aga_expect is None, the inputs will be tested against the wrapped
-            function, the "golden solution" to the problem. If aga_expect is
-            specified, the inputs will double as a test _of_ the golden solution;
-            to successfully produce the problem grader, the golden solution must
-            return aga_expect from the given input.
-        aga_expect_stdout : Optional[str | Sequence[str]]
-            If aga_expect_stdout is specified, the golden solution's stdout will be
-            checked against the given value(s). If aga_expect_stdout is a string, it
-            will be compared against the golden solution's stdout. If
-            aga_expect_stdout is a sequence of strings, the golden solution's stdout
-            will be split on newlines (with '\n' removed) and the resulting list will
-            be compared against the given sequence. If aga_expect_stdout is None, the
-            golden solution's stdout will not be checked.
-        aga_hidden : bool
-            If True, hide the problem from students on supported frontends.
-        aga_name : Optional[str]
-            The test case's name. If `None`, defaults to "Test {inputs}", where
-            {inputs} is a comma-separated list of args and kwargs.
-        aga_weight : int
-            The test case's relative weight to the group's score. See :ref:`Determining
-            Score` for details.
-        aga_value : float
-            The test case's absolute score. See :ref:`Determining Score` for details.
-        aga_extra_credit : float
-            The test case's absolute extra credit score. See :ref:`Determining Score`
-            for details.
-        aga_override_check : Callable[[TestCase, Output, T], None] | None
-            A function which overrides the equality assertions made by the library. See
-            :ref:`Overriding the Equality Check` for more.
-        aga_override_test : Callable[[TestCase, Callable[T], Callable[T]], None] | None
-            A function which overrides the entire test behavior of the library. See
-            :ref:`Overriding the Entire Test` for more.
-        kwargs :
-            Keyword arguments to be passed to the functions under test. Any keyword
-            starting with aga\_ is reserved.
-
-        Returns
-        -------
-        Callable[[Problem[T]], Problem[T]]
-            A decorator which adds the test case to a problem.
-        """
+        """Initialize a Param."""
         self._args = args
         self._kwargs = kwargs
-        self._aga_kwargs = {
-            k: kwargs.pop(k) for k in AGA_RESERVED_KEYWORDS if k in kwargs
-        }
 
     @property
     def args(self) -> Tuple[Any, ...]:
@@ -739,244 +709,202 @@ class _TestParam:
         """Return the keyword arguments to be passed to the functions under test."""
         return self._kwargs
 
-    @property
-    def aga_kwargs(self) -> Dict[str, Any]:
-        """Return the aga_* keyword arguments of the test."""
-        return self._aga_kwargs
-
-    def update_aga_kwargs(self, **kwargs: Any) -> _TestParam:
+    def update_kwargs(self, **kwargs: Any) -> _TestCase:
         """Update the keyword arguments to be passed to the functions under test."""
-        self._aga_kwargs.update(kwargs)
+        self._kwargs.update(kwargs)
         return self
-
-    def args_repr(self, sep: str = ",") -> str:
-        """Return a string representation of the test's arguments."""
-        return sep.join(repr(x) for x in self.args)
-
-    def kwargs_repr(self, sep: str = ",") -> str:
-        # we use k instead of repr(k) so we don't get quotes around it
-        return sep.join(k + "=" + repr(v) for k, v in self.kwargs.items())
-
-    def sep_repr(self, sep: str = ",") -> str:
-        """Return sep if both exist, "" otherwise."""
-        return self.args and self.kwargs and sep or ""
 
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
         """Generate a test case for the given problem."""
-        self.check_validity()
+        return self(prob)
+
+    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
+        """Add the test case to the given problem."""
+        for kwd, _ in self.kwargs.items():
+            _check_reserved_keyword(kwd)
 
         prob.add_test_case(
-            aga_param=self,
-            **self._aga_kwargs,
+            *self.args,
+            **self.kwargs,
         )
 
         return prob
 
-    def check_validity(self) -> None:
-        """Check if the test case is valid."""
 
-        # check that kwd doesn't contain any reserved keywords
-        for kwd in self.kwargs.keys():
-            _check_reserved_keyword(kwd)
-
-    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
-        """Add the test case to the given problem."""
-        return self.generate_test_case(prob)
-
-    def __str__(self) -> str:
-        """Return a string representation of the test case."""
-        return f"TestCase({self.args}, {self.kwargs})"
-
-    def __repr__(self) -> str:
-        """Return a string representation of the test case."""
-        return f"TestCase({self.args}, {self.kwargs}, {self.aga_kwargs})"
+param = _TestCase  # pylint: disable=invalid-name
+test_case = _TestCase  # pylint: disable=invalid-name
 
 
-param = _TestParam  # pylint: disable=invalid-name
-test_case = _TestParam  # pylint: disable=invalid-name
+def _parse_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestCase]:
+    """Parse the parameters for param sequence."""
+    if kwargs:
+        raise ValueError("aga_params=True ignores non-aga kwargs")
+
+    if len(args) != 1:
+        raise ValueError(
+            "aga_params=True requires exactly one iterable of sets of parameters"
+        )
+
+    return list(arg if isinstance(arg, _TestCase) else param(*arg) for arg in args[0])
 
 
-class _TestParams:
-    """A class to store the parameters for a test."""
+def _parse_zip_or_product(
+    *args: Iterable[Any],
+    aga_product: bool = False,
+    aga_zip: bool = False,
+    **kwargs: Any,
+) -> List[_TestCase]:
+    """Parse parameters for zip or product."""
+    if not aga_zip ^ aga_product:
+        raise ValueError("exactly one of aga_zip or aga_product must be True")
 
-    __slots__ = ["final_params"]
+    combinator = product if aga_product else zip
 
-    params: ClassVar[partial[_TestParams]]
-    zip: ClassVar[partial[_TestParams]]
-    product: ClassVar[partial[_TestParams]]
+    # ok so if the combinator is product
+    # we are taking the cartesian product for all args and kwargs
+    # and if the combinator is zip,
+    # we are zipping all the args and kwargs, if there are any
+    combined_args = list(combinator(*args))
 
-    def __init__(
-        self,
-        *args: Iterable[Any],
-        aga_product: bool = False,
-        aga_zip: bool = False,
-        aga_params: bool = False,
-        **kwargs: Any,
-    ) -> None:
-        r"""Generate many test cases programmatically, from generators of inputs.
+    combined_kwargs = list(combinator(*kwargs.values()))
 
-        Parameters
-        ----------
-        args :
-            Generators for arguments to be passed to the functions under test.
-        aga_product : bool
-            Whether to take a cartesian product of the generators (creating one test
-            case for each set of inputs in the product), or to zip them (iterate
-            through each generator in sequence). Default `False`.
-        aga_zip : bool
-            Whether to zip the input generators. Default `False`.
-        aga_params : bool
-            Whether to treat the input generators as a single iterable of sets of
-            parameters. Default `False`.
-        kwargs :
-            `aga_` keywords have their meaning inherited from `test_case`, and are
-            applied to each test case generated by this function. Singleton value and
-            Sequence values are supported, i.e., `aga_hidden=True` and
-            `aga_expect = [1, 2, 3]` are both valid. When passing in a Sequence object,
-            the length of the sequence must match the length of the test cases.
-            Generators for keyword arguments to be passed to the functions under test.
-            Any keyword starting with aga\_ is reserved.
+    # ======= validation checks =======
+    if combinator is zip:
+        # create empty args for zip if there are no args
+        if combined_args and combined_kwargs:
+            if len(combined_args) != len(combined_kwargs):
+                raise ValueError('length of "args" and "kwargs" must match in zip mode')
+        elif combined_args:
+            combined_kwargs = [()] * len(combined_args)
+        elif combined_kwargs:
+            combined_args = [()] * len(combined_kwargs)
 
-        Returns
-        -------
-        Callable[[Problem[T]], Problem[T]]
-            A decorator which adds the test cases to a problem.
-        """
-        if not (aga_product ^ aga_zip ^ aga_params) or (
-            aga_product and aga_zip and aga_params
+    all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
+
+    # ======= zipping all the args together =======
+    return list(
+        param(*curr_args, **dict(zip(kwargs.keys(), curr_kwargs)))
+        for (curr_args, curr_kwargs) in all_args_and_kwargs
+    )
+
+
+def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[_TestCase]) -> None:
+    """Add aga_kwargs to the finalized parameters."""
+    # process aga input type
+    for aga_kwarg_key, aga_kwarg_value in aga_kwargs.items():
+        if isinstance(aga_kwarg_value, Iterable) and not isinstance(
+            aga_kwarg_value, str
         ):
-            raise ValueError(
-                "Exactly one of aga_product, aga_zip, or aga_params must be True. \n"
-                f"You got: "
-                f"aga_product={aga_product}, aga_zip={aga_zip}, aga_params={aga_params}"
-            )
-
-        # pop aga keywords out
-        aga_kwargs_dict = {
-            kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
-        }
-
-        if aga_params:
-            # build final params
-            # So we're allowing [param(1, 2), [3, 4]] as a valid input
-            self.final_params: List[_TestParam] = type(self).parse_params(
-                *args, **kwargs
-            )
+            aga_kwargs[aga_kwarg_key] = list(aga_kwarg_value)
         else:
-            self.final_params = type(self).parse_zip_or_product(
-                *args, aga_zip=aga_zip, aga_product=aga_product, **kwargs
-            )
+            aga_kwargs[aga_kwarg_key] = [aga_kwarg_value] * len(final_params)
 
-        type(self).add_aga_kwargs(aga_kwargs_dict, self.final_params)
-
-    @staticmethod
-    def parse_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestParam]:
-        """Parse the parameters for param sequence."""
-        if kwargs:
-            raise ValueError("aga_params=True ignores non-aga kwargs")
-
-        if len(args) != 1:
-            raise ValueError(
-                "aga_params=True requires exactly one iterable of sets of parameters"
-            )
-
-        return list(
-            arg if isinstance(arg, _TestParam) else param(*arg) for arg in args[0]
+    # validate aga input type
+    if not all(
+        len(aga_kwarg_value) == len(final_params)
+        for aga_kwarg_value in aga_kwargs.values()
+    ):
+        # the length of the kwargs should be equal to the number of test cases
+        # i.e. the length of the combined args
+        raise ValueError(
+            f"all aga_ keyword args must have the same length as the test cases, "
+            f"which is {len(final_params)}"
         )
 
-    @staticmethod
-    def parse_zip_or_product(
-        *args: Iterable[Any],
-        aga_product: bool = False,
-        aga_zip: bool = False,
-        **kwargs: Any,
-    ) -> List[_TestParam]:
-        """Parse parameters for zip or product."""
-        if not aga_zip ^ aga_product:
-            raise ValueError("exactly one of aga_zip or aga_product must be True")
-        combinator = product if aga_product else zip
+    # the aga kwargs list we want
+    aga_kwargs_list: List[Dict[str, Any]] = [
+        dict(zip(aga_kwargs.keys(), aga_kwarg_value))
+        for aga_kwarg_value in zip(*aga_kwargs.values())
+    ]
 
-        # ok so if the combinator is product
-        # we are taking the cartesian product for all args and kwargs
-        # and if the combinator is zip,
-        # we are zipping all the args and kwargs, if there are any
-        combined_args = list(combinator(*args))
-        combined_kwargs = list(combinator(*kwargs.values()))
+    if not aga_kwargs_list:
+        # generate default aga kwargs dict if there are no aga kwargs
+        aga_kwargs_list = [{} for _ in final_params]
 
-        # ======= validation checks =======
-        if combinator is zip:
-            # create empty args for zip if there are no args
-            if combined_args and combined_kwargs:
-                if len(combined_args) != len(combined_kwargs):
-                    raise ValueError(
-                        'length of "args" and "kwargs" must match in zip mode'
-                    )
-            elif combined_args:
-                combined_kwargs = [()] * len(combined_args)
-            elif combined_kwargs:
-                combined_args = [()] * len(combined_kwargs)
+    for final_param, kwargs in zip(final_params, aga_kwargs_list):
+        final_param.update_kwargs(**kwargs)
 
-        all_args_and_kwargs = list(combinator(combined_args, combined_kwargs))
 
-        # ======= zipping all the args together =======
-        return list(
-            param(*curr_args, **dict(zip(kwargs.keys(), curr_kwargs)))
-            for (curr_args, curr_kwargs) in all_args_and_kwargs
+def test_cases(
+    *args: Iterable[Any],
+    aga_product: bool = False,
+    aga_zip: bool = False,
+    aga_params: bool = False,
+    **kwargs: Any,
+) -> Callable[[Problem[Output]], Problem[Output]]:
+    r"""Generate many test cases programmatically, from generators of inputs.
+
+    Parameters
+    ----------
+    args :
+        Generators for arguments to be passed to the functions under test.
+    aga_product : bool
+        Whether to take a cartesian product of the generators (creating one test case
+        for each set of inputs in the product), or to zip them (iterate through each
+        generator in sequence). Default `False`.
+    aga_zip : bool
+        Whether to zip the input generators. Default `False`.
+    aga_params : bool
+        Whether to treat the input generators as a single iterable of sets of
+        parameters. Default `False`.
+    kwargs :
+        `aga_` keywords have their meaning inherited from `test_case`, and are
+        applied to each test case generated by this function. Singleton value and
+        Sequence values are supported, i.e., `aga_hidden=True` and
+        `aga_expect = [1, 2, 3]` are both valid. When passing in a Sequence object,
+        the length of the sequence must match the length of the test cases.
+        Generators for keyword arguments to be passed to the functions under test. Any
+        keyword starting with aga\_ is reserved.
+
+    Returns
+    -------
+    Callable[[Problem[T]], Problem[T]]
+        A decorator which adds the test cases to a problem.
+    """
+    if not (aga_product ^ aga_zip ^ aga_params) or (
+        aga_product and aga_zip and aga_params
+    ):
+        raise ValueError(
+            "Exactly one of aga_product, aga_zip, or aga_params must be True. \n"
+            f"You got: "
+            f"aga_product={aga_product}, aga_zip={aga_zip}, aga_params={aga_params}"
         )
 
-    @staticmethod
-    def add_aga_kwargs(
-        aga_kwargs: Dict[str, Any], final_params: List[_TestParam]
-    ) -> None:
-        """Add aga_kwargs to the finalized parameters."""
-        # process aga input type
-        for aga_kwarg_key, aga_kwarg_value in aga_kwargs.items():
-            if isinstance(aga_kwarg_value, Iterable) and not isinstance(
-                aga_kwarg_value, str
-            ):
-                aga_kwargs[aga_kwarg_key] = list(aga_kwarg_value)
-            else:
-                aga_kwargs[aga_kwarg_key] = [aga_kwarg_value] * len(final_params)
+    # pop aga keywords out
+    aga_kwargs_dict = {
+        kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
+    }
 
-        # validate aga input type
-        if not all(
-            len(aga_kwarg_value) == len(final_params)
-            for aga_kwarg_value in aga_kwargs.values()
-        ):
-            # the length of the kwargs should be equal to the number of test cases
-            # i.e. the length of the combined args
-            raise ValueError(
-                f"all aga_ keyword args must have the same length as the test cases, "
-                f"which is {len(final_params)}"
-            )
+    final_params: List[_TestCase]
 
-        # the aga kwargs list we want
-        aga_kwargs_list: List[Dict[str, Any]] = [
-            dict(zip(aga_kwargs.keys(), aga_kwarg_value))
-            for aga_kwarg_value in zip(*aga_kwargs.values())
-        ]
+    if aga_params:
+        # build final params
+        # So we're allowing [param(1, 2), [3, 4]] as a valid input
+        final_params = _parse_params(*args, **kwargs)
+    else:
+        final_params = _parse_zip_or_product(
+            *args, aga_zip=aga_zip, aga_product=aga_product, **kwargs
+        )
 
-        if not aga_kwargs_list:
-            # generate default aga kwargs dict if there are no aga kwargs
-            aga_kwargs_list = [{} for _ in final_params]
+    _add_aga_kwargs(aga_kwargs_dict, final_params)
 
-        for final_param, kwargs in zip(final_params, aga_kwargs_list):
-            final_param.update_aga_kwargs(**kwargs)
-
-    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
-        for final_param in self.final_params:
+    def outer(prob: Problem[Output]) -> Problem[Output]:
+        """Add the test cases to the problem."""
+        for final_param in final_params:
             prob = final_param.generate_test_case(prob)
 
         return prob
 
+    return outer
 
-test_cases = _TestParams  # pylint: disable=invalid-name
+
 test_cases_params = partial(test_cases, aga_params=True)
 test_cases_zip = partial(test_cases, aga_zip=True)
 test_cases_product = partial(test_cases, aga_product=True)
-test_cases.params = test_cases_params
-test_cases.product = test_cases_product
-test_cases.zip = test_cases_zip
+
+test_cases.params = test_cases_params  # type: ignore
+test_cases.product = test_cases_product  # type: ignore
+test_cases.zip = test_cases_zip  # type: ignore
 
 
 def group(
