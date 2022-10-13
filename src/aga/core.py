@@ -419,7 +419,9 @@ class _TestInputGroup(Generic[Output]):
         ]
         scores = compute_scores(score_infos, group_score)
 
-        for (score, case) in zip(scores, self._test_cases):  # type: float, _TestInputs
+        for (score, case) in zip(
+            scores, self._test_cases
+        ):  # type: float, _TestInputs[Output]
             suite.addTest(case.generate_test_case(golden, under_test, score, config))
 
         scored_prizes = []
@@ -754,6 +756,7 @@ class _TestParam:
         return sep.join(repr(x) for x in self.args)
 
     def kwargs_repr(self, sep: str = ",") -> str:
+        """Return appropriate string representation of the test's keyword arguments."""
         # we use k instead of repr(k) so we don't get quotes around it
         return sep.join(k + "=" + repr(v) for k, v in self.kwargs.items())
 
@@ -774,9 +777,8 @@ class _TestParam:
 
     def check_validity(self) -> None:
         """Check if the test case is valid."""
-
-        # check that kwd doesn't contain any reserved keywords
-        for kwd in self.kwargs.keys():
+        # check that kwargs doesn't contain any reserved keywords
+        for kwd in self.kwargs:
             _check_reserved_keyword(kwd)
 
     def __call__(self, prob: Problem[Output]) -> Problem[Output]:

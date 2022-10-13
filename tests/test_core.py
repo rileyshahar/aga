@@ -20,6 +20,7 @@ class TestTestCases:
     """Test the test_cases decorator."""
 
     def test_test_input_with_arguments(self) -> None:
+        """Test that test_input can be used with arguments."""
         test_input = _TestInputs(
             3,
             4,
