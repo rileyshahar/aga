@@ -58,12 +58,12 @@ class TcOutput:
     @staticmethod
     def format_error_description(error: str) -> str:
         """Format an error description."""
-        return "Error: \n" f"{error}"
+        return "Error: \n" f"{error}\n\n"
 
     @staticmethod
     def format_description(desc: str) -> str:
         """Format a description."""
-        return desc
+        return f"{desc}\n\n"
 
     @property
     def rich_output(self) -> str:
@@ -74,7 +74,7 @@ class TcOutput:
         if self.error_description:
             res += TcOutput.format_error_description(self.error_description)
 
-        return res
+        return res.strip()
 
     def is_correct(self) -> bool:
         """Check whether the problem recieved full credit."""
