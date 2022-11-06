@@ -136,6 +136,10 @@ is_even = lambda x: x % 2 == 0
 def is_even(x):
     return x % 2 == 0
 """,
+    "override_description": """
+def is_even(x):
+    return x % 2 == 0
+""",
 }
 
 
@@ -970,3 +974,26 @@ def fixture_injection_tear_down() -> Generator[None, None, None]:
             # ehh
             del sys.modules[mod_name]
             delattr(aga, mod_name.split(".")[-1])
+
+
+@pytest.fixture(name="override_description")
+def fixture_override_description() -> Problem[bool]:
+    """Generate a problem which tests `aga_description` and overrides."""
+
+    def override(
+        the_case: _TestInputs[int],
+        golden: Callable[[int], int],
+        student: Callable[[int], int],
+    ) -> None:
+        """Override the description."""
+        the_case.assertEqual(golden(*the_case.args), student(*the_case.args))
+        the_case.description = "This is a custom description."
+
+    @test_case(20, aga_description="This is a pre-defined description.")
+    @test_case(10, aga_override_test=override)
+    @problem()
+    def is_even(x: int) -> bool:
+        """Return True if x is even."""
+        return x % 2 == 0
+
+    return is_even

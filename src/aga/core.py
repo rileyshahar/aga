@@ -38,6 +38,7 @@ AGA_RESERVED_KEYWORDS = {
     "aga_extra_credit",
     "aga_override_check",
     "aga_override_test",
+    "aga_description",
 }
 
 
@@ -115,6 +116,11 @@ class AgaTestCase(TestCase):
         """Get the test's metadata."""
         return self._metadata
 
+    @property
+    def test_input(self) -> _TestInputs[Output]:
+        """Get the test input."""
+        return self._test_input
+
     # pylint: disable=invalid-name
     # camelCase is required by unittest
     def runTest(self) -> None:
@@ -176,6 +182,7 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ],
+        aga_description: Optional[str],
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -186,6 +193,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self._expect_stdout = aga_expect_stdout
         self._override_check = aga_override_check
         self._override_test = aga_override_test
+        self._description = aga_description
         self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
         self._args = args
@@ -200,6 +208,16 @@ class _TestInputs(TestCase, Generic[Output]):
     def kwargs(self) -> Dict[str, Any]:
         """Get the keyword arguments for the test case."""
         return self._kwargs
+
+    @property
+    def description(self) -> str:
+        """Get the description of the test case."""
+        return self._description or ""
+
+    @description.setter
+    def description(self, desc: str) -> None:
+        """Set the description of the test case."""
+        self._description = desc
 
     def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
@@ -445,6 +463,7 @@ class Problem(Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ] = None,
+        aga_description: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -464,6 +483,7 @@ class Problem(Generic[Output]):
             aga_override_check=aga_override_check,
             aga_override_test=aga_override_test,
             aga_mock_input=self._config.problem.mock_input,
+            aga_description=aga_description,
             **kwargs,
         )
         self._ungrouped_tests.append(case)

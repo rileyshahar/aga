@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 from aga import problem as agaproblem
 from aga.core import Problem
 from aga.gradescope.main import gradescope_main
+from aga.runner import TcOutput
 
 Output = TypeVar("Output")
 
@@ -102,8 +103,11 @@ def test_json_test_output_square_incorrect(gs_json_square_incorrect: Any) -> Non
     print(gs_json_square_incorrect["tests"])
     assert any(
         map(
-            lambda t: t["output"] == "Your submission didn't give the output "
-            "we expected. We checked it with 2 and got 0, but we expected 4.",
+            lambda t: t["output"]
+            == TcOutput.format_error_description(
+                "Your submission didn't give the output "
+                "we expected. We checked it with 2 and got 0, but we expected 4."
+            ),
             gs_json_square_incorrect["tests"],
         )
     )

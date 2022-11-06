@@ -27,7 +27,7 @@ def print_fancy_summary(output: ProblemOutput) -> None:
     for test in output.tests:
         rprint(
             Panel(
-                test.output or "",
+                test.rich_output,
                 title=("" if test.is_correct() else "[bright_red]")
                 + ("(HIDDEN) " if test.hidden else "")
                 + test.name,
