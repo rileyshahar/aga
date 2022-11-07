@@ -1,4 +1,5 @@
 """Tests for the runner module."""
+from textwrap import dedent
 
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput, load_and_run
@@ -17,7 +18,7 @@ def test_square_output(
             score=20 / 3,
             max_score=20 / 3,
             name="Test on 4.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -27,7 +28,7 @@ def test_square_output(
             score=20 / 3,
             max_score=20 / 3,
             name="Test on 2.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -37,7 +38,7 @@ def test_square_output(
             score=20 / 3,
             max_score=20 / 3,
             name="Test on -2.",
-            output=None,
+            error_description=None,
             hidden=True,
         )
         in output.tests
@@ -57,7 +58,7 @@ def test_square_failure_output(
             score=0,
             max_score=20 / 3,
             name="Test on 4.",
-            output="Your submission didn't give the output we expected. "
+            error_description="Your submission didn't give the output we expected. "
             "We checked it with 4 and got 0, but we expected 16.",
             hidden=False,
         )
@@ -68,7 +69,7 @@ def test_square_failure_output(
             score=0,
             max_score=20 / 3,
             name="Test on 2.",
-            output="Your submission didn't give the output we expected. "
+            error_description="Your submission didn't give the output we expected. "
             "We checked it with 2 and got 0, but we expected 4.",
             hidden=False,
         )
@@ -79,7 +80,7 @@ def test_square_failure_output(
             score=0,
             max_score=20 / 3,
             name="Test on -2.",
-            output="Your submission didn't give the output we expected. "
+            error_description="Your submission didn't give the output we expected. "
             "We checked it with -2 and got 0, but we expected 4.",
             hidden=True,
         )
@@ -106,7 +107,7 @@ def test_hello_world(
             score=20.0,
             max_score=20.0,
             name="Test on .",
-            output=None,
+            error_description=None,
             hidden=False,
         )
     ]
@@ -140,7 +141,7 @@ def test_hello_world_failure(
             score=0.0,
             max_score=20.0,
             name="Test on .",
-            output=HELLO_WORLD_FAILURE_OUT,
+            error_description=HELLO_WORLD_FAILURE_OUT,
             hidden=False,
         )
     ]
@@ -163,7 +164,7 @@ def test_hello_world_script(
             score=20.0,
             max_score=20.0,
             name="Test on .",
-            output=None,
+            error_description=None,
             hidden=False,
         )
     ]
@@ -182,7 +183,7 @@ def test_hello_name(
             score=10.0,
             max_score=10.0,
             name="Test on 'world','me'.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -192,7 +193,7 @@ def test_hello_name(
             score=10.0,
             max_score=10.0,
             name="Test on 'Alice','Bob'.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -244,7 +245,7 @@ def test_hello_name_incorrect(
             score=0.0,
             max_score=10.0,
             name="Test on 'world','me'.",
-            output=HELLO_NAME_FAILURE_OUT_ME,
+            error_description=HELLO_NAME_FAILURE_OUT_ME,
             hidden=False,
         )
         in output.tests
@@ -254,7 +255,7 @@ def test_hello_name_incorrect(
             score=0.0,
             max_score=10.0,
             name="Test on 'Alice','Bob'.",
-            output=HELLO_NAME_FAILURE_OUT_ALICE,
+            error_description=HELLO_NAME_FAILURE_OUT_ALICE,
             hidden=False,
         )
         == output.tests[1]
@@ -307,7 +308,7 @@ def test_square_prize(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 0.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -317,7 +318,7 @@ def test_square_prize(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 2.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -327,7 +328,7 @@ def test_square_prize(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Prize: correct and on time",
-            output=(
+            description=(
                 "Good work! You earned these points since all tests passed and "
                 "you turned in the assignment on time."
             ),
@@ -353,7 +354,7 @@ def test_square_prize_late(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 0.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -363,7 +364,7 @@ def test_square_prize_late(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 2.",
-            output=None,
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -373,7 +374,7 @@ def test_square_prize_late(
             score=0.0 / 3,
             max_score=20.0 / 3,
             name="Prize: correct and on time",
-            output=(
+            description=(
                 "To earn these points next time, "
                 "make sure to turn the assignment in on time."
             ),
@@ -512,8 +513,59 @@ def test_disallow_def(
     """Test that temp_wrong is wrong."""
     output = load_and_run(disallow_test, source_is_even_def, metadata)
     assert output.score == 0.0
-    assert output.tests[0].output == (
-        """Looks like use you used some disallowed constructs:
-  - FunctionDef on line 1
-"""
+    assert output.tests[0].rich_output == TcOutput.format_rich_output(
+        error_description=dedent(
+            """\
+                Looks like use you used some disallowed constructs:
+                  - FunctionDef on line 1
+            """
+        )
     )
+
+
+def test_description_overriden(
+    override_description: Problem[int],
+    source_bad_override_description: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that override_description overrides the description."""
+    output = load_and_run(
+        override_description, source_bad_override_description, metadata
+    )
+    assert (
+        TcOutput(
+            score=0,
+            max_score=20 / 3,
+            name="Test on 10.",
+            description="This is a custom description.",
+            error_description="True != False",
+            hidden=False,
+        )
+        in output.tests
+    )
+
+    assert (
+        TcOutput(
+            score=20 / 3,
+            max_score=20 / 3,
+            name="30 is a special number",
+            description="This is a custom description.",
+            error_description=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+
+    assert (
+        TcOutput(
+            score=20 / 3,
+            max_score=20 / 3,
+            name="Test on 20.",
+            description="This is a pre-defined description.",
+            error_description=None,
+            hidden=False,
+        )
+        in output.tests
+    )
+
+    assert len(output.tests) == 3

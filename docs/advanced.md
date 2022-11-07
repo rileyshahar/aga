@@ -110,3 +110,14 @@ def is_even_lambda(x: int) -> bool:
 ```
 
 For full details on `Disallow`, see the reference.
+
+If you wish to write your own checks, you can use the methods provided by [`unittest.TestCase`](https://docs.python.org/3/library/unittest.html#unittest.TestCase). For example, the override function can be written as:
+
+```python
+def my_check(case, golden, student):
+    case.assertEqual(golden(*case.args), student(*case.args), "test failed")
+```
+
+The `case` exposes `args` arguments and `kwargs` variables which are passed from `test_case` decorator. For example, `test_case(3, 4, z = 10)` will create a case with `args = (3, 4)` and `kwargs = {"z": 10}`. All the `aga_*` kwargs will be strip away in the building process. 
+
+The `case` also exposes `name` and `description` variables which are the name of the test case and the description of the test case. Changing those variables is equivalent to changing `aga_name` and `aga_description` but this means you can set it dynamically during the testing. 

@@ -38,6 +38,7 @@ AGA_RESERVED_KEYWORDS = {
     "aga_extra_credit",
     "aga_override_check",
     "aga_override_test",
+    "aga_description",
 }
 
 
@@ -62,7 +63,6 @@ __all__ = [
 class TestMetadata:
     """Stores metadata about a specific test case."""
 
-    name: str
     max_score: float
     config: AgaTestConfig
     check_stdout: bool
@@ -111,9 +111,15 @@ class AgaTestCase(TestCase):
         self._under_test = under_test
         self._metadata = metadata
 
+    @property
     def metadata(self) -> TestMetadata:
         """Get the test's metadata."""
         return self._metadata
+
+    @property
+    def test_input(self) -> _TestInputs[Output]:
+        """Get the test input."""
+        return self._test_input
 
     # pylint: disable=invalid-name
     # camelCase is required by unittest
@@ -128,7 +134,21 @@ class AgaTestCase(TestCase):
 
         This method is called by unittest.
         """
-        return self._metadata.name
+        return self.name
+
+    @property
+    def name(self) -> str:
+        """Format the name of the test case."""
+        return self._test_input.name or self._metadata.config.name_fmt.format(
+            args=self._test_input.args_repr(self._metadata.config.name_sep),
+            kwargs=self._test_input.kwargs_repr(self._metadata.config.name_sep),
+            sep=self._test_input.sep(self._metadata.config.name_sep),
+        )
+
+    @property
+    def description(self) -> str | None:
+        """Get the problem's description."""
+        return self._test_input.description
 
 
 class AgaTestSuite(TestSuite):
@@ -176,6 +196,7 @@ class _TestInputs(TestCase, Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ],
+        aga_description: Optional[str],
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -186,6 +207,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self._expect_stdout = aga_expect_stdout
         self._override_check = aga_override_check
         self._override_test = aga_override_test
+        self._description = aga_description
         self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
 
         self._args = args
@@ -200,6 +222,26 @@ class _TestInputs(TestCase, Generic[Output]):
     def kwargs(self) -> Dict[str, Any]:
         """Get the keyword arguments for the test case."""
         return self._kwargs
+
+    @property
+    def description(self) -> str | None:
+        """Get the description of the test case."""
+        return self._description
+
+    @description.setter
+    def description(self, desc: str | None) -> None:
+        """Set the description of the test case."""
+        self._description = desc
+
+    @property
+    def name(self) -> str | None:
+        """Get the name of the test case."""
+        return self._name
+
+    @name.setter
+    def name(self, name: str | None) -> None:
+        """Set the name of the test case."""
+        self._name = name
 
     def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
@@ -292,16 +334,7 @@ class _TestInputs(TestCase, Generic[Output]):
         config: AgaConfig,
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
-        name_fmt = config.test.name_fmt
-        name_sep = config.test.name_sep
-
-        name = self._name or name_fmt.format(
-            args=self._args_repr(name_sep),
-            kwargs=self._kwargs_repr(name_sep),
-            sep=self._sep(name_sep),
-        )
         metadata = TestMetadata(
-            name=name,
             hidden=self._hidden,
             config=config.test,
             max_score=score,
@@ -310,22 +343,24 @@ class _TestInputs(TestCase, Generic[Output]):
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
-    def _args_repr(self, sep: str) -> str:
+    def args_repr(self, sep: str) -> str:
+        """Get a string representation of the arguments."""
         return sep.join(repr(x) for x in self._args)
 
-    def _kwargs_repr(self, sep: str) -> str:
+    def kwargs_repr(self, sep: str) -> str:
+        """Get a string representation of the keyword arguments."""
         # we use k instead of repr(k) so we don't get quotes around it
         return sep.join(k + "=" + repr(v) for k, v in self._kwargs.items())
 
-    def _sep(self, sep: str) -> str:
+    def sep(self, sep: str) -> str:
         """Return sep if both exist, "" otherwise."""
         assert sep == ","
         return self._args and self._kwargs and sep or ""
 
     def __repr__(self) -> str:
-        args_repr = self._args_repr(",")
-        kwargs_repr = self._kwargs_repr(",")
-        sep = self._sep(",")
+        args_repr = self.args_repr(",")
+        kwargs_repr = self.kwargs_repr(",")
+        sep = self.sep(",")
 
         return args_repr + sep + kwargs_repr
 
@@ -445,6 +480,7 @@ class Problem(Generic[Output]):
         aga_override_test: Optional[
             Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
         ] = None,
+        aga_description: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         """Add a test case to the current group.
@@ -464,6 +500,7 @@ class Problem(Generic[Output]):
             aga_override_check=aga_override_check,
             aga_override_test=aga_override_test,
             aga_mock_input=self._config.problem.mock_input,
+            aga_description=aga_description,
             **kwargs,
         )
         self._ungrouped_tests.append(case)
@@ -670,6 +707,9 @@ class _TestCase:
     aga_name : Optional[str]
         The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
         a comma-separated list of args and kwargs.
+    aga_description: Optional[str]
+        The detailed description for the test case. It will be displayed under the
+        test case name and thus supports longer descriptions.
     aga_weight : int
         The test case's relative weight to the group's score. See :ref:`Determining
         Score` for details.

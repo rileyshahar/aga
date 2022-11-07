@@ -1,4 +1,5 @@
 """Contains various fixtures, especially pre-written problems."""
+# pylint: disable=too-many-lines
 
 import ast
 import inspect
@@ -134,6 +135,12 @@ is_even = lambda x: x % 2 == 0
 """,
     "is_even_def": """
 def is_even(x):
+    return x % 2 == 0
+""",
+    "bad_override_description": """
+def is_even(x):
+    if x == 10:
+        return False
     return x % 2 == 0
 """,
 }
@@ -970,3 +977,29 @@ def fixture_injection_tear_down() -> Generator[None, None, None]:
             # ehh
             del sys.modules[mod_name]
             delattr(aga, mod_name.split(".")[-1])
+
+
+@pytest.fixture(name="override_description")
+def fixture_override_description() -> Problem[bool]:
+    """Generate a problem which tests `aga_description` and overrides."""
+
+    def override(
+        the_case: _TestInputs[int],
+        golden: Callable[[int], int],
+        student: Callable[[int], int],
+    ) -> None:
+        """Override the description."""
+        if the_case.args[0] == 30:
+            the_case.name = "30 is a special number"
+        the_case.description = "This is a custom description."
+        the_case.assertEqual(golden(*the_case.args), student(*the_case.args))
+
+    @test_case(30, aga_override_test=override)
+    @test_case(20, aga_description="This is a pre-defined description.")
+    @test_case(10, aga_override_test=override)
+    @problem()
+    def is_even(x: int) -> bool:
+        """Return True if x is even."""
+        return x % 2 == 0
+
+    return is_even

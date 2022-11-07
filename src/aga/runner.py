@@ -39,9 +39,11 @@ class TcOutput:
         The max score for the test.
     name : str
         The test's name.
-    output : Optional[str]
-        Human-readable text output of the test. Some frontends distinguish between no
-        output and empty output, i.e. in terms of showing UI elements.
+    description : Optional[str]
+        Human-readable text description of the test. Some frontends distinguish
+        between no output and empty output, i.e. in terms of showing UI elements.
+    error_description: Optional[str]
+        Human-readable error description of the test.
     hidden : bool
         The test's visibility.
     """
@@ -49,8 +51,37 @@ class TcOutput:
     score: float
     max_score: float
     name: str
-    output: Optional[str] = None
     hidden: bool = False
+    description: Optional[str] = None
+    error_description: Optional[str] = None
+
+    @staticmethod
+    def format_error_description(error: str) -> str:
+        """Format an error description."""
+        return "Error: \n" f"{error}\n\n"
+
+    @staticmethod
+    def format_description(desc: str) -> str:
+        """Format a description."""
+        return f"{desc}\n\n"
+
+    @staticmethod
+    def format_rich_output(
+        description: Optional[str] = None, error_description: Optional[str] = None
+    ) -> str:
+        """Format a rich output."""
+        res = ""
+        if description:
+            res += TcOutput.format_description(description)
+        if error_description:
+            res += TcOutput.format_error_description(error_description)
+
+        return res.strip()
+
+    @property
+    def rich_output(self) -> str:
+        """Output of all the descriptions."""
+        return TcOutput.format_rich_output(self.description, self.error_description)
 
     def is_correct(self) -> bool:
         """Check whether the problem recieved full credit."""
@@ -103,11 +134,12 @@ class _AgaTestResult(TestResult):
     @staticmethod
     def _test_data(test: AgaTestCase) -> TcOutput:
         """Construct the test data for a successful test, with _no_ output."""
-        metadata = test.metadata()
+        metadata = test.metadata
 
         return TcOutput(
+            name=test.name,
+            description=test.description,
             max_score=metadata.max_score,
-            name=metadata.name,
             score=metadata.max_score,
             hidden=metadata.hidden,
         )
@@ -115,7 +147,7 @@ class _AgaTestResult(TestResult):
     def _fail_data(self, test: AgaTestCase, err) -> TcOutput:  # type: ignore
         """Construct the test data for a failure."""
         data = self._test_data(test)
-        data.output = str(err[1])
+        data.error_description = str(err[1])
         data.score = 0.0
 
         return data
@@ -123,7 +155,7 @@ class _AgaTestResult(TestResult):
     def _err_data(self, test: AgaTestCase, err) -> TcOutput:  # type: ignore
         """Construct the test data for an error."""
         data = self._test_data(test)
-        data.output = test.metadata().config.error_msg.format(
+        data.error_description = test.metadata.config.error_msg.format(
             type=err[0].__name__,
             message=err[1],
             traceback=limited_traceback(err[2]),
@@ -174,7 +206,7 @@ class _AgaTestResult(TestResult):
                 score=score,
                 max_score=prize.max_score,
                 name=prize.prize.name,
-                output=message,
+                description=message,
             )
 
             # don't append to self._tests immediately so the next prizes don't see this

@@ -48,7 +48,7 @@ class GradescopeTestJson:
             score=output.score,
             max_score=output.max_score,
             name=output.name,
-            output=output.output,
+            output=output.rich_output,
             visibility="hidden" if output.hidden else "visible",
         )
 
