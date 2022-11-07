@@ -120,4 +120,4 @@ def my_check(case, golden, student):
 
 The `case` exposes `args` arguments and `kwargs` variables which are passed from `test_case` decorator. For example, `test_case(3, 4, z = 10)` will create a case with `args = (3, 4)` and `kwargs = {"z": 10}`. All the `aga_*` kwargs will be strip away in the building process. 
 
-The `case` also exposes `description` variable which is the description of the test case. It's the same as setting `aga_description` but this means you can set it dynamically during the testing. When overriding the test case, you can set `description` to change to detailed description. 
+The `case` also exposes `name` and `description` variables which are the name of the test case and the description of the test case. Changing those variables is equivalent to changing `aga_name` and `aga_description` but this means you can set it dynamically during the testing. 
