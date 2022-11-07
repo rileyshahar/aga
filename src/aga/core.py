@@ -63,7 +63,6 @@ __all__ = [
 class TestMetadata:
     """Stores metadata about a specific test case."""
 
-    name: str
     max_score: float
     config: AgaTestConfig
     check_stdout: bool
@@ -112,6 +111,7 @@ class AgaTestCase(TestCase):
         self._under_test = under_test
         self._metadata = metadata
 
+    @property
     def metadata(self) -> TestMetadata:
         """Get the test's metadata."""
         return self._metadata
@@ -134,7 +134,16 @@ class AgaTestCase(TestCase):
 
         This method is called by unittest.
         """
-        return self._metadata.name
+        return self.name
+
+    @property
+    def name(self) -> str:
+        """Format the name of the test case."""
+        return self._test_input.name or self._metadata.config.name_fmt.format(
+            args=self._test_input.args_repr(self._metadata.config.name_sep),
+            kwargs=self._test_input.kwargs_repr(self._metadata.config.name_sep),
+            sep=self._test_input.sep(self._metadata.config.name_sep),
+        )
 
 
 class AgaTestSuite(TestSuite):
@@ -218,6 +227,16 @@ class _TestInputs(TestCase, Generic[Output]):
     def description(self, desc: str | None) -> None:
         """Set the description of the test case."""
         self._description = desc
+
+    @property
+    def name(self) -> str | None:
+        """Get the name of the test case."""
+        return self._name
+
+    @name.setter
+    def name(self, name: str | None) -> None:
+        """Set the name of the test case."""
+        self._name = name
 
     def _eval(self, func: Callable[..., Any]) -> Any:
         """Evaluate func on the arguments."""
@@ -310,16 +329,7 @@ class _TestInputs(TestCase, Generic[Output]):
         config: AgaConfig,
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
-        name_fmt = config.test.name_fmt
-        name_sep = config.test.name_sep
-
-        name = self._name or name_fmt.format(
-            args=self._args_repr(name_sep),
-            kwargs=self._kwargs_repr(name_sep),
-            sep=self._sep(name_sep),
-        )
         metadata = TestMetadata(
-            name=name,
             hidden=self._hidden,
             config=config.test,
             max_score=score,
@@ -328,22 +338,24 @@ class _TestInputs(TestCase, Generic[Output]):
         )
         return AgaTestCase(self, golden, under_test, metadata)
 
-    def _args_repr(self, sep: str) -> str:
+    def args_repr(self, sep: str) -> str:
+        """Get a string representation of the arguments."""
         return sep.join(repr(x) for x in self._args)
 
-    def _kwargs_repr(self, sep: str) -> str:
+    def kwargs_repr(self, sep: str) -> str:
+        """Get a string representation of the keyword arguments."""
         # we use k instead of repr(k) so we don't get quotes around it
         return sep.join(k + "=" + repr(v) for k, v in self._kwargs.items())
 
-    def _sep(self, sep: str) -> str:
+    def sep(self, sep: str) -> str:
         """Return sep if both exist, "" otherwise."""
         assert sep == ","
         return self._args and self._kwargs and sep or ""
 
     def __repr__(self) -> str:
-        args_repr = self._args_repr(",")
-        kwargs_repr = self._kwargs_repr(",")
-        sep = self._sep(",")
+        args_repr = self.args_repr(",")
+        kwargs_repr = self.kwargs_repr(",")
+        sep = self.sep(",")
 
         return args_repr + sep + kwargs_repr
 

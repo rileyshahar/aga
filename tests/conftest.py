@@ -989,6 +989,8 @@ def fixture_override_description() -> Problem[bool]:
         student: Callable[[int], int],
     ) -> None:
         """Override the description."""
+        if the_case.args[0] == 30:
+            the_case.name = "30 is a special number"
         the_case.description = "This is a custom description."
         the_case.assertEqual(golden(*the_case.args), student(*the_case.args))
 

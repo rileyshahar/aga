@@ -609,12 +609,24 @@ def fixture_gs_json_override_description(
     ],
 )
 def test_json_override_description(
-    gs_json_bad_override_description: Any, target: TcOutput
+    gs_json_bad_override_description: Any, target: str
 ) -> None:
     """Test that the JSON file includes the right test cases."""
     assert any(
         map(
             lambda t: t["output"] == target,
+            gs_json_bad_override_description["tests"],
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "target", ["30 is a special number", "Test on 20.", "Test on 10."]
+)
+def test_json_override_name(gs_json_bad_override_description: Any, target: str) -> None:
+    assert any(
+        map(
+            lambda t: t["name"] == target,
             gs_json_bad_override_description["tests"],
         )
     )

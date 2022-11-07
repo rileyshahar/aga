@@ -134,12 +134,12 @@ class _AgaTestResult(TestResult):
     @staticmethod
     def _test_data(test: AgaTestCase) -> TcOutput:
         """Construct the test data for a successful test, with _no_ output."""
-        metadata = test.metadata()
+        metadata = test.metadata
         test_input = test.test_input
 
         return TcOutput(
+            name=test.name,
             max_score=metadata.max_score,
-            name=metadata.name,
             score=metadata.max_score,
             hidden=metadata.hidden,
             description=test_input.description,
@@ -156,7 +156,7 @@ class _AgaTestResult(TestResult):
     def _err_data(self, test: AgaTestCase, err) -> TcOutput:  # type: ignore
         """Construct the test data for an error."""
         data = self._test_data(test)
-        data.error_description = test.metadata().config.error_msg.format(
+        data.error_description = test.metadata.config.error_msg.format(
             type=err[0].__name__,
             message=err[1],
             traceback=limited_traceback(err[2]),

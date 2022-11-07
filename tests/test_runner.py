@@ -548,7 +548,7 @@ def test_description_overriden(
         TcOutput(
             score=20 / 3,
             max_score=20 / 3,
-            name="Test on 30.",
+            name="30 is a special number",
             description="This is a custom description.",
             error_description=None,
             hidden=False,
