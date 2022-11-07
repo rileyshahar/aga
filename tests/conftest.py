@@ -1,4 +1,5 @@
 """Contains various fixtures, especially pre-written problems."""
+# pylint: disable=too-many-lines
 
 import ast
 import inspect
@@ -136,8 +137,10 @@ is_even = lambda x: x % 2 == 0
 def is_even(x):
     return x % 2 == 0
 """,
-    "override_description": """
+    "bad_override_description": """
 def is_even(x):
+    if x == 10:
+        return False
     return x % 2 == 0
 """,
 }
@@ -986,9 +989,10 @@ def fixture_override_description() -> Problem[bool]:
         student: Callable[[int], int],
     ) -> None:
         """Override the description."""
-        the_case.assertEqual(golden(*the_case.args), student(*the_case.args))
         the_case.description = "This is a custom description."
+        the_case.assertEqual(golden(*the_case.args), student(*the_case.args))
 
+    @test_case(30, aga_override_test=override)
     @test_case(20, aga_description="This is a pre-defined description.")
     @test_case(10, aga_override_test=override)
     @problem()

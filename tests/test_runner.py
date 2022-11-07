@@ -513,30 +513,42 @@ def test_disallow_def(
     """Test that temp_wrong is wrong."""
     output = load_and_run(disallow_test, source_is_even_def, metadata)
     assert output.score == 0.0
-    assert output.tests[0].rich_output == (
-        TcOutput.format_error_description(
-            dedent(
-                """\
+    assert output.tests[0].rich_output == TcOutput.format_rich_output(
+        error_description=dedent(
+            """\
                 Looks like use you used some disallowed constructs:
                   - FunctionDef on line 1
-                """
-            )
+            """
         )
     )
 
 
 def test_description_overriden(
     override_description: Problem[int],
-    source_override_description: str,
+    source_bad_override_description: str,
     metadata: SubmissionMetadata,
 ) -> None:
     """Test that override_description overrides the description."""
-    output = load_and_run(override_description, source_override_description, metadata)
+    output = load_and_run(
+        override_description, source_bad_override_description, metadata
+    )
     assert (
         TcOutput(
-            score=10.0,
-            max_score=10.0,
+            score=0,
+            max_score=20 / 3,
             name="Test on 10.",
+            description="This is a custom description.",
+            error_description="True != False",
+            hidden=False,
+        )
+        in output.tests
+    )
+
+    assert (
+        TcOutput(
+            score=20 / 3,
+            max_score=20 / 3,
+            name="Test on 30.",
             description="This is a custom description.",
             error_description=None,
             hidden=False,
@@ -546,8 +558,8 @@ def test_description_overriden(
 
     assert (
         TcOutput(
-            score=10.0,
-            max_score=10.0,
+            score=20 / 3,
+            max_score=20 / 3,
             name="Test on 20.",
             description="This is a pre-defined description.",
             error_description=None,
@@ -556,4 +568,4 @@ def test_description_overriden(
         in output.tests
     )
 
-    assert len(output.tests) == 2
+    assert len(output.tests) == 3

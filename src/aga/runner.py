@@ -65,16 +65,23 @@ class TcOutput:
         """Format a description."""
         return f"{desc}\n\n"
 
+    @staticmethod
+    def format_rich_output(
+        description: Optional[str] = None, error_description: Optional[str] = None
+    ) -> str:
+        """Format a rich output."""
+        res = ""
+        if description:
+            res += TcOutput.format_description(description)
+        if error_description:
+            res += TcOutput.format_error_description(error_description)
+
+        return res.strip()
+
     @property
     def rich_output(self) -> str:
         """Output of all the descriptions."""
-        res = ""
-        if self.description:
-            res += TcOutput.format_description(self.description)
-        if self.error_description:
-            res += TcOutput.format_error_description(self.error_description)
-
-        return res.strip()
+        return TcOutput.format_rich_output(self.description, self.error_description)
 
     def is_correct(self) -> bool:
         """Check whether the problem recieved full credit."""

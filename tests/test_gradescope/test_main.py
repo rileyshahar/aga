@@ -104,9 +104,11 @@ def test_json_test_output_square_incorrect(gs_json_square_incorrect: Any) -> Non
     assert any(
         map(
             lambda t: t["output"]
-            == TcOutput.format_error_description(
-                "Your submission didn't give the output "
-                "we expected. We checked it with 2 and got 0, but we expected 4."
+            == TcOutput.format_rich_output(
+                error_description=(
+                    "Your submission didn't give the output "
+                    "we expected. We checked it with 2 and got 0, but we expected 4."
+                )
             ),
             gs_json_square_incorrect["tests"],
         )
@@ -571,4 +573,48 @@ def test_json_too_many_matching_symbols(
         "It looks like multiple files you submitted have objects named `duplicate`; "
         "unfortunately, we can't figure out which one is supposed to be the real "
         "submission. Please remove all but one of them and resumbit."
+    )
+
+
+@pytest.fixture(name="gs_json_bad_override_description")
+def fixture_gs_json_override_description(
+    override_description: Problem[int],
+    source_bad_override_description: str,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> Any:
+    return get_gs_json(
+        override_description,
+        source_bad_override_description,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        TcOutput.format_rich_output(
+            description="This is a custom description.",
+            error_description="True != False",
+        ),
+        TcOutput.format_rich_output(
+            description="This is a pre-defined description.",
+        ),
+        TcOutput.format_rich_output(
+            description="This is a custom description.",
+        ),
+    ],
+)
+def test_json_override_description(
+    gs_json_bad_override_description: Any, target: TcOutput
+) -> None:
+    """Test that the JSON file includes the right test cases."""
+    assert any(
+        map(
+            lambda t: t["output"] == target,
+            gs_json_bad_override_description["tests"],
+        )
     )
