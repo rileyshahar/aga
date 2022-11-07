@@ -135,14 +135,13 @@ class _AgaTestResult(TestResult):
     def _test_data(test: AgaTestCase) -> TcOutput:
         """Construct the test data for a successful test, with _no_ output."""
         metadata = test.metadata
-        test_input = test.test_input
 
         return TcOutput(
             name=test.name,
+            description=test.description,
             max_score=metadata.max_score,
             score=metadata.max_score,
             hidden=metadata.hidden,
-            description=test_input.description,
         )
 
     def _fail_data(self, test: AgaTestCase, err) -> TcOutput:  # type: ignore

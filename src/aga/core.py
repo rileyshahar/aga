@@ -145,6 +145,11 @@ class AgaTestCase(TestCase):
             sep=self._test_input.sep(self._metadata.config.name_sep),
         )
 
+    @property
+    def description(self) -> str | None:
+        """Get the problem's description."""
+        return self._test_input.description
+
 
 class AgaTestSuite(TestSuite):
     """A thin wrapper around TestSuite that store a config."""
