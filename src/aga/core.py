@@ -210,16 +210,6 @@ class _TestInputs(TestCase, Generic[Output]):
         return self._kwargs
 
     @property
-    def name(self) -> str | None:
-        """Get the name of the test case."""
-        return self._name
-
-    @name.setter
-    def name(self, name: str | None) -> None:
-        """Set the name of the test case."""
-        self._name = name
-
-    @property
     def description(self) -> str | None:
         """Get the description of the test case."""
         return self._description
