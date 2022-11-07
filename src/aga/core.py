@@ -690,6 +690,9 @@ class _TestCase:
     aga_name : Optional[str]
         The test case's name. If `None`, defaults to "Test {inputs}", where {inputs} is
         a comma-separated list of args and kwargs.
+    aga_description: Optional[str]
+        The detailed description for the test case. It will be displayed under the
+        test case name and thus supports longer descriptions.
     aga_weight : int
         The test case's relative weight to the group's score. See :ref:`Determining
         Score` for details.
