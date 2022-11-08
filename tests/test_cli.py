@@ -159,10 +159,20 @@ def test_check_invalid_problem(
 
 
 def test_check_with_override(
-    mocked_lpfp: MagicMock, overrided_problem: Problem[Output]
+    mocked_lpfp: MagicMock, overridden_problem: Problem[Output]
 ) -> None:
     """Test that check succeeds with a valid problem."""
-    overrided_problem.check()
+    overridden_problem.check()
+
+
+def test_invalid_check_with_override(
+    mocked_lpfp: MagicMock, invalid_overridden_problem: Problem[Output]
+) -> None:
+    """Test that check fails with an invalid problem."""
+    with pytest.raises(
+        AssertionError, match="Your solution doesn't pass the overridden test|check."
+    ):
+        invalid_overridden_problem.check()
 
 
 def test_complete_frontend_empty() -> None:

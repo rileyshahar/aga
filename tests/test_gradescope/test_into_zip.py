@@ -55,13 +55,26 @@ def test_into_gradescope_zip_source(
 
     _, zip_path = gradescope_zip
     with ZipFile(zip_path) as zip_f:
+        for core_mod_member in ("parameter", "problem", "suite"):
+            with zip_f.open(
+                pathjoin("aga", "core", f"{core_mod_member}.py")
+            ) as core_mod:
+                module = __import__(
+                    ".".join(["aga", "core", core_mod_member]),
+                    fromlist=[core_mod_member],
+                )
+
+                unzipped_source = core_mod.read().decode("utf-8")
+                actual_source = getsource(module)
+                assert unzipped_source == actual_source
+
         for (name, module) in getmembers(aga, ismodule):
             # don't check gradescope because it's a subdirectory and I'm too lazy to
             # write special handling or recursion right now
             if getattr(module, INJECTION_MODULE_FLAG, None):
                 continue
 
-            if name not in ("gradescope", "cli"):
+            if name not in ("gradescope", "cli", "core"):
                 with zip_f.open(pathjoin("aga", name + ".py")) as src:
                     unzipped_core_source = src.read()
                     core_source = bytes(getsource(module), "UTF-8")
