@@ -147,6 +147,10 @@ class _TestParam:
         """Return sep if both exist, "" otherwise."""
         return self.args and self.kwargs and sep or ""
 
+    def aga_kwargs_repr(self, sep: str = ",") -> str:
+        """Return a string representation of the test's aga_* keyword arguments."""
+        return sep.join(k + "=" + repr(v) for k, v in self.aga_kwargs.items())
+
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
         """Generate a test case for the given problem."""
         self.check_validity()
@@ -170,11 +174,13 @@ class _TestParam:
 
     def __str__(self) -> str:
         """Return a string representation of the test case."""
-        return f"TestCase({self.args}, {self.kwargs})"
+        return f"param({self.args_repr()}, {self.kwargs_repr()})"
 
     def __repr__(self) -> str:
         """Return a string representation of the test case."""
-        return f"TestCase({self.args}, {self.kwargs}, {self.aga_kwargs})"
+        return (
+            f"param({self.args_repr()}, {self.kwargs_repr()}, {self.aga_kwargs_repr()})"
+        )
 
 
 param = _TestParam  # pylint: disable=invalid-name

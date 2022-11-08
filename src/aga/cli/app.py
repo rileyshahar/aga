@@ -61,7 +61,7 @@ def _load_injection_config(
         config.injection.find_auto_injection()
 
     if not config.injection.is_valid:
-        raise ValueError("injection files/dirs are invalid")
+        raise ValueError("injection files or dirs are invalid")
 
     config.injection.create_injection_module(injection_module)
     config.injection.inject()

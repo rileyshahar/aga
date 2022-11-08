@@ -324,7 +324,6 @@ class _TestInputs(TestCase, Generic[Output]):
         config: AgaConfig,
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
-
         metadata = TestMetadata(
             hidden=self._hidden,
             config=config.test,
