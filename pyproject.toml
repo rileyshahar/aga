@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aga"
-version = "0.11.2"
+version = "0.12.0"
 description = "aga grades assignments"
 authors = ["Riley Shahar <riley.shahar@gmail.com>"]
 license = "MIT"
