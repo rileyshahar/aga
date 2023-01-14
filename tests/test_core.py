@@ -98,18 +98,14 @@ class TestTestCases:
 
         _check_problem(add_three)
 
-    def test_aga_test_cases_no_flag_fail(self) -> None:
-        """Test that aga_test_cases without a combination flag raises an error."""
-        with pytest.raises(
-            ValueError,
-            match="Exactly one of aga_product, aga_zip, or aga_params must be True.",
-        ):
+    def test_aga_test_cases_no_flag(self) -> None:
+        """Test that aga_test_cases without a combination flag."""
 
-            @_test_cases([1, 2])
-            @problem()
-            def test_problem(x: int) -> int:
-                """Test problem."""
-                return x
+        @_test_cases([1, 2])
+        @problem()
+        def test_problem(x: int) -> int:
+            """Test problem."""
+            return x
 
     @pytest.mark.parametrize(
         "flags",
@@ -124,10 +120,11 @@ class TestTestCases:
         """Test that aga_test_cases with multiple combination flags raises an error."""
         with pytest.raises(
             ValueError,
-            match="Exactly one of aga_product, aga_zip, or aga_params must be True.",
+            match="Exactly many of aga_product, aga_zip, or aga_params are True. "
+            "Only 1 or 0 of the flags is allowed. ",
         ):
 
-            @_test_cases([1, 2], **flags)
+            @_test_cases([1, 2], [3, 4], **flags)
             @problem()
             def test_problem(x: int) -> int:
                 """Test problem."""

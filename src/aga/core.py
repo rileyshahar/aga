@@ -828,6 +828,14 @@ def _parse_zip_or_product(
     )
 
 
+def _parse_no_flag(*args: Iterable[Any], **kwargs: Any) -> List[_TestCase]:
+    """Parse the parameters for no flag."""
+    if kwargs:
+        raise ValueError("`test_cases` with no flags ignores non-aga kwargs")
+
+    return [param(arg) for arg in args]
+
+
 def _add_aga_kwargs(aga_kwargs: Dict[str, Any], final_params: List[_TestCase]) -> None:
     """Add aga_kwargs to the finalized parameters."""
     # process aga input type
@@ -901,11 +909,10 @@ def test_cases(
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the test cases to a problem.
     """
-    if not (aga_product ^ aga_zip ^ aga_params) or (
-        aga_product and aga_zip and aga_params
-    ):
+    if aga_product + aga_zip + aga_params > 1:
         raise ValueError(
-            "Exactly one of aga_product, aga_zip, or aga_params must be True. \n"
+            "Exactly many of aga_product, aga_zip, or aga_params are True. "
+            "Only 1 or 0 of the flags is allowed. \n"
             f"You got: "
             f"aga_product={aga_product}, aga_zip={aga_zip}, aga_params={aga_params}"
         )
@@ -921,10 +928,12 @@ def test_cases(
         # build final params
         # So we're allowing [param(1, 2), [3, 4]] as a valid input
         final_params = _parse_params(*args, **kwargs)
-    else:
+    elif aga_zip or aga_product:
         final_params = _parse_zip_or_product(
             *args, aga_zip=aga_zip, aga_product=aga_product, **kwargs
         )
+    else:
+        final_params = _parse_no_flag(*args, **kwargs)
 
     _add_aga_kwargs(aga_kwargs_dict, final_params)
 
