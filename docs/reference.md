@@ -5,6 +5,14 @@
    :members:
 ```
 
+## Core
+
+```{eval-rst}
+.. automodule:: aga.core
+   :members:
+```
+
+
 ## Prizes
 
 ```{eval-rst}
