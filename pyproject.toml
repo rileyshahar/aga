@@ -21,7 +21,6 @@ types-toml = "^0.10.8"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
-codecov = "^2.1.12"
 coverage = {extras = ["toml"], version = "^5.5"}
 flake8 = "^4.0.1"
 flake8-black = "^0.2.3"
