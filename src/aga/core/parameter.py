@@ -14,6 +14,7 @@ from typing import (
     TypeVar,
     Callable,
     TypedDict,
+    cast,
 )
 from enum import Enum
 
@@ -57,15 +58,17 @@ DEFAULT_AGA_RESERVED_VALUES = {
 
 
 class AgaKeywordDictType(TypedDict):
+    """Aga keyword arguments type."""
+
     aga_expect: None | Any
     aga_expect_stdout: None | str
     aga_hidden: bool
     aga_name: None | str
-    aga_weight: float
+    aga_weight: int
     aga_value: float
     aga_extra_credit: float
-    aga_override_check: None | Callable[[Any], bool]
-    aga_override_test: None | Callable[[Any], Any]
+    aga_override_check: None | Callable[..., bool]
+    aga_override_test: None | Callable[..., Any]
     aga_description: None | str
     aga_is_pipeline: bool
 
@@ -96,7 +99,7 @@ class AgaKeywordContainer:
     """A container for aga_* keyword arguments."""
 
     def __init__(self, **kwargs: Any):
-        self.aga_kwargs: AgaKeywordDictType = kwargs
+        self.aga_kwargs: AgaKeywordDictType = cast(AgaKeywordDictType, kwargs)
 
     @property
     def aga_kwargs(self) -> AgaKeywordDictType:
@@ -109,7 +112,7 @@ class AgaKeywordContainer:
         self._aga_kwargs = kwargs
         self.ensure_aga_kwargs()
 
-    def ensure_aga_kwargs(self):
+    def ensure_aga_kwargs(self) -> AgaKeywordContainer:
         """Ensure that the aga_* keywords are handled correct."""
         for k in self.aga_kwargs:
             try:
@@ -118,15 +121,17 @@ class AgaKeywordContainer:
                 raise ValueError(f'invalid kwargs "{k}" in a test param') from e
         return self
 
-    def update_aga_kwargs(self, **kwargs: Any):
+    def update_aga_kwargs(self, **kwargs: Any) -> AgaKeywordContainer:
         """Update the keyword arguments to be passed to the functions under test."""
-        self.aga_kwargs.update(kwargs)
+        self.aga_kwargs.update(kwargs)  # type: ignore
         self.ensure_aga_kwargs()
         return self
 
-    def ensure_default_aga_values(self):
+    def ensure_default_aga_values(self) -> AgaKeywordContainer:
         """Ensure that the aga_* keywords all have default."""
-        self.aga_kwargs = {**DEFAULT_AGA_RESERVED_VALUES, **self.aga_kwargs}
+        self.aga_kwargs = cast(
+            AgaKeywordDictType, {**DEFAULT_AGA_RESERVED_VALUES, **self.aga_kwargs}
+        )
         return self
 
     @property
@@ -150,12 +155,12 @@ class AgaKeywordContainer:
         self.aga_kwargs[AgaReservedKeywords.aga_name.value] = name
 
     @property
-    def override_test(self) -> Callable | None:
+    def override_test(self) -> Callable[..., Any] | None:
         """Get the override_test aga_override_test of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_override_test.value]
 
     @property
-    def override_check(self) -> Callable | None:
+    def override_check(self) -> Callable[..., Any] | None:
         """Get the override_check aga_override_check of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_override_check.value]
 
@@ -165,7 +170,7 @@ class AgaKeywordContainer:
         return self.aga_kwargs[AgaReservedKeywords.aga_is_pipeline.value]
 
     @property
-    def weight(self) -> float:
+    def weight(self) -> int:
         """Get the weight aga_weight of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_weight.value]
 
@@ -190,7 +195,7 @@ class AgaKeywordContainer:
         return self.aga_kwargs[AgaReservedKeywords.aga_expect.value]
 
     @property
-    def expect_stdout(self) -> List | str | None:
+    def expect_stdout(self) -> str | None:
         """Get the expected aga_expect_stdout of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_expect_stdout.value]
 
@@ -289,7 +294,7 @@ class _TestParam(AgaKeywordContainer):
         self._kwargs = kwargs
         self.ensure_valid_kwargs()
 
-    def ensure_valid_kwargs(self):
+    def ensure_valid_kwargs(self) -> _TestParam:
         """Ensure that the aga_* keywords are handled correct."""
         for k in self.kwargs:
             if k.startswith("aga_"):
@@ -313,7 +318,8 @@ class _TestParam(AgaKeywordContainer):
 
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
         """Generate a test case for the given problem."""
-        self.ensure_default_aga_values().ensure_valid_kwargs().ensure_aga_kwargs()
+        self.ensure_default_aga_values()
+        self.ensure_valid_kwargs().ensure_aga_kwargs()  # type: ignore
 
         prob.add_test_case(param=self)
 

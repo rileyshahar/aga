@@ -1,5 +1,6 @@
 """Contains various fixtures, especially pre-written problems."""
 # pylint: disable=too-many-lines
+from __future__ import annotations
 
 import ast
 import inspect
@@ -814,14 +815,13 @@ def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
 def fixture_higher_order() -> Problem[Callable[[int], int]]:
     """Generate a problem which tests a higher-order function."""
 
-    # pylint: disable=W0613
     def _make_n_check(
-        case,
-        golden,
-        student,
-        metadata: TestMetadata,
-        msg_format: str,
-    ):  # type: ignore
+        case: TestCase,
+        golden: Callable[[int], int],
+        student: Callable[[int], int],
+        metadata: TestMetadata,  # pylint: disable=W0613
+        msg_format: str,  # pylint: disable=W0613
+    ) -> None:
         # here `golden` and `student` are the inner functions returned by the
         # submissions, so they have type int -> int`
         for i in range(10):
@@ -1087,6 +1087,14 @@ def fixture_test_pipeline_linked_list() -> Problem[bool]:
         pop(): 10,
     }
 
+    # pylint: disable=too-few-public-methods
+    class Node:
+        """A node in a linked list."""
+
+        def __init__(self, value: int, next_node: Node | None = None) -> None:
+            self.value = value
+            self.next = next_node
+
     @test_case.pipeline(
         *actions.keys(),
         aga_expect_stdout="< 10 >\n< 20 10 >\n< 30 20 10 >\n",
@@ -1096,35 +1104,27 @@ def fixture_test_pipeline_linked_list() -> Problem[bool]:
     class LL:
         """A linked list for testing."""
 
-        # pylint: disable=too-few-public-methods
-        class Node:
-            """A node in a linked list."""
+        def __init__(self) -> None:
+            self.first: Node | None = None
 
-            def __init__(self, value, next_node=None):
-                self.value = value
-                self.next = next_node
-
-        def __init__(self):
-            self.first = None
-
-        def __repr__(self):
+        def __repr__(self) -> str:
             return f"< {self._chain_nodes(self.first)}>"
 
-        def _chain_nodes(self, node: Node):
+        def _chain_nodes(self, node: Node | None) -> str:
             if node is None:
                 return ""
             else:
                 return f"{node.value} {self._chain_nodes(node.next)}"
 
-        def display(self):
+        def display(self) -> None:
             """Print the list."""
             print(self)
 
-        def prepend(self, value):
+        def prepend(self, value: int) -> None:
             """Add a new element to the front of the list."""
-            self.first = self.Node(value, self.first)
+            self.first = Node(value, self.first)
 
-        def pop(self):
+        def pop(self) -> int:
             """Remove the first element from the list and return it."""
             if self.first is None:
                 raise IndexError("Cannot pop from an empty list")
@@ -1133,4 +1133,4 @@ def fixture_test_pipeline_linked_list() -> Problem[bool]:
             self.first = self.first.next
             return value
 
-    return LL
+    return LL  # type: ignore

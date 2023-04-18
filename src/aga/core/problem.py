@@ -40,7 +40,7 @@ class Problem(Generic[Output]):
         self._groups: list[_TestInputGroup[Output]] = []
         self.is_script = is_script
 
-    def add_test_case(self, param: Optional[_TestParam]) -> None:
+    def add_test_case(self, param: _TestParam) -> None:
         """Add a test case to the current group.
 
         Student solutions will be checked against the golden solution; i.e., this method

@@ -10,7 +10,6 @@ from typing import (
     Callable,
     Dict,
     Generic,
-    Optional,
     Sequence,
     Tuple,
     TypeVar,
@@ -158,7 +157,7 @@ class _TestInputs(TestCase, Generic[Output]):
 
     def __init__(
         self,
-        aga_param: Optional[_TestParam],
+        aga_param: _TestParam,
         mock_input: bool,
     ) -> None:
         super().__init__()
@@ -214,7 +213,7 @@ class _TestInputs(TestCase, Generic[Output]):
         self.aga_kwargs.name = name
 
     def _eval(
-        self, answer: Callable[..., Any] | Type, check_output: bool = False
+        self, answer: Callable[..., Any] | Type[Any], check_output: bool = False
     ) -> Tuple[None | str, Any]:
         """Evaluate func on the arguments."""
         # deepcopy in case the student submission mutates arguments; we don't want it to
@@ -287,8 +286,8 @@ class _TestInputs(TestCase, Generic[Output]):
 
     def _assert_eq(
         self,
-        expected: Output,
-        got: Output,
+        expected: Any,
+        got: Any,
         metadata: TestMetadata,
         msg_format: str,
     ) -> None:

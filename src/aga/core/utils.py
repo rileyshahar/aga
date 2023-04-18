@@ -74,7 +74,7 @@ class MethodCallerFactory:
 
     def __call__(
         self, *args: Any, caller_class: Type[MethodCaller] = MethodCaller, **kwargs: Any
-    ) -> Any:
+    ) -> MethodCaller:
         """Create a MethodCaller instance with the method name."""
         return caller_class(self._attr_name, *args, **kwargs)
 
@@ -83,17 +83,17 @@ class MethodCallerFactory:
 class PropertyGetter:
     """Get an attribute from an instance."""
 
-    def __init__(self, attr_name: str, *_, **__):
+    def __init__(self, attr_name: str, *_: Any, **__: Any) -> None:
         self._attr_name = attr_name
 
-    def __call__(self, instance: Any, previous_result: Any = None):
+    def __call__(self, instance: Any, previous_result: Any = None) -> Any:
         return getattr(instance, self._attr_name)
 
 
 class PropertyGetterFactory:
     """Factory for creating PropertyGetter instances."""
 
-    def __init__(self, attr_name: str):
+    def __init__(self, attr_name: str) -> None:
         self._attr_name = attr_name
 
     @property
@@ -101,7 +101,12 @@ class PropertyGetterFactory:
         """Return the property's name."""
         return self._attr_name
 
-    def __call__(self, *args, getter_class: Type = PropertyGetter, **kwargs):
+    def __call__(
+        self,
+        *args: Any,
+        getter_class: Type[PropertyGetter] = PropertyGetter,
+        **kwargs: Any,
+    ) -> PropertyGetter:
         """Create a PropertyGetter instance with the attribute name."""
         return getter_class(self._attr_name, *args, **kwargs)
 
@@ -110,7 +115,7 @@ class PropertyGetterFactory:
 class Initializer(MethodCaller):
     """Call the __init__ method on an instance."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__("__call__", *args, **kwargs)
 
 

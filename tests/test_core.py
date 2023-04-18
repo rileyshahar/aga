@@ -7,7 +7,7 @@ from typing import Dict, Any
 import pytest
 from aga import test_cases as _test_cases
 from aga import problem
-from aga.core import param
+from aga.core import param, Problem
 from aga.core.suite import _TestInputs
 from aga.cli.app import _check_problem
 from aga.core.utils import CaptureOut
@@ -38,7 +38,7 @@ class TestTestCases:
             aga_override_test=tester,
             aga_description="test description",
         )
-        test_input = _TestInputs(test_param, mock_input=True)
+        test_input: _TestInputs[None] = _TestInputs(test_param, mock_input=True)
         assert test_input.param
         assert test_input.args == (3, 4)
         assert test_input.kwargs == {"y": 4}
@@ -208,6 +208,6 @@ class TestTestCases:
 
         assert stdout.value == print_value
 
-    def test_pipeline(self, test_pipeline_linked_list) -> None:
+    def test_pipeline(self, test_pipeline_linked_list: Problem[None]) -> None:
         """Test that the pipeline decorator works."""
         test_pipeline_linked_list.check()
