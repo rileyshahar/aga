@@ -13,6 +13,7 @@ from typing import (
     TYPE_CHECKING,
     TypeVar,
 )
+from enum import Enum
 
 Output = TypeVar("Output")
 
@@ -20,17 +21,33 @@ Output = TypeVar("Output")
 if TYPE_CHECKING:
     from .problem import Problem
 
-AGA_RESERVED_KEYWORDS = {
-    "aga_expect",
-    "aga_expect_stdout",
-    "aga_hidden",
-    "aga_name",
-    "aga_weight",
-    "aga_value",
-    "aga_extra_credit",
-    "aga_override_check",
-    "aga_override_test",
-    "aga_description",
+
+class AgaReservedKeywords(Enum):
+    aga_expect = "aga_expect"
+    aga_expect_stdout = "aga_expect_stdout"
+    aga_hidden = "aga_hidden"
+    aga_name = "aga_name"
+    aga_weight = "aga_weight"
+    aga_value = "aga_value"
+    aga_extra_credit = "aga_extra_credit"
+    aga_override_check = "aga_override_check"
+    aga_override_test = "aga_override_test"
+    aga_description = "aga_description"
+    aga_is_pipeline = "aga_is_pipeline"
+
+
+DEFAULT_AGA_RESERVED_VALUES = {
+    "aga_expect": None,
+    "aga_expect_stdout": None,
+    "aga_hidden": False,
+    "aga_name": None,
+    "aga_weight": 1,
+    "aga_value": 0.0,
+    "aga_extra_credit": 0.0,
+    "aga_override_check": None,
+    "aga_override_test": None,
+    "aga_description": None,
+    "aga_is_pipeline": False,
 }
 
 
@@ -41,20 +58,120 @@ __all__ = [
     "test_cases_params",
     "test_cases_zip",
     "test_cases_product",
+    "AgaReservedKeywords",
+    "AgaKeywordContainer",
 ]
 
 
-def _check_reserved_keyword(kwd: str) -> None:
+def _check_default_values() -> None:
     """Raise an error if `kwd` is reserved."""
-    if kwd.startswith("aga_") and kwd not in AGA_RESERVED_KEYWORDS:
-        raise ValueError(
-            f'invalid keyword arg "{kwd}" to `test_case`: all keyword args '
-            "beginning `aga_` are reserved"
-        )
+    assert len(AgaReservedKeywords) == len(DEFAULT_AGA_RESERVED_VALUES)
+    for kwd in AgaReservedKeywords:
+        assert kwd.value in DEFAULT_AGA_RESERVED_VALUES
 
 
-class _TestParam:
+_check_default_values()
+
+
+class AgaKeywordContainer:
+    def __init__(self, **kwargs: Any):
+        self.aga_kwargs: Dict[str, Any] = kwargs
+
+    @property
+    def aga_kwargs(self) -> Dict[str, Any]:
+        """Return the aga_* keyword arguments of the test."""
+        return self._aga_kwargs
+
+    @aga_kwargs.setter
+    def aga_kwargs(self, kwargs: Dict[str, Any]) -> None:
+        """Set the aga_* keyword arguments of the test."""
+        self._aga_kwargs = kwargs
+        self.ensure_aga_kwargs()
+
+    def ensure_aga_kwargs(self):
+        """Ensure that the aga_* keywords are handled correct."""
+        for k in self.aga_kwargs:
+            try:
+                AgaReservedKeywords(k)
+            except ValueError as e:
+                raise ValueError(f'invalid kwargs "{k}" in a test param') from e
+        return self
+
+    def update_aga_kwargs(self, **kwargs: Any):
+        """Update the keyword arguments to be passed to the functions under test."""
+        self.aga_kwargs.update(kwargs)
+        self.ensure_aga_kwargs()
+        return self
+
+    def ensure_default_aga_values(self):
+        self.aga_kwargs = {**DEFAULT_AGA_RESERVED_VALUES, **self.aga_kwargs}
+        return self
+
+    @property
+    def description(self) -> str | None:
+        """Get the description of the test case."""
+        return self.aga_kwargs[AgaReservedKeywords.aga_description.value]
+
+    @description.setter
+    def description(self, desc: str | None) -> None:
+        """Set the description of the test case."""
+        self.aga_kwargs[AgaReservedKeywords.aga_description.value] = desc
+
+    @property
+    def name(self) -> str | None:
+        """Get the name of the test case."""
+        return self.aga_kwargs[AgaReservedKeywords.aga_name.value]
+
+    @name.setter
+    def name(self, name: str | None) -> None:
+        """Set the name of the test case."""
+        self.aga_kwargs[AgaReservedKeywords.aga_name.value] = name
+
+    @property
+    def override_test(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_override_test.value]
+
+    @property
+    def override_check(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_override_check.value]
+
+    @property
+    def is_pipeline(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_is_pipeline.value]
+
+    @property
+    def weight(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_weight.value]
+
+    @property
+    def value(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_value.value]
+
+    @property
+    def extra_credit(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_extra_credit.value]
+
+    @property
+    def hidden(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_hidden.value]
+
+    @property
+    def expect(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_expect.value]
+
+    @property
+    def expect_stdout(self):
+        return self.aga_kwargs[AgaReservedKeywords.aga_expect_stdout.value]
+
+    def aga_kwargs_repr(self, sep: str = ",") -> str:
+        """Return a string representation of the test's aga_* keyword arguments."""
+        return sep.join(k + "=" + repr(v) for k, v in self.aga_kwargs.items())
+
+
+class _TestParam(AgaKeywordContainer):
     __slots__ = ["_args", "_kwargs", "_aga_kwargs"]
+
+    pipeline: ClassVar[partial[_TestParam]]
 
     def __init__(self, *args: Any, **kwargs: Any):
         r"""Declare a specific test case/param for some problem.
@@ -99,6 +216,8 @@ class _TestParam:
         aga_override_test : Callable[[TestCase, Callable[T], Callable[T]], None] | None
             A function which overrides the entire test behavior of the library. See
             :ref:`Overriding the Entire Test` for more.
+        aga_is_pipeline: bool
+            If True, the test case will be run through as a pipeline.
         kwargs :
             Keyword arguments to be passed to the functions under test. Any keyword
             starting with aga\_ is reserved.
@@ -108,30 +227,44 @@ class _TestParam:
         Callable[[Problem[T]], Problem[T]]
             A decorator which adds the test case to a problem.
         """
-        self._args = args
-        self._kwargs = kwargs
-        self._aga_kwargs = {
-            k: kwargs.pop(k) for k in AGA_RESERVED_KEYWORDS if k in kwargs
-        }
+        super().__init__(
+            **{
+                k.value: kwargs.pop(k.value)
+                for k in AgaReservedKeywords
+                if k.value in kwargs
+            }
+        )
+        self.kwargs = kwargs
+        self.args = args
 
     @property
     def args(self) -> Tuple[Any, ...]:
         """Return the arguments to be passed to the functions under test."""
         return self._args
 
+    @args.setter
+    def args(self, args: Tuple[Any, ...]) -> None:
+        """Set the arguments to be passed to the functions under test."""
+        self._args = args
+
     @property
     def kwargs(self) -> Dict[str, Any]:
         """Return the keyword arguments to be passed to the functions under test."""
         return self._kwargs
 
-    @property
-    def aga_kwargs(self) -> Dict[str, Any]:
-        """Return the aga_* keyword arguments of the test."""
-        return self._aga_kwargs
+    @kwargs.setter
+    def kwargs(self, kwargs: Dict[str, Any]) -> None:
+        """Set the keyword arguments to be passed to the functions under test."""
+        self._kwargs = kwargs
+        self.ensure_valid_kwargs()
 
-    def update_aga_kwargs(self, **kwargs: Any) -> _TestParam:
-        """Update the keyword arguments to be passed to the functions under test."""
-        self._aga_kwargs.update(kwargs)
+    def ensure_valid_kwargs(self):
+        """Ensure that the aga_* keywords are handled correct."""
+        for k in self.kwargs:
+            if k.startswith("aga_"):
+                raise ValueError(
+                    f'aga keyword "{k}" should not be in kwargs of a test param'
+                )
         return self
 
     def args_repr(self, sep: str = ",") -> str:
@@ -147,29 +280,16 @@ class _TestParam:
         """Return sep if both exist, "" otherwise."""
         return self.args and self.kwargs and sep or ""
 
-    def aga_kwargs_repr(self, sep: str = ",") -> str:
-        """Return a string representation of the test's aga_* keyword arguments."""
-        return sep.join(k + "=" + repr(v) for k, v in self.aga_kwargs.items())
-
     def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
         """Generate a test case for the given problem."""
-        self.check_validity()
+        self.ensure_default_aga_values().ensure_valid_kwargs().ensure_aga_kwargs()
 
-        prob.add_test_case(
-            aga_param=self,
-            **self._aga_kwargs,
-        )
+        prob.add_test_case(param=self)
 
         return prob
 
-    def check_validity(self) -> None:
-        """Check if the test case is valid."""
-        # check that kwargs doesn't contain any reserved keywords
-        for kwd in self.kwargs:
-            _check_reserved_keyword(kwd)
-
     def __call__(self, prob: Problem[Output]) -> Problem[Output]:
-        """Add the test case to the given problem."""
+        """Add the test case to the given as a decorator."""
         return self.generate_test_case(prob)
 
     def __str__(self) -> str:
@@ -183,6 +303,9 @@ class _TestParam:
         )
 
 
+_TestParam.pipeline = partial(
+    _TestParam, aga_is_pipeline=True
+)  # pylint: disable=invalid-name
 param = _TestParam  # pylint: disable=invalid-name
 test_case = _TestParam  # pylint: disable=invalid-name
 
@@ -243,7 +366,9 @@ class _TestParams:
 
         # pop aga keywords out
         aga_kwargs_dict = {
-            kwd: kwargs.pop(kwd) for kwd in AGA_RESERVED_KEYWORDS if kwd in kwargs
+            kwd.value: kwargs.pop(kwd.value)
+            for kwd in AgaReservedKeywords
+            if kwd.value in kwargs
         }
 
         if aga_params:
@@ -364,6 +489,7 @@ class _TestParams:
             final_param.update_aga_kwargs(**kwargs)
 
     def __call__(self, prob: Problem[Output]) -> Problem[Output]:
+        """Generate the test cases as a decorator."""
         for final_param in self.final_params:
             prob = final_param.generate_test_case(prob)
 

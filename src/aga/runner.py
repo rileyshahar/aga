@@ -262,7 +262,7 @@ def load_and_run(
     """Load the submission and then run the suite, returning the output.
 
     The path can be either a directory, which will be searched without recurring into
-    subdirctories, or a single file. This method handles errors from missing or invalid
+    subdirectories, or a single file. This method handles errors from missing or invalid
     submissions.
     """
     try:

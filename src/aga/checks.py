@@ -1,32 +1,15 @@
 """Additional checks and filters for problems."""
+from __future__ import annotations
 import ast
 import inspect
-from functools import wraps
-from io import StringIO
 from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 from unittest import TestCase
-from unittest.mock import patch
 
-__all__ = ("with_captured_stdout", "Site", "Disallow")
+__all__ = ("Site", "Disallow")
 
 Output = TypeVar("Output")
 
 Site = tuple[str, int]
-
-
-def with_captured_stdout(
-    func: Callable[..., Output]
-) -> Callable[..., tuple[str, Output]]:
-    """Run func, returning its stdout and normal return value."""
-
-    @wraps(func)
-    def inner(*args: Any, **kwargs: Any) -> tuple[str, Any]:
-        with patch("sys.stdout", new_callable=StringIO) as stdout:
-            func_out = func(*args, **kwargs)
-
-        return stdout.getvalue(), func_out
-
-    return inner
 
 
 class Disallow:
@@ -105,7 +88,6 @@ class Disallow:
         """Search for disallowed AST objects in a source string."""
         # Walk through each AST node (with no guarantee of order)
         for node in ast.walk(ast.parse(src)):
-
             # handle function calls
             if self._functions != [] and isinstance(node, ast.Call):
                 use = _check_function(node.func, self._functions)  # type: ignore

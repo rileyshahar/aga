@@ -14,12 +14,13 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
+    Type,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
-from .parameter import _TestParam
-from ..checks import with_captured_stdout
+from .parameter import _TestParam, AgaKeywordContainer
+from .utils import CaptureOut
 from ..config import AgaConfig, AgaTestConfig
 from ..score import Prize, ScoredPrize, ScoreInfo, compute_scores
 from ..util import text_diff
@@ -109,16 +110,21 @@ class AgaTestCase(TestCase):
     @property
     def name(self) -> str:
         """Format the name of the test case."""
-        return self._test_input.name or self._metadata.config.name_fmt.format(
-            args=self._test_input.param.args_repr(self._metadata.config.name_sep),
-            kwargs=self._test_input.param.kwargs_repr(self._metadata.config.name_sep),
-            sep=self._test_input.param.sep_repr(self._metadata.config.name_sep),
+        return (
+            self._test_input.aga_kwargs.name
+            or self._metadata.config.name_fmt.format(
+                args=self._test_input.param.args_repr(self._metadata.config.name_sep),
+                kwargs=self._test_input.param.kwargs_repr(
+                    self._metadata.config.name_sep
+                ),
+                sep=self._test_input.param.sep_repr(self._metadata.config.name_sep),
+            )
         )
 
     @property
     def description(self) -> str | None:
         """Get the problem's description."""
-        return self._test_input.description
+        return self._test_input.aga_kwargs.description
 
 
 class AgaTestSuite(TestSuite):
@@ -153,50 +159,15 @@ class _TestInputs(TestCase, Generic[Output]):
 
     def __init__(
         self,
-        *args: Any,
-        aga_expect: Optional[Output],
-        aga_expect_stdout: Optional[str | Sequence[str]],
-        aga_hidden: bool,
-        aga_name: Optional[str],
-        aga_weight: int,
-        aga_value: float,
-        aga_extra_credit: float,
-        aga_mock_input: bool,
-        aga_override_check: Optional[
-            Callable[[_TestInputs[Output], Output, Output], None]
-        ],
-        aga_override_test: Optional[
-            Callable[
-                [_TestInputs[Output], Callable[..., Output], Callable[..., Output]],
-                None,
-            ]
-        ],
-        aga_description: Optional[str],
-        aga_param: Optional[_TestParam] = None,
-        **kwargs: Any,
+        aga_param: Optional[_TestParam],
+        mock_input: bool,
     ) -> None:
         super().__init__()
-        self._name = aga_name
-        self._hidden = aga_hidden
-        self._mock_input = aga_mock_input
-        self._expect = aga_expect
-        self._expect_stdout = aga_expect_stdout
-        self._override_check = aga_override_check
-        self._override_test = aga_override_test
-        self._description = aga_description
-        self.score_info = ScoreInfo(aga_weight, aga_value, aga_extra_credit)
-
-        if aga_param:
-            if args or kwargs:
-                raise ValueError(
-                    "aga_param must be used without any positional or keyword "
-                    "argument, but got \n"
-                    f"    args: {args}\n"
-                    f"    kwargs: {kwargs}"
-                )
-            self._param: _TestParam = aga_param
-        else:
-            self._param = _TestParam(*args, **kwargs)
+        self._mock_input = mock_input
+        self._param: _TestParam = aga_param
+        self.score_info = ScoreInfo(
+            self.aga_kwargs.weight, self.aga_kwargs.value, self.aga_kwargs.extra_credit
+        )
 
     @property
     def args(self) -> Tuple[Any, ...]:
@@ -214,36 +185,55 @@ class _TestInputs(TestCase, Generic[Output]):
         return self._param
 
     @property
+    def aga_kwargs(self) -> AgaKeywordContainer:
+        """Get the keyword arguments for the test case."""
+        return self._param
+
+    @property
+    def mock_input(self) -> bool:
+        """Get the mock input of the test case."""
+        return self._mock_input
+
+    @property
     def description(self) -> str | None:
         """Get the description of the test case."""
-        return self._description
+        return self.aga_kwargs.description
 
     @description.setter
     def description(self, desc: str | None) -> None:
         """Set the description of the test case."""
-        self._description = desc
+        self.aga_kwargs.description = desc
 
     @property
     def name(self) -> str | None:
-        """Get the name of the test case."""
-        return self._name
+        """Get the description of the test case."""
+        return self.aga_kwargs.name
 
     @name.setter
     def name(self, name: str | None) -> None:
-        """Set the name of the test case."""
-        self._name = name
+        """Set the description of the test case."""
+        self.aga_kwargs.name = name
 
-    def _eval(self, func: Callable[..., Any]) -> Any:
+    def _eval(
+        self, answer: Callable[..., Any] | Type, check_output: bool = False
+    ) -> Tuple[None | str, Any]:
         """Evaluate func on the arguments."""
         # deepcopy in case the student submission mutates arguments; we don't want it to
         # mess with our copy of the arguments
-        if self._mock_input:
-            with patch(
-                "builtins.input", generate_custom_input(deepcopy(self.args))
-            ) as _:
-                return func()
-        else:
-            return func(*deepcopy(self.args), **deepcopy(self.kwargs))
+        with CaptureOut(check_output) as stdout:
+            if self.mock_input:
+                with patch(
+                    "builtins.input", generate_custom_input(deepcopy(self.args))
+                ) as _:
+                    result = answer()
+            elif self.aga_kwargs.is_pipeline:
+                result = [None]
+                for arg in self.args:
+                    result.append(arg(answer, result[-1]))
+            else:
+                result = answer(*deepcopy(self.args), **deepcopy(self.kwargs))
+
+        return stdout.value, result
 
     def check(
         self,
@@ -257,37 +247,43 @@ class _TestInputs(TestCase, Generic[Output]):
         if they differ. This means it can be plugged into any unittest TestCase as a
         helper method.
         """
-        if self._override_test:
-            self._override_test(self, golden, under_test)
+        if self.aga_kwargs.override_test:
+            self.aga_kwargs.override_test(self, golden, under_test)
             return
 
-        if self._override_check:
-            self._override_check(self, self._eval(golden), self._eval(under_test))
-            return
-
-        if metadata.check_stdout:
-            golden_stdout, golden_output = self._eval(with_captured_stdout(golden))
-            under_test_stdout, under_test_output = self._eval(
-                with_captured_stdout(under_test)
-            )
-
-            self._assert_eq(
-                golden_stdout,
-                under_test_stdout,
-                metadata,
-                metadata.config.stdout_differ_msg,
-            )
-
+        if self.aga_kwargs.override_check:
+            check = self.aga_kwargs.override_check
         else:
-            golden_output = self._eval(golden)
-            under_test_output = self._eval(under_test)
+            check = type(self)._assert_eq
 
-        self._assert_eq(
-            golden_output, under_test_output, metadata, metadata.config.failure_msg
+        golden_stdout, golden_output = self._eval(golden, metadata.check_stdout)
+        under_test_stdout, under_test_output = self._eval(
+            under_test, metadata.check_stdout
         )
 
+        type(self)._assert_eq(
+            self,
+            golden_stdout,
+            under_test_stdout,
+            metadata,
+            metadata.config.stdout_differ_msg,
+        )
+
+        check(
+            self,
+            golden_output,
+            under_test_output,
+            metadata=metadata,
+            msg_format=metadata.config.failure_msg,
+        )
+
+    @staticmethod
     def _assert_eq(
-        self, expected: Output, got: Output, metadata: TestMetadata, msg_format: str
+        self,
+        expected: Output,
+        got: Output,
+        metadata: TestMetadata,
+        msg_format: str,
     ) -> None:
         """Assert that expected equals got, formatting `msg_format` if not."""
         # we can only diff strings
@@ -325,7 +321,7 @@ class _TestInputs(TestCase, Generic[Output]):
     ) -> AgaTestCase:
         """Generate a TestCase which tests `golden` against `under_test`."""
         metadata = TestMetadata(
-            hidden=self._hidden,
+            hidden=self.aga_kwargs.hidden,
             config=config.test,
             max_score=score,
             check_stdout=config.problem.check_stdout,
@@ -343,15 +339,18 @@ class _TestInputs(TestCase, Generic[Output]):
 
     def check_one(self, golden: Callable[..., Output]) -> None:
         """Check that the golden solution is correct."""
-        if self._expect is not None or self._expect_stdout is not None:
-            if self._override_test:
+        if (
+            self.aga_kwargs.expect is not None
+            or self.aga_kwargs.expect_stdout is not None
+        ):
+            if self.aga_kwargs.override_test:
 
                 def dummy_tester(*_: Any, **__: Any) -> Output:
                     # https://github.com/python/mypy/issues/4805 ehh
-                    return self._expect  # type: ignore
+                    return self.aga_kwargs.expect  # type: ignore
 
                 try:
-                    self._override_test(
+                    self.aga_kwargs.override_test(
                         self,
                         dummy_tester,
                         golden,
@@ -363,13 +362,13 @@ class _TestInputs(TestCase, Generic[Output]):
                         f"{self._param}"
                     ) from e
             else:
-                golden_stdout, golden_output = self._eval(
-                    with_captured_stdout(golden)
-                )  # type: str, Output
-                if self._expect is not None:
-                    if self._override_check is not None:
+                golden_stdout, golden_output = self._eval(golden, check_output=True)
+                if self.aga_kwargs.expect is not None:
+                    if self.aga_kwargs.override_check is not None:
                         try:
-                            self._override_check(self, self._expect, golden_output)
+                            self.aga_kwargs.override_check(
+                                self, self.aga_kwargs.expect, golden_output
+                            )
                         except AssertionError as e:
                             raise AssertionError(
                                 "Your solution doesn't pass the overridden check. \n"
@@ -377,14 +376,15 @@ class _TestInputs(TestCase, Generic[Output]):
                                 f"{self._param}"
                             ) from e
                     else:
-                        self.assertEqual(golden_output, self._expect)
+                        self.assertEqual(golden_output, self.aga_kwargs.expect)
 
-                if self._expect_stdout is not None:
-                    if isinstance(self._expect_stdout, str):
-                        self.assertEqual(golden_stdout, self._expect_stdout)
-                    elif isinstance(self._expect_stdout, Sequence):
+                if self.aga_kwargs.expect_stdout is not None:
+                    if isinstance(self.aga_kwargs.expect_stdout, str):
+                        self.assertEqual(golden_stdout, self.aga_kwargs.expect_stdout)
+                    elif isinstance(self.aga_kwargs.expect_stdout, Sequence):
                         self.assertEqual(
-                            golden_stdout.splitlines(), list(self._expect_stdout)
+                            golden_stdout.splitlines(),
+                            list(self.aga_kwargs.expect_stdout),
                         )
 
 
@@ -421,13 +421,13 @@ class _TestInputGroup(Generic[Output]):
         ]
         scores = compute_scores(score_infos, group_score)
 
-        for (score, case) in zip(
+        for score, case in zip(
             scores, self._test_cases
         ):  # type: float, _TestInputs[Output]
             suite.addTest(case.generate_test_case(golden, under_test, score, config))
 
         scored_prizes = []
-        for (score, prize) in zip(reversed(scores), reversed(self._prizes)):
+        for score, prize in zip(reversed(scores), reversed(self._prizes)):
             # reverse scores so we get the ones that correspond to the prizes
             scored_prizes.append(
                 ScoredPrize(prize=prize, max_score=score)  # type: ignore

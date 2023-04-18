@@ -43,44 +43,14 @@ class Problem(Generic[Output]):
         self._groups: list[_TestInputGroup[Output]] = []
         self.is_script = is_script
 
-    def add_test_case(
-        self,
-        *args: Any,
-        aga_expect: Optional[Output] = None,
-        aga_hidden: bool = False,
-        aga_name: Optional[str] = None,
-        aga_weight: int = 1,
-        aga_value: float = 0.0,
-        aga_extra_credit: float = 0.0,
-        aga_expect_stdout: Optional[str | Sequence[str]] = None,
-        aga_override_check: Optional[Callable[[TestCase, Output, Output], None]] = None,
-        aga_override_test: Optional[
-            Callable[[TestCase, Callable[..., Output], Callable[..., Output]], None]
-        ] = None,
-        aga_param: Optional[_TestParam] = None,
-        aga_description: Optional[str] = None,
-        **kwargs: Any,
-    ) -> None:
+    def add_test_case(self, param: Optional[_TestParam]) -> None:
         """Add a test case to the current group.
 
         Student solutions will be checked against the golden solution; i.e., this method
         does _not_ produce a test of the golden solution.
         """
         case: _TestInputs[Output] = _TestInputs(
-            *args,
-            aga_expect=aga_expect,
-            aga_expect_stdout=aga_expect_stdout,
-            aga_hidden=aga_hidden,
-            aga_name=aga_name,
-            aga_weight=aga_weight,
-            aga_value=aga_value,
-            aga_extra_credit=aga_extra_credit,
-            aga_override_check=aga_override_check,
-            aga_override_test=aga_override_test,
-            aga_mock_input=self._config.problem.mock_input,
-            aga_param=aga_param,
-            aga_description=aga_description,
-            **kwargs,
+            param, mock_input=self._config.problem.mock_input
         )
         self._ungrouped_tests.append(case)
 
@@ -145,7 +115,7 @@ class Problem(Generic[Output]):
         scores = compute_scores(score_infos, metadata.total_score)
 
         ret_prizes = []
-        for (score, grp) in zip(scores, groups):
+        for score, grp in zip(scores, groups):
             suite, prizes = grp.generate_test_suite(
                 self._golden, under_test, score, self._config
             )

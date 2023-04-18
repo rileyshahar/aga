@@ -10,6 +10,7 @@ from aga import problem
 from aga.core import param
 from aga.core.suite import _TestInputs
 from aga.cli.app import _check_problem
+from aga.core.utils import CaptureOut
 
 
 def tester(*_: Any) -> None:
@@ -22,7 +23,7 @@ class TestTestCases:
 
     def test_test_input_with_arguments(self) -> None:
         """Test that test_input can be used with arguments."""
-        test_input = _TestInputs(
+        test_param = param(
             3,
             4,
             y=4,
@@ -33,57 +34,14 @@ class TestTestCases:
             aga_weight=True,
             aga_value=True,
             aga_extra_credit=True,
-            aga_mock_input=True,
             aga_override_check=tester,
             aga_override_test=tester,
             aga_description="test description",
         )
+        test_input = _TestInputs(test_param, mock_input=True)
         assert test_input.param
         assert test_input.args == (3, 4)
         assert test_input.kwargs == {"y": 4}
-        assert not test_input.param.aga_kwargs
-
-    def test_test_input_with_param_and_arguments(self) -> None:
-        """Test that test_input cannot be used with param and arguments."""
-
-        with pytest.raises(
-            ValueError, match="aga_param must be used without any positional or keyword"
-        ):
-            _TestInputs(
-                3,
-                4,  # additional *args
-                aga_param=param(1, 2),  # with aga_param
-                aga_expect=True,
-                aga_expect_stdout="1",
-                aga_hidden=True,
-                aga_name="test",
-                aga_weight=True,
-                aga_value=True,
-                aga_extra_credit=True,
-                aga_mock_input=True,
-                aga_override_check=tester,
-                aga_override_test=tester,
-                aga_description="test description",
-            )
-
-        with pytest.raises(
-            ValueError, match="aga_param must be used without any positional or keyword"
-        ):
-            _TestInputs(
-                aga_param=param(1, 2),  # aga_param
-                aga_expect=True,
-                aga_expect_stdout="1",
-                aga_hidden=True,
-                aga_name="test",
-                aga_weight=True,
-                aga_value=True,
-                aga_extra_credit=True,
-                aga_mock_input=True,
-                aga_override_check=tester,
-                aga_override_test=tester,
-                aga_description="test description",
-                some_arg=10,  # with additional keyword args
-            )
 
     def test_zip_arg_length_and_kwargs_length_not_match(self) -> None:
         """Test that the length of the zipped args and kwargs must match."""
@@ -234,3 +192,16 @@ class TestTestCases:
             def add_two(x: int, y: int) -> int:
                 """Add two numbers."""
                 return x + y
+
+    def test_capture_out_no_capture(self) -> None:
+        with CaptureOut(False) as c:
+            print("some stdout")
+
+        assert c.value is None
+
+    def test_capture_out_with_capture(self) -> None:
+        print_value = "some stdout here"
+        with CaptureOut(True) as c:
+            print(print_value, end="")
+
+        assert c.value == print_value

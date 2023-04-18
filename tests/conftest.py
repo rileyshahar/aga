@@ -17,13 +17,15 @@ from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 import aga
-from aga import group, problem, test_case, test_cases
+from aga import group, problem, test_case, test_cases, param
 from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
-from aga.core.suite import _TestInputs
+from aga.core.suite import _TestInputs, TestMetadata
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
+
+# from aga.utils.attrs import MethodCaller
 
 SOURCES = {
     "square_problem": """
@@ -165,7 +167,7 @@ def _make_source_fixture(source: str, name: str) -> None:
     setattr(module, name, inner)
 
 
-for (_name, _source) in SOURCES.items():
+for _name, _source in SOURCES.items():
     _make_source_fixture(_source, _name)
 
 
@@ -811,7 +813,13 @@ def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
 def fixture_higher_order() -> Problem[Callable[[int], int]]:
     """Generate a problem which tests a higher-order function."""
 
-    def _make_n_check(case, golden, student):  # type: ignore
+    def _make_n_check(
+        case,
+        golden,
+        student,
+        metadata: TestMetadata,
+        msg_format: str,
+    ):  # type: ignore
         # here `golden` and `student` are the inner functions returned by the
         # submissions, so they have type int -> int`
         for i in range(10):
@@ -1055,3 +1063,27 @@ def fixture_override_description() -> Problem[bool]:
         return x % 2 == 0
 
     return is_even
+
+
+# @pytest.fixture(name="test_pipeline_linked_list")
+# def fixture_test_pipeline_linked_list() -> Problem[bool]:
+#     """Generate a problem problem using pipeline."""
+#
+#     init = MethodCaller("__init__")
+#
+#     @test_case.pipeline(
+#         param(
+#             init,
+#         )
+#     )
+#     @problem()
+#     class LL:
+#         class Node:
+#             def __init__(self, value, next_node=None):
+#                 self.value = value
+#                 self.next = next_node
+#
+#         def __init__(self):
+#             self.first = None
+#
+#     return LL
