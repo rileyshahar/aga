@@ -20,7 +20,7 @@ from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
 from .parameter import _TestParam, AgaKeywordContainer
-from .utils import CaptureOut
+from .utils import CaptureOut, initializer
 from ..config import AgaConfig, AgaTestConfig
 from ..score import Prize, ScoredPrize, ScoreInfo, compute_scores
 from ..util import text_diff
@@ -146,7 +146,6 @@ def generate_custom_input(input_list: Iterable[str]) -> Callable[[Any], str]:
     return _custom_input
 
 
-# pylint: disable=too-many-instance-attributes
 class _TestInputs(TestCase, Generic[Output]):
     """A single set of test inputs for a problem.
 
@@ -228,8 +227,17 @@ class _TestInputs(TestCase, Generic[Output]):
                     result = answer()
             elif self.aga_kwargs.is_pipeline:
                 result = [None]
-                for arg in self.args:
-                    result.append(arg(answer, result[-1]))
+                if len(self.args) > 0:
+                    first_process = self.args[0]
+                    pipeline_processes = self.args
+
+                    if first_process is initializer:
+                        answer = first_process(answer)
+                        result.append(None)
+                        pipeline_processes = self.args[1:]
+
+                    for process in pipeline_processes:
+                        result.append(process(answer, result[-1]))
             else:
                 result = answer(*deepcopy(self.args), **deepcopy(self.kwargs))
 
@@ -363,11 +371,22 @@ class _TestInputs(TestCase, Generic[Output]):
                     ) from e
             else:
                 golden_stdout, golden_output = self._eval(golden, check_output=True)
+
+                # compare output
                 if self.aga_kwargs.expect is not None:
+                    compared_expect_out = self.aga_kwargs.expect
+                    if self.aga_kwargs.is_pipeline:
+                        golden_output = golden_output[1:]
+                        if isinstance(
+                            self.aga_kwargs.expect, Sequence
+                        ) and not isinstance(self.aga_kwargs.expect, str):
+                            compared_expect_out = list(self.aga_kwargs.expect)
+
+                    # if check is overridden, use it
                     if self.aga_kwargs.override_check is not None:
                         try:
                             self.aga_kwargs.override_check(
-                                self, self.aga_kwargs.expect, golden_output
+                                self, compared_expect_out, golden_output
                             )
                         except AssertionError as e:
                             raise AssertionError(
@@ -378,14 +397,22 @@ class _TestInputs(TestCase, Generic[Output]):
                     else:
                         self.assertEqual(golden_output, self.aga_kwargs.expect)
 
+                # compare stdout
                 if self.aga_kwargs.expect_stdout is not None:
                     if isinstance(self.aga_kwargs.expect_stdout, str):
-                        self.assertEqual(golden_stdout, self.aga_kwargs.expect_stdout)
-                    elif isinstance(self.aga_kwargs.expect_stdout, Sequence):
-                        self.assertEqual(
-                            golden_stdout.splitlines(),
-                            list(self.aga_kwargs.expect_stdout),
+                        compared_golden_stdout = golden_stdout
+                        compared_expected_stdout = self.aga_kwargs.expect_stdout
+                    elif isinstance(
+                        self.aga_kwargs.expect_stdout, Sequence
+                    ) and isinstance(golden_stdout, str):
+                        compared_golden_stdout = golden_stdout.splitlines()
+                        compared_expected_stdout = list(self.aga_kwargs.expect_stdout)
+                    else:
+                        raise TypeError(
+                            "expect_stdout must be a string or a sequence of strings"
                         )
+
+                    self.assertEqual(compared_expected_stdout, compared_golden_stdout)
 
 
 class _TestInputGroup(Generic[Output]):

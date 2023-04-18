@@ -4,10 +4,16 @@ from __future__ import annotations
 
 from contextlib import redirect_stdout
 from io import StringIO
+from typing import Any, Type
 from unittest.mock import patch
 
 
-__all__ = ("CaptureOut", "MethodCaller", "MethodCallerFactory")
+__all__ = (
+    "CaptureOut",
+    "MethodCaller",
+    "MethodCallerFactory",
+    "initializer",
+)
 
 
 class CaptureOut:
@@ -47,7 +53,7 @@ class MethodCaller:
         self._args = args
         self._kwargs = kwargs
 
-    def __call__(self, instance):
+    def __call__(self, instance: Any, previous_result: Any = None):
         return getattr(instance, self._attr_name)(*self._args, **self._kwargs)
 
 
@@ -59,5 +65,33 @@ class MethodCallerFactory:
     def attr_name(self) -> str:
         return self._attr_name
 
-    def __call__(self, *args, **kwargs):
-        return MethodCaller(self._attr_name, *args, **kwargs)
+    def __call__(self, *args, caller_class: Type = MethodCaller, **kwargs):
+        return caller_class(self._attr_name, *args, **kwargs)
+
+
+class PropertyGetter:
+    def __init__(self, attr_name: str, *_, **__):
+        self._attr_name = attr_name
+
+    def __call__(self, instance: Any, previous_result: Any = None):
+        return getattr(instance, self._attr_name)
+
+
+class PropertyGetterFactory:
+    def __init__(self, attr_name: str):
+        self._attr_name = attr_name
+
+    @property
+    def attr_name(self) -> str:
+        return self._attr_name
+
+    def __call__(self, *args, getter_class: Type = PropertyGetter, **kwargs):
+        return getter_class(self._attr_name, *args, **kwargs)
+
+
+class Initializer(MethodCaller):
+    def __init__(self, *args, **kwargs):
+        super().__init__("__call__", *args, **kwargs)
+
+
+initializer = Initializer()

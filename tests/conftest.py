@@ -17,11 +17,12 @@ from _pytest.config import Config
 from pytest_lazyfixture import lazy_fixture  # type: ignore
 
 import aga
-from aga import group, problem, test_case, test_cases, param
+from aga import group, problem, test_case, test_cases
 from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
 from aga.core.suite import _TestInputs, TestMetadata
+from aga.core.utils import MethodCallerFactory, initializer
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
 
@@ -1065,25 +1066,63 @@ def fixture_override_description() -> Problem[bool]:
     return is_even
 
 
-# @pytest.fixture(name="test_pipeline_linked_list")
-# def fixture_test_pipeline_linked_list() -> Problem[bool]:
-#     """Generate a problem problem using pipeline."""
-#
-#     init = MethodCaller("__init__")
-#
-#     @test_case.pipeline(
-#         param(
-#             init,
-#         )
-#     )
-#     @problem()
-#     class LL:
-#         class Node:
-#             def __init__(self, value, next_node=None):
-#                 self.value = value
-#                 self.next = next_node
-#
-#         def __init__(self):
-#             self.first = None
-#
-#     return LL
+@pytest.fixture(name="test_pipeline_linked_list")
+def fixture_test_pipeline_linked_list() -> Problem[bool]:
+    """Generate a problem problem using pipeline."""
+
+    prepend = MethodCallerFactory("prepend")
+    display = MethodCallerFactory("display")
+    pop = MethodCallerFactory("pop")
+
+    actions = {
+        initializer: None,
+        prepend(10): None,
+        display(): None,
+        prepend(20): None,
+        display(): None,
+        prepend(30): None,
+        display(): None,
+        pop(): 30,
+        pop(): 20,
+        pop(): 10,
+    }
+
+    @test_case.pipeline(
+        *actions.keys(),
+        aga_expect_stdout="< 10 >\n< 20 10 >\n< 30 20 10 >\n",
+        aga_expect=list(actions.values()),
+    )
+    @problem()
+    class LL:
+        class Node:
+            def __init__(self, value, next_node=None):
+                self.value = value
+                self.next = next_node
+
+        def __init__(self):
+            self.first = None
+
+        def __repr__(self):
+            return f"< {self._chain_nodes(self.first)}>"
+
+        def _chain_nodes(self, node: Node):
+            if node is None:
+                return ""
+            else:
+                return f"{node.value} {self._chain_nodes(node.next)}"
+
+        def display(self):
+            print(self)
+
+        def prepend(self, value):
+            self.first = self.Node(value, self.first)
+
+        def pop(self):
+            if self.first is None:
+                raise IndexError("Cannot pop from an empty list")
+            else:
+                value = self.first.value
+                self.first = self.first.next
+                return value
+
+    return LL

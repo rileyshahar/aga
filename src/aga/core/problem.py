@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 from typing import (
-    Any,
     Callable,
     Generic,
     Optional,
-    Sequence,
     TYPE_CHECKING,
     TypeVar,
 )
-from unittest import TestCase
 
 from .suite import _TestInputs, _TestInputGroup, AgaTestSuite, SubmissionMetadata
 from ..config import AgaConfig

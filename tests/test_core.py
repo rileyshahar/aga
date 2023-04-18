@@ -205,3 +205,6 @@ class TestTestCases:
             print(print_value, end="")
 
         assert c.value == print_value
+
+    def test_pipeline(self, test_pipeline_linked_list) -> None:
+        test_pipeline_linked_list.check()

@@ -12,6 +12,7 @@ from typing import (
     ClassVar,
     TYPE_CHECKING,
     TypeVar,
+    Callable,
 )
 from enum import Enum
 
@@ -128,39 +129,39 @@ class AgaKeywordContainer:
         self.aga_kwargs[AgaReservedKeywords.aga_name.value] = name
 
     @property
-    def override_test(self):
+    def override_test(self) -> Callable | None:
         return self.aga_kwargs[AgaReservedKeywords.aga_override_test.value]
 
     @property
-    def override_check(self):
+    def override_check(self) -> Callable | None:
         return self.aga_kwargs[AgaReservedKeywords.aga_override_check.value]
 
     @property
-    def is_pipeline(self):
+    def is_pipeline(self) -> bool:
         return self.aga_kwargs[AgaReservedKeywords.aga_is_pipeline.value]
 
     @property
-    def weight(self):
+    def weight(self) -> float:
         return self.aga_kwargs[AgaReservedKeywords.aga_weight.value]
 
     @property
-    def value(self):
+    def value(self) -> float:
         return self.aga_kwargs[AgaReservedKeywords.aga_value.value]
 
     @property
-    def extra_credit(self):
+    def extra_credit(self) -> float:
         return self.aga_kwargs[AgaReservedKeywords.aga_extra_credit.value]
 
     @property
-    def hidden(self):
+    def hidden(self) -> bool:
         return self.aga_kwargs[AgaReservedKeywords.aga_hidden.value]
 
     @property
-    def expect(self):
+    def expect(self) -> Any:
         return self.aga_kwargs[AgaReservedKeywords.aga_expect.value]
 
     @property
-    def expect_stdout(self):
+    def expect_stdout(self) -> List | str | None:
         return self.aga_kwargs[AgaReservedKeywords.aga_expect_stdout.value]
 
     def aga_kwargs_repr(self, sep: str = ",") -> str:
