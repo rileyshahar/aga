@@ -285,7 +285,6 @@ class _TestInputs(TestCase, Generic[Output]):
             msg_format=metadata.config.failure_msg,
         )
 
-    @staticmethod
     def _assert_eq(
         self,
         expected: Output,
@@ -370,49 +369,50 @@ class _TestInputs(TestCase, Generic[Output]):
                         f"{self._param}"
                     ) from e
             else:
-                golden_stdout, golden_output = self._eval(golden, check_output=True)
+                self._default_check(golden)
 
-                # compare output
-                if self.aga_kwargs.expect is not None:
-                    compared_expect_out = self.aga_kwargs.expect
-                    if self.aga_kwargs.is_pipeline:
-                        golden_output = golden_output[1:]
-                        if isinstance(
-                            self.aga_kwargs.expect, Sequence
-                        ) and not isinstance(self.aga_kwargs.expect, str):
-                            compared_expect_out = list(self.aga_kwargs.expect)
+    def _default_check(self, golden: Callable[..., Output]) -> None:
+        """Check that the golden solution is correct."""
+        golden_stdout, golden_output = self._eval(golden, check_output=True)
 
-                    # if check is overridden, use it
-                    if self.aga_kwargs.override_check is not None:
-                        try:
-                            self.aga_kwargs.override_check(
-                                self, compared_expect_out, golden_output
-                            )
-                        except AssertionError as e:
-                            raise AssertionError(
-                                "Your solution doesn't pass the overridden check. \n"
-                                "Test parameters: \n"
-                                f"{self._param}"
-                            ) from e
-                    else:
-                        self.assertEqual(golden_output, self.aga_kwargs.expect)
+        # compare output
+        if self.aga_kwargs.expect is not None:
+            compared_expect_out = self.aga_kwargs.expect
+            if self.aga_kwargs.is_pipeline:
+                golden_output = golden_output[1:]
+                compared_expect_out = list(self.aga_kwargs.expect)
 
-                # compare stdout
-                if self.aga_kwargs.expect_stdout is not None:
-                    if isinstance(self.aga_kwargs.expect_stdout, str):
-                        compared_golden_stdout = golden_stdout
-                        compared_expected_stdout = self.aga_kwargs.expect_stdout
-                    elif isinstance(
-                        self.aga_kwargs.expect_stdout, Sequence
-                    ) and isinstance(golden_stdout, str):
-                        compared_golden_stdout = golden_stdout.splitlines()
-                        compared_expected_stdout = list(self.aga_kwargs.expect_stdout)
-                    else:
-                        raise TypeError(
-                            "expect_stdout must be a string or a sequence of strings"
-                        )
+            # if check is overridden, use it
+            if self.aga_kwargs.override_check is not None:
+                try:
+                    self.aga_kwargs.override_check(
+                        self, compared_expect_out, golden_output
+                    )
+                except AssertionError as e:
+                    raise AssertionError(
+                        "Your solution doesn't pass the overridden check. \n"
+                        "Test parameters: \n"
+                        f"{self._param}"
+                    ) from e
+            else:
+                self.assertEqual(golden_output, self.aga_kwargs.expect)
 
-                    self.assertEqual(compared_expected_stdout, compared_golden_stdout)
+        # compare stdout
+        if self.aga_kwargs.expect_stdout is not None:
+            if isinstance(self.aga_kwargs.expect_stdout, str):
+                compared_golden_stdout = golden_stdout
+                compared_expected_stdout = self.aga_kwargs.expect_stdout
+            elif isinstance(self.aga_kwargs.expect_stdout, Sequence) and isinstance(
+                golden_stdout, str
+            ):
+                compared_golden_stdout = golden_stdout.splitlines()
+                compared_expected_stdout = list(self.aga_kwargs.expect_stdout)
+            else:
+                raise TypeError(
+                    "expect_stdout must be a string or a sequence of strings"
+                )
+
+            self.assertEqual(compared_expected_stdout, compared_golden_stdout)
 
 
 class _TestInputGroup(Generic[Output]):

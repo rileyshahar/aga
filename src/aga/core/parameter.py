@@ -13,6 +13,7 @@ from typing import (
     TYPE_CHECKING,
     TypeVar,
     Callable,
+    TypedDict,
 )
 from enum import Enum
 
@@ -23,7 +24,10 @@ if TYPE_CHECKING:
     from .problem import Problem
 
 
+# pylint: disable=C0103
 class AgaReservedKeywords(Enum):
+    """Reserved keywords for aga."""
+
     aga_expect = "aga_expect"
     aga_expect_stdout = "aga_expect_stdout"
     aga_hidden = "aga_hidden"
@@ -52,6 +56,20 @@ DEFAULT_AGA_RESERVED_VALUES = {
 }
 
 
+class AgaKeywordDictType(TypedDict):
+    aga_expect: None | Any
+    aga_expect_stdout: None | str
+    aga_hidden: bool
+    aga_name: None | str
+    aga_weight: float
+    aga_value: float
+    aga_extra_credit: float
+    aga_override_check: None | Callable[[Any], bool]
+    aga_override_test: None | Callable[[Any], Any]
+    aga_description: None | str
+    aga_is_pipeline: bool
+
+
 __all__ = [
     "test_case",
     "param",
@@ -75,16 +93,18 @@ _check_default_values()
 
 
 class AgaKeywordContainer:
+    """A container for aga_* keyword arguments."""
+
     def __init__(self, **kwargs: Any):
-        self.aga_kwargs: Dict[str, Any] = kwargs
+        self.aga_kwargs: AgaKeywordDictType = kwargs
 
     @property
-    def aga_kwargs(self) -> Dict[str, Any]:
+    def aga_kwargs(self) -> AgaKeywordDictType:
         """Return the aga_* keyword arguments of the test."""
         return self._aga_kwargs
 
     @aga_kwargs.setter
-    def aga_kwargs(self, kwargs: Dict[str, Any]) -> None:
+    def aga_kwargs(self, kwargs: AgaKeywordDictType) -> None:
         """Set the aga_* keyword arguments of the test."""
         self._aga_kwargs = kwargs
         self.ensure_aga_kwargs()
@@ -105,6 +125,7 @@ class AgaKeywordContainer:
         return self
 
     def ensure_default_aga_values(self):
+        """Ensure that the aga_* keywords all have default."""
         self.aga_kwargs = {**DEFAULT_AGA_RESERVED_VALUES, **self.aga_kwargs}
         return self
 
@@ -130,38 +151,47 @@ class AgaKeywordContainer:
 
     @property
     def override_test(self) -> Callable | None:
+        """Get the override_test aga_override_test of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_override_test.value]
 
     @property
     def override_check(self) -> Callable | None:
+        """Get the override_check aga_override_check of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_override_check.value]
 
     @property
     def is_pipeline(self) -> bool:
+        """Get the is_pipeline aga_is_pipeline of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_is_pipeline.value]
 
     @property
     def weight(self) -> float:
+        """Get the weight aga_weight of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_weight.value]
 
     @property
     def value(self) -> float:
+        """Get the value aga_value of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_value.value]
 
     @property
     def extra_credit(self) -> float:
+        """Get the extra credit aga_extra_credit of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_extra_credit.value]
 
     @property
     def hidden(self) -> bool:
+        """Get the hidden aga_hidden of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_hidden.value]
 
     @property
     def expect(self) -> Any:
+        """Get the expected aga_expect of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_expect.value]
 
     @property
     def expect_stdout(self) -> List | str | None:
+        """Get the expected aga_expect_stdout of the test case."""
         return self.aga_kwargs[AgaReservedKeywords.aga_expect_stdout.value]
 
     def aga_kwargs_repr(self, sep: str = ",") -> str:

@@ -814,6 +814,7 @@ def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
 def fixture_higher_order() -> Problem[Callable[[int], int]]:
     """Generate a problem which tests a higher-order function."""
 
+    # pylint: disable=W0613
     def _make_n_check(
         case,
         golden,
@@ -1069,7 +1070,6 @@ def fixture_override_description() -> Problem[bool]:
 @pytest.fixture(name="test_pipeline_linked_list")
 def fixture_test_pipeline_linked_list() -> Problem[bool]:
     """Generate a problem problem using pipeline."""
-
     prepend = MethodCallerFactory("prepend")
     display = MethodCallerFactory("display")
     pop = MethodCallerFactory("pop")
@@ -1094,7 +1094,12 @@ def fixture_test_pipeline_linked_list() -> Problem[bool]:
     )
     @problem()
     class LL:
+        """A linked list for testing."""
+
+        # pylint: disable=too-few-public-methods
         class Node:
+            """A node in a linked list."""
+
             def __init__(self, value, next_node=None):
                 self.value = value
                 self.next = next_node
@@ -1112,17 +1117,20 @@ def fixture_test_pipeline_linked_list() -> Problem[bool]:
                 return f"{node.value} {self._chain_nodes(node.next)}"
 
         def display(self):
+            """Print the list."""
             print(self)
 
         def prepend(self, value):
+            """Add a new element to the front of the list."""
             self.first = self.Node(value, self.first)
 
         def pop(self):
+            """Remove the first element from the list and return it."""
             if self.first is None:
                 raise IndexError("Cannot pop from an empty list")
-            else:
-                value = self.first.value
-                self.first = self.first.next
-                return value
+
+            value = self.first.value
+            self.first = self.first.next
+            return value
 
     return LL

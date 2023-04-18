@@ -194,17 +194,20 @@ class TestTestCases:
                 return x + y
 
     def test_capture_out_no_capture(self) -> None:
-        with CaptureOut(False) as c:
+        """Test that CaptureOut does not capture stdout when taking False."""
+        with CaptureOut(False) as stdout:
             print("some stdout")
 
-        assert c.value is None
+        assert stdout.value is None
 
     def test_capture_out_with_capture(self) -> None:
+        """Test that CaptureOut captures stdout when taking True."""
         print_value = "some stdout here"
-        with CaptureOut(True) as c:
+        with CaptureOut(True) as stdout:
             print(print_value, end="")
 
-        assert c.value == print_value
+        assert stdout.value == print_value
 
     def test_pipeline(self, test_pipeline_linked_list) -> None:
+        """Test that the pipeline decorator works."""
         test_pipeline_linked_list.check()
