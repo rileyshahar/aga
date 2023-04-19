@@ -16,9 +16,6 @@ from aga.runner import TcOutput
 
 Output = TypeVar("Output")
 
-# location of resources file, for testing imports
-RESOURCES_DIR = "aga.gradescope.resources"
-
 
 def get_gs_json(
     problem: Problem[Any],
@@ -554,6 +551,7 @@ def test_json_too_many_matching_symbols(
     example_metadata_file: str,
 ) -> None:
     """Test that the error message is correct."""
+
     # source_dir has no solution for diff, so this should error
     @agaproblem()
     def duplicate() -> None:
