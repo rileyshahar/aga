@@ -86,8 +86,8 @@ class MethodCaller:
 
     def __str__(self) -> str:
         """Return a string representation of the method call."""
-        arg_repr = f'{", ".join(map(str, self.args))}, ' if self.args else ""
-        kwargs = map(lambda k, v: f"{k}={v}", self._kwargs.items())  # type: ignore
+        arg_repr = f'{", ".join(map(repr, self.args))}, ' if self.args else ""
+        kwargs = (f"{k}={repr(v)}" for k, v in self._kwargs.items())  # type: ignore
         kwargs_repr = f'{", ".join(kwargs)}, ' if self._kwargs else ""
         return _ensure_formatting_dot(f"{self._attr_name}({arg_repr}{kwargs_repr})")
 
