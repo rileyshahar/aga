@@ -8,7 +8,7 @@ from importlib.resources import files
 from inspect import getmembers, getsource, ismodule
 from io import TextIOWrapper
 from os.path import join as pathjoin
-from typing import Iterable, Tuple, TypeVar
+from typing import Iterable, Tuple, Any
 from zipfile import ZipFile
 
 import pytest
@@ -20,13 +20,13 @@ from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
 from aga.gradescope.into_zip import _get_setup_shell_by_version, GS_UTILS_RESOURCE_DIR
 
-Output = TypeVar("Output")
+AnyProblem = Problem[Any, Any]
 
 
 @pytest.fixture(name="gradescope_zip")
 def fixture_gradescope_zip(
-    valid_problem: Problem[Output],
-) -> Iterable[Tuple[Problem[Output], str]]:
+    valid_problem: AnyProblem,
+) -> Iterable[Tuple[AnyProblem, str]]:
     """Construct a zip from a problem, returning the problem and the zip path."""
 
     zip_path = into_gradescope_zip(valid_problem)
@@ -38,7 +38,7 @@ def fixture_gradescope_zip(
     os.remove(zip_path)
 
 
-def test_into_gradescope_zip_path(gradescope_zip: Tuple[Problem[Output], str]) -> None:
+def test_into_gradescope_zip_path(gradescope_zip: Tuple[AnyProblem, str]) -> None:
     """Test that into_gradescope_zip puts the zip file at the right place."""
 
     orig_problem, zip_path = gradescope_zip
@@ -46,9 +46,7 @@ def test_into_gradescope_zip_path(gradescope_zip: Tuple[Problem[Output], str]) -
     assert zip_path == f"{orig_problem.name()}.zip"
 
 
-def test_into_gradescope_zip_source(
-    gradescope_zip: tuple[Problem[Output], str]
-) -> None:
+def test_into_gradescope_zip_source(gradescope_zip: tuple[AnyProblem, str]) -> None:
     """Test that into_gradescope_zip archives the library source correctly."""
 
     _, zip_path = gradescope_zip
@@ -79,23 +77,21 @@ def test_into_gradescope_zip_source(
                     assert unzipped_core_source == core_source
 
 
-def test_into_gradescope_zip_problem(
-    gradescope_zip: tuple[Problem[Output], str]
-) -> None:
+def test_into_gradescope_zip_problem(gradescope_zip: tuple[AnyProblem, str]) -> None:
     """Test that into_gradescope_zip pickles the provided problem correctly."""
 
     orig_problem, zip_path = gradescope_zip
 
     with ZipFile(zip_path) as zip_f:
         with zip_f.open("problem.pckl") as problem:
-            problem_loaded = load(problem)  # type: Problem[Output]
+            problem_loaded = load(problem)  # type: AnyProblem
             problem_loaded.check()
             assert problem_loaded.name() == orig_problem.name()
 
 
 @pytest.mark.parametrize("file", ("run_autograder", "setup.py"))
 def test_into_gradescope_zip_run_autograder(
-    gradescope_zip: tuple[Problem[Output], str], file: str
+    gradescope_zip: tuple[AnyProblem, str], file: str
 ) -> None:
     """Test that into_gradescope_zip copies files correctly."""
 
@@ -109,7 +105,7 @@ def test_into_gradescope_zip_run_autograder(
 
 
 def test_into_gradescope_zip_run_autograder_setup_shell_script(
-    gradescope_zip: tuple[Problem[Output], str]
+    gradescope_zip: tuple[AnyProblem, str]
 ) -> None:
     """Test that into_gradescope_zip copies files correctly for setup.sh."""
 
@@ -127,7 +123,7 @@ def test_into_gradescope_zip_run_autograder_setup_shell_script(
         assert zipped_file.read() == src.read()
 
 
-def test_into_gradescope_zip_custom_path(valid_problem: Problem[Output]) -> None:
+def test_into_gradescope_zip_custom_path(valid_problem: AnyProblem) -> None:
     """Test into_gradescope_zip with a custom path."""
 
     try:
@@ -137,7 +133,7 @@ def test_into_gradescope_zip_custom_path(valid_problem: Problem[Output]) -> None
         os.remove("archive.zip")
 
 
-def test_into_gradescope_zip_incorrect_problem(diff_bad_impl: Problem[int]) -> None:
+def test_into_gradescope_zip_incorrect_problem(diff_bad_impl: AnyProblem) -> None:
     """Test into_gradescope_zip with an invalid problem."""
 
     with pytest.raises(InvalidProblem):

@@ -4,7 +4,7 @@ import json
 from os.path import dirname
 from os.path import join as pathjoin
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
@@ -14,11 +14,11 @@ from aga.core import Problem
 from aga.gradescope.main import gradescope_main
 from aga.runner import TcOutput
 
-Output = TypeVar("Output")
+AnyProblem = Problem[Any, Any]
 
 
 def get_gs_json(
-    problem: Problem[Any],
+    problem: AnyProblem,
     source: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -41,7 +41,7 @@ def get_gs_json(
 
 @pytest.fixture(name="gs_json_square")
 def fixture_gs_json_square(
-    square: Problem[int],
+    square: AnyProblem,
     source_square: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -78,7 +78,7 @@ def test_json_test_visibility_square(gs_json_square: Any) -> None:
 
 @pytest.fixture(name="gs_json_square_incorrect")
 def fixture_gs_json_square_incorrect(
-    square: Problem[int],
+    square: AnyProblem,
     source_square_incorrect: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -114,7 +114,7 @@ def test_json_test_output_square_incorrect(gs_json_square_incorrect: Any) -> Non
 
 @pytest.fixture(name="gs_json_square_error")
 def fixture_gs_json_square_error(
-    square: Problem[int],
+    square: AnyProblem,
     source_square_error: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -144,7 +144,7 @@ def test_json_test_output_square_error(gs_json_square_error: Any) -> None:
 
 @pytest.fixture(name="gs_json_square_custom_name")
 def fixture_gs_json_square_custom_name(
-    square_custom_name: Problem[int],
+    square_custom_name: AnyProblem,
     source_square: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -168,7 +168,7 @@ def test_json_test_name_square_custom_name(gs_json_square_custom_name: Any) -> N
 
 
 def test_json_test_score_square_with_weights(
-    square_simple_weighted: Problem[int],
+    square_simple_weighted: AnyProblem,
     source_square_wrong_on_zero: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -189,7 +189,7 @@ def test_json_test_score_square_with_weights(
 
 
 def test_json_test_score_square_grouped(
-    square_grouped: Problem[int],
+    square_grouped: AnyProblem,
     source_square_wrong_on_zero: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -210,7 +210,7 @@ def test_json_test_score_square_grouped(
 
 
 def test_json_square_generated_cases(
-    square_generated_cases: Problem[int],
+    square_generated_cases: AnyProblem,
     source_square_wrong_on_zero: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -236,7 +236,7 @@ def test_json_square_generated_cases(
 
 
 def test_json_diff_generated_cases(
-    diff_generated: Problem[int],
+    diff_generated: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -266,7 +266,7 @@ def test_json_diff_generated_cases(
 
 
 def test_json_pos_zip(
-    pos_zip: Problem[int],
+    pos_zip: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -287,7 +287,7 @@ def test_json_pos_zip(
 
 
 def test_json_pos_zip_with_singleton_aga_args(
-    pos_zip_with_singleton_aga_args: Problem[int],
+    pos_zip_with_singleton_aga_args: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -308,7 +308,7 @@ def test_json_pos_zip_with_singleton_aga_args(
 
 
 def test_json_aga_args_in_product(
-    aga_args_in_product: Problem[int],
+    aga_args_in_product: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -333,7 +333,7 @@ def test_json_aga_args_in_product(
 
 
 def test_json_aga_args_with_kwargs_in_product(
-    aga_args_with_kwargs_in_product: Problem[int],
+    aga_args_with_kwargs_in_product: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -358,7 +358,7 @@ def test_json_aga_args_with_kwargs_in_product(
 
 
 def test_json_aga_args_with_kwargs_in_product_singleton(
-    aga_args_with_kwargs_in_product_singleton: Problem[int],
+    aga_args_with_kwargs_in_product_singleton: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -383,7 +383,7 @@ def test_json_aga_args_with_kwargs_in_product_singleton(
 
 
 def test_json_aga_args_singleton(
-    aga_args_singleton: Problem[int],
+    aga_args_singleton: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -408,7 +408,7 @@ def test_json_aga_args_singleton(
 
 
 def test_json_diff_kwarg_generated_cases_no_product(
-    pos_and_kwd_zip: Problem[int],
+    pos_and_kwd_zip: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -432,7 +432,7 @@ def test_json_diff_kwarg_generated_cases_no_product(
 
 
 def test_json_diff_kwarg_generated_cases(
-    pos_and_kwd_generated: Problem[int],
+    pos_and_kwd_generated: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -462,7 +462,7 @@ def test_json_diff_kwarg_generated_cases(
 
 
 def test_json_diff_kwarg_custom_generator(
-    pos_and_kwd_generator_function: Problem[int],
+    pos_and_kwd_generator_function: AnyProblem,
     source_diff: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -492,7 +492,7 @@ def test_json_diff_kwarg_custom_generator(
 
 
 def test_json_invalid_source(
-    square: Problem[int],
+    square: AnyProblem,
     source_invalid: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -520,7 +520,7 @@ def test_json_invalid_source(
 
 
 def test_json_no_matching_symbol(
-    diff: Problem[int],
+    diff: AnyProblem,
     source_dir: str,
     mocker: MockerFixture,
     tmp_path: Path,
@@ -576,7 +576,7 @@ def test_json_too_many_matching_symbols(
 
 @pytest.fixture(name="gs_json_bad_override_description")
 def fixture_gs_json_override_description(
-    override_description: Problem[int],
+    override_description: AnyProblem,
     source_bad_override_description: str,
     mocker: MockerFixture,
     tmp_path: Path,

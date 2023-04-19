@@ -14,6 +14,7 @@ from unittest import TestResult
 
 from .config import AgaConfig
 from .core import AgaTestCase, AgaTestSuite, Problem, SubmissionMetadata
+from .core.problem import ProblemParamSpec, ProblemOutputType
 from .loader import (
     MultipleScripts,
     NoMatchingSymbol,
@@ -255,7 +256,7 @@ def _run(
 
 
 def load_and_run(
-    problem: Problem[Output],
+    problem: Problem[ProblemParamSpec, ProblemOutputType],
     path: str,
     metadata: SubmissionMetadata,
 ) -> ProblemOutput:
@@ -311,19 +312,23 @@ def _submission_syntax_error_msg(cause: SyntaxError, config: AgaConfig) -> str:
     return config.loader.import_error_msg.format(message=str(cause))
 
 
-def _no_matches_error_msg(problem: Problem[Output]) -> str:
+def _no_matches_error_msg(problem: Problem[ProblemParamSpec, ProblemOutputType]) -> str:
     return problem.config().loader.no_match_msg.format(name=problem.expected_symbol())
 
 
-def _too_many_matches_error_msg(problem: Problem[Output]) -> str:
+def _too_many_matches_error_msg(
+    problem: Problem[ProblemParamSpec, ProblemOutputType]
+) -> str:
     return problem.config().loader.too_many_matches_msg.format(
         name=problem.expected_symbol()
     )
 
 
-def _no_script_error_msg(problem: Problem[Output]) -> str:
+def _no_script_error_msg(problem: Problem[ProblemParamSpec, ProblemOutputType]) -> str:
     return problem.config().loader.no_script_error_msg
 
 
-def _multiple_scripts_error_msg(problem: Problem[Output]) -> str:
+def _multiple_scripts_error_msg(
+    problem: Problem[ProblemParamSpec, ProblemOutputType]
+) -> str:
     return problem.config().loader.multiple_scripts_error_msg

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, Iterable
+from itertools import chain, combinations
 
 import pytest
+
+
 from aga import test_cases as _test_cases
 from aga import (
     test_cases_zip as _test_cases_zip,
@@ -21,6 +24,14 @@ from aga.core.utils import CaptureOut
 
 def tester(*_: Any) -> None:
     """Dummy Tester."""
+
+
+def powerset(iterable: Iterable[Any], min_length: int = 0) -> Iterable[Any]:
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(
+        combinations(s, r) for r in range(min_length, len(s) + 1)
+    )
 
 
 class TestTestCases:
@@ -122,7 +133,7 @@ class TestTestCases:
 
     @pytest.mark.parametrize("test_fn", [_test_cases.params, _test_cases_params])
     def test_aga_params_with_param_obj(
-        self, test_fn: Callable[..., Problem[int]]
+        self, test_fn: Callable[..., Problem[Any, Any]]
     ) -> None:
         """Test that aga_params can be used with param objects."""
 
@@ -132,7 +143,7 @@ class TestTestCases:
             """Add three numbers."""
             return a + b + c
 
-        _check_problem(add_three)  # type: ignore
+        _check_problem(add_three)
 
     def test_aga_test_cases_no_flag(self) -> None:
         """Test that aga_test_cases without a combination flag."""
@@ -163,7 +174,7 @@ class TestTestCases:
         "test_fn", [_test_cases.singular_params, _test_cases_singular_params]
     )
     def test_aga_test_cases_singular_params(
-        self, test_fn: Callable[..., Problem[int]]
+        self, test_fn: Callable[..., Problem[Any, Any]]
     ) -> None:
         """Test that aga_test_cases with aga_params flag."""
 
@@ -176,10 +187,12 @@ class TestTestCases:
             """Test problem."""
             return x * x
 
-        _check_problem(test_problem)  # type: ignore
+        _check_problem(test_problem)
 
     @pytest.mark.parametrize("test_fn", [_test_cases.product, _test_cases_product])
-    def test_aga_test_cases_product(self, test_fn: Callable[..., Problem[int]]) -> None:
+    def test_aga_test_cases_product(
+        self, test_fn: Callable[..., Problem[Any, Any]]
+    ) -> None:
         """Test that aga_test_cases with aga_params flag."""
 
         @test_fn(
@@ -192,10 +205,12 @@ class TestTestCases:
             """Test problem."""
             return x * y
 
-        _check_problem(test_problem)  # type: ignore
+        _check_problem(test_problem)
 
     @pytest.mark.parametrize("test_fn", [_test_cases.zip, _test_cases_zip])
-    def test_aga_test_cases_zip(self, test_fn: Callable[..., Problem[int]]) -> None:
+    def test_aga_test_cases_zip(
+        self, test_fn: Callable[..., Problem[Any, Any]]
+    ) -> None:
         """Test that aga_test_cases with aga_params flag."""
 
         @test_fn(
@@ -208,7 +223,7 @@ class TestTestCases:
             """Test problem."""
             return x * y
 
-        _check_problem(test_problem)  # type: ignore
+        _check_problem(test_problem)
 
     @pytest.mark.parametrize("flags", [{"aga_product": True, "aga_zip": True}, {}])
     def test_zip_or_product_flag_guard(self, flags: Dict[str, bool]) -> None:
@@ -221,11 +236,11 @@ class TestTestCases:
     @pytest.mark.parametrize(
         "flags",
         [
-            {"aga_product": True, "aga_zip": True, "aga_params": True},
-            {"aga_zip": True, "aga_params": True},
-            {"aga_product": True, "aga_params": True},
-            {"aga_product": True, "aga_zip": True},
-            {},
+            {flag: True for flag in flags}
+            for flags in powerset(
+                {"aga_product", "aga_zip", "aga_params", "aga_singular_params"},
+                min_length=2,
+            )
         ],
     )
     def test_aga_test_cases_multiple_flags_fail(self, flags: Dict[str, bool]) -> None:
@@ -233,7 +248,7 @@ class TestTestCases:
         with pytest.raises(
             ValueError,
             match="Exactly many of aga_product, aga_zip, or aga_params are True. "
-            "Only 1 or 0 of the flags is allowed. ",
+            "Only 0 or 1 of the flags is allowed. ",
         ):
 
             @_test_cases([1, 2], [3, 4], **flags)
@@ -284,6 +299,6 @@ class TestTestCases:
 
         assert stdout.value == print_value
 
-    def test_pipeline(self, test_pipeline_linked_list: Problem[None]) -> None:
+    def test_pipeline(self, test_pipeline_linked_list: Problem[Any, Any]) -> None:
         """Test that the pipeline decorator works."""
         test_pipeline_linked_list.check()

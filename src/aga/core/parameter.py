@@ -22,7 +22,7 @@ Output = TypeVar("Output")
 
 
 if TYPE_CHECKING:
-    from .problem import Problem
+    from .problem import Problem, ProblemParamSpec, ProblemOutputType
 
 
 # pylint: disable=C0103
@@ -317,7 +317,9 @@ class _TestParam(AgaKeywordContainer):
         """Return sep if both exist, "" otherwise."""
         return self.args and self.kwargs and sep or ""
 
-    def generate_test_case(self, prob: Problem[Output]) -> Problem[Output]:
+    def generate_test_case(
+        self, prob: Problem[ProblemParamSpec, ProblemOutputType]
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
         """Generate a test case for the given problem."""
         self.ensure_default_aga_values()
         self.ensure_valid_kwargs().ensure_aga_kwargs()  # type: ignore
@@ -326,7 +328,9 @@ class _TestParam(AgaKeywordContainer):
 
         return prob
 
-    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
+    def __call__(
+        self, prob: Problem[ProblemParamSpec, ProblemOutputType]
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
         """Add the test case to the given as a decorator."""
         return self.generate_test_case(prob)
 
@@ -399,10 +403,10 @@ class _TestParams:
         Callable[[Problem[T]], Problem[T]]
             A decorator which adds the test cases to a problem.
         """
-        if aga_params + aga_zip + aga_product > 1:
+        if aga_params + aga_zip + aga_product + aga_singular_params > 1:
             raise ValueError(
                 "Exactly many of aga_product, aga_zip, or aga_params are True. "
-                "Only 1 or 0 of the flags is allowed. \n"
+                "Only 0 or 1 of the flags is allowed. \n"
                 f"You got: "
                 f"aga_product={aga_product}, aga_zip={aga_zip}, aga_params={aga_params}"
             )
@@ -548,7 +552,9 @@ class _TestParams:
         for final_param, kwargs in zip(final_params, aga_kwargs_list):
             final_param.update_aga_kwargs(**kwargs)
 
-    def __call__(self, prob: Problem[Output]) -> Problem[Output]:
+    def __call__(
+        self, prob: Problem[ProblemParamSpec, ProblemOutputType]
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
         """Generate the test cases as a decorator."""
         for final_param in self.final_params:
             prob = final_param.generate_test_case(prob)

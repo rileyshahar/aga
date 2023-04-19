@@ -1,14 +1,15 @@
 """Utilities for easily computing problem score."""
 
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, TypeVar
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
+    from .core.problem import ProblemOutputType, ProblemParamSpec
     from .core import Problem, SubmissionMetadata
     from .runner import TcOutput
 
 
-Output = TypeVar("Output")
 PrizeCriteria = Callable[[list["TcOutput"], "SubmissionMetadata"], tuple[float, str]]
 
 
@@ -76,7 +77,10 @@ def prize(
     weight: int = 1,
     value: float = 0.0,
     extra_credit: float = 0.0,
-) -> Callable[["Problem[Output]"], "Problem[Output]"]:
+) -> Callable[
+    [Problem[ProblemParamSpec, ProblemOutputType]],
+    Problem[ProblemParamSpec, ProblemOutputType],
+]:
     """Add a points prize to the problem.
 
     Parameters
@@ -101,7 +105,9 @@ def prize(
     """
     to_add = Prize(name, criteria, ScoreInfo(weight, value, extra_credit))
 
-    def inner(problem: "Problem[Output]") -> "Problem[Output]":
+    def inner(
+        problem: Problem[ProblemParamSpec, ProblemOutputType]
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
         problem.add_prize(to_add)
         return problem
 

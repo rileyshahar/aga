@@ -1,6 +1,6 @@
 """Tests for the command-line interfact."""
 
-from typing import TypeVar
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +11,7 @@ from aga.cli import aga_app
 from aga.cli.app import FRONTENDS, complete_frontend
 from aga.core import Problem
 
-Output = TypeVar("Output")
+AnyProblem = Problem[Any, Any]
 
 runner = CliRunner(mix_stderr=False)
 
@@ -31,7 +31,7 @@ def fixture_mocked_igz(mocker: MockerFixture, injection_tear_down: None) -> Magi
 
 
 def test_gen_gradescope(
-    mocked_lpfp: MagicMock, mocked_igz: MagicMock, square: Problem[int]
+    mocked_lpfp: MagicMock, mocked_igz: MagicMock, square: Problem[[int], int]
 ) -> None:
     """Test that gen_gradescope works correctly."""
     mocked_lpfp.return_value = [square]
@@ -61,8 +61,8 @@ def test_gen_gradescope_no_match(mocked_lpfp: MagicMock, mocked_igz: MagicMock) 
 def test_gen_gradescope_multiple_matches(
     mocked_lpfp: MagicMock,
     mocked_igz: MagicMock,
-    square: Problem[int],
-    diff: Problem[int],
+    square: Problem[[int], int],
+    diff: Problem[[int, int], int],
 ) -> None:
     """Test that gen_gradescope errors with multiple matching symbols."""
     mocked_lpfp.return_value = [square, diff]
@@ -79,7 +79,7 @@ def test_gen_gradescope_multiple_matches(
 
 
 def test_gen_invalid_frontend(
-    mocked_lpfp: MagicMock, mocked_igz: MagicMock, valid_problem: Problem[Output]
+    mocked_lpfp: MagicMock, mocked_igz: MagicMock, valid_problem: AnyProblem
 ) -> None:
     """Test that gen_gradescope errors with an invalid frontend."""
     mocked_lpfp.return_value = [valid_problem]
@@ -95,7 +95,7 @@ def test_gen_invalid_frontend(
 
 def test_run(
     mocked_lpfp: MagicMock,
-    square: Problem[int],
+    square: Problem[[int], int],
     source_square: str,
 ) -> None:
     """Test that gen_gradescope works correctly."""
@@ -112,7 +112,7 @@ def test_run(
 
 def test_run_failing(
     mocked_lpfp: MagicMock,
-    square: Problem[int],
+    square: Problem[[int], int],
     source_square_incorrect: str,
 ) -> None:
     """Test that gen_gradescope works correctly."""
@@ -127,9 +127,7 @@ def test_run_failing(
     assert result.exit_code == 0
 
 
-def test_check_valid_problem(
-    mocked_lpfp: MagicMock, valid_problem: Problem[Output]
-) -> None:
+def test_check_valid_problem(mocked_lpfp: MagicMock, valid_problem: AnyProblem) -> None:
     """Test that check succeeds with a valid problem."""
     mocked_lpfp.return_value = [valid_problem]
 
@@ -142,7 +140,7 @@ def test_check_valid_problem(
 
 
 def test_check_invalid_problem(
-    mocked_lpfp: MagicMock, diff_bad_gt: Problem[int]
+    mocked_lpfp: MagicMock, diff_bad_gt: Problem[[int], int]
 ) -> None:
     """Test that check fails with an invalid problem."""
     mocked_lpfp.return_value = [diff_bad_gt]
@@ -159,14 +157,14 @@ def test_check_invalid_problem(
 
 
 def test_check_with_override(
-    mocked_lpfp: MagicMock, overridden_problem: Problem[Output]
+    mocked_lpfp: MagicMock, overridden_problem: AnyProblem
 ) -> None:
     """Test that check succeeds with a valid problem."""
     overridden_problem.check()
 
 
 def test_invalid_check_with_override(
-    mocked_lpfp: MagicMock, invalid_overridden_problem: Problem[Output]
+    mocked_lpfp: MagicMock, invalid_overridden_problem: AnyProblem
 ) -> None:
     """Test that check fails with an invalid problem."""
     with pytest.raises(

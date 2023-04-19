@@ -4,6 +4,7 @@ from io import StringIO
 from os.path import dirname
 from os.path import join as pathjoin
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -84,21 +85,21 @@ def test_load_symbol_from_dir_multiple_symble_errors(source_dir: str) -> None:
         load_symbol_from_path(source_dir, "duplicate")
 
 
-def test_load_problem(tmp_path: str, square: Problem[int]) -> None:
+def test_load_problem(tmp_path: str, square: Problem[[int], int]) -> None:
     """Test that load_problem loads square correctly."""
 
     path = pathjoin(tmp_path, "problem.pckl")
     with open(path, "wb") as file:
         dump(square, file)
 
-    square_loaded: Problem[int] = load_problem(tmp_path, "problem.pckl")
-    square_loaded.check()  # pylint: disable=no-member
+    square_loaded: Problem[Any, Any] = load_problem(tmp_path, "problem.pckl")
+    square_loaded.check()
 
 
 def test_load_problems(source_square_problem: str) -> None:
     """Test that load_problem loads square correctly."""
 
-    square_loaded: list[Problem[int]] = list(
+    square_loaded: list[Problem[[int], int]] = list(
         load_problems_from_path(source_square_problem)
     )
     square_loaded[0].check()  # pylint: disable=no-member

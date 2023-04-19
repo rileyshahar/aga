@@ -130,14 +130,14 @@ def _load_from_module_by(
             yield item
 
 
-def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any]]:
+def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any, Any]]:
     """Return all problems in the module."""
     yield from _load_from_module_by(
         lambda i: isinstance(i, Problem), module  # type: ignore
     )
 
 
-def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
+def load_problems_from_path(path: str) -> Iterable[Problem[Any, Any]]:
     """Load all problems from the module at path."""
     mod = _load_source_from_file(path)
     yield from _load_problems_from_module(mod)
@@ -200,8 +200,8 @@ class _ProblemUnpickler(Unpickler):  # type: ignore
         return super().find_class(module, name)
 
 
-def load_problem(root: str, fname: str = "problem.pckl") -> Problem[Output]:
+def load_problem(root: str, fname: str = "problem.pckl") -> Problem[Any, Any]:
     """Load a problem from the gradescope environment."""
     with open(pathjoin(root, fname), "rb") as problem_pickled:
-        out: Problem[Output] = _ProblemUnpickler(problem_pickled).load()
+        out: Problem[Any, Any] = _ProblemUnpickler(problem_pickled).load()
     return out

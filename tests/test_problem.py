@@ -1,6 +1,6 @@
 """Tests the for `Problem` class."""
 
-from typing import TypeVar
+from typing import Any
 
 from pytest import raises
 
@@ -8,27 +8,28 @@ from aga import problem
 from aga import test_case as case
 from aga.core import Problem, test_case
 
-Output = TypeVar("Output")
+
+AnyProblem = Problem[Any, Any]
 
 
-def test_valid_problem(valid_problem: Problem[Output]) -> None:
+def test_valid_problem(valid_problem: AnyProblem) -> None:
     """Test that correctly-defined problems succeed their golden tests."""
     valid_problem.check()
 
 
-def test_square_metadata(square: Problem[int]) -> None:
+def test_square_metadata(square: AnyProblem) -> None:
     """Test that `square` has correct metadata."""
     assert square.name() == "square"
     assert square.expected_symbol() == "square"
 
 
-def test_diff_metadata(diff: Problem[int]) -> None:
+def test_diff_metadata(diff: AnyProblem) -> None:
     """Test that `diff` has correct metadata."""
     assert diff.name() == "difference"
     assert diff.expected_symbol() == "difference"
 
 
-def test_palindrome_metadata(palindrome: Problem[bool]) -> None:
+def test_palindrome_metadata(palindrome: AnyProblem) -> None:
     """Test that `palindrome` has correct metadata.
 
     Note that palindrome uses the problem decorator's "name" argument.
@@ -37,13 +38,13 @@ def test_palindrome_metadata(palindrome: Problem[bool]) -> None:
     assert palindrome.expected_symbol() == "strpal"
 
 
-def test_failed_golden_test(diff_bad_gt: Problem[int]) -> None:
+def test_failed_golden_test(diff_bad_gt: AnyProblem) -> None:
     """Ensure incorrect golden tests fail for a working diff implementation."""
     with raises(AssertionError):
         diff_bad_gt.check()
 
 
-def test_bad_diff_impl(diff_bad_impl: Problem[int]) -> None:
+def test_bad_diff_impl(diff_bad_impl: AnyProblem) -> None:
     """Ensure golden tests fail for an incorrect diff implementation."""
     with raises(AssertionError):
         diff_bad_impl.check()
@@ -71,14 +72,14 @@ def test_problem_caller() -> None:
     assert test_problem(10) == 10 * 10
 
 
-def test_aga_stdout_check(aga_expect_stdout: Problem[None]) -> None:
+def test_aga_stdout_check(aga_expect_stdout: AnyProblem) -> None:
     """Test that the problem decorator returns the function it decorates."""
     aga_expect_stdout.check()
 
 
 def test_aga_expect_stdout_with_input(
-    script_aga_expect_stdout_with_input: Problem[None],
-    function_aga_expect_stdout_with_input: Problem[None],
+    script_aga_expect_stdout_with_input: AnyProblem,
+    function_aga_expect_stdout_with_input: AnyProblem,
 ) -> None:
     """Test that the problem decorator returns the function it decorates."""
     script_aga_expect_stdout_with_input.check()

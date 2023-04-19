@@ -9,7 +9,7 @@ from os import makedirs
 from os.path import join as pathjoin
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
-from typing import Iterable, Optional, TypeVar
+from typing import Iterable, Optional
 from zipfile import ZipFile
 from sys import version_info
 
@@ -18,7 +18,7 @@ from dill import dump  # type: ignore
 
 from ..core import Problem
 
-Output = TypeVar("Output")
+from ..core.problem import ProblemParamSpec, ProblemOutputType
 
 
 # don't zip resources because we handle them manually
@@ -60,13 +60,17 @@ def _handle_gs_utils_zipping(zip_file: ZipFile, temp_working_dir_path: str) -> N
 
 
 def _handle_problem_zipping(
-    zip_file: ZipFile, temp_working_dir: str, problem: Problem[Output]
+    zip_file: ZipFile,
+    temp_working_dir: str,
+    problem: Problem[ProblemParamSpec, ProblemOutputType],
 ) -> None:
     path = _dump_problem_into_dir(problem, temp_working_dir)
     zip_file.write(path, arcname="problem.pckl")
 
 
-def into_gradescope_zip(problem: Problem[Output], path: Optional[str] = None) -> str:
+def into_gradescope_zip(
+    problem: Problem[ProblemParamSpec, ProblemOutputType], path: Optional[str] = None
+) -> str:
     """Convert a Problem into a gradescope autograder zip, returning its location.
 
     This is the high-level entrypoint for this module.
@@ -82,7 +86,9 @@ def into_gradescope_zip(problem: Problem[Output], path: Optional[str] = None) ->
     return zip_name
 
 
-def _get_zipfile_dest(path: Optional[str], problem: Problem[Output]) -> str:
+def _get_zipfile_dest(
+    path: Optional[str], problem: Problem[ProblemParamSpec, ProblemOutputType]
+) -> str:
     """Determine the destination in which to put the zip file.
 
     If `path` is none, this is the problem's name; otherwise it's just the provided
@@ -94,7 +100,7 @@ def _get_zipfile_dest(path: Optional[str], problem: Problem[Output]) -> str:
         return path
 
 
-def _check_problem(problem: Problem[Output]) -> None:
+def _check_problem(problem: Problem[ProblemParamSpec, ProblemOutputType]) -> None:
     """Check whether `problem` is valid.
 
     Currently, this just runs the golden tests for problem.
@@ -150,7 +156,9 @@ def _manual_copy_resource_to(
 
 
 def _dump_problem_into_dir(
-    problem: Problem[Output], tempdir: str, fname: str = "problem.pckl"
+    problem: Problem[ProblemParamSpec, ProblemOutputType],
+    tempdir: str,
+    fname: str = "problem.pckl",
 ) -> str:
     """Dump a problem into a directory, returning the pckl file path."""
     path = pathjoin(tempdir, fname)
@@ -158,7 +166,9 @@ def _dump_problem_into_dir(
     return path
 
 
-def _dump_problem_at_path(problem: Problem[Output], dest: str) -> None:
+def _dump_problem_at_path(
+    problem: Problem[ProblemParamSpec, ProblemOutputType], dest: str
+) -> None:
     """Pickle the problem into a destination."""
     with open(dest, "wb") as file:
         dump(problem, file)

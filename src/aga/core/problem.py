@@ -7,37 +7,41 @@ from typing import (
     Optional,
     TYPE_CHECKING,
     TypeVar,
+    ParamSpec,
 )
 
 from .suite import _TestInputs, _TestInputGroup, AgaTestSuite, SubmissionMetadata
 from ..config import AgaConfig
 from ..score import Prize, ScoredPrize, compute_scores
 
-Output = TypeVar("Output")
+
+# pylint: disable=invalid-name
+ProblemParamSpec = ParamSpec("ProblemParamSpec")
+ProblemOutputType = TypeVar("ProblemOutputType")
 
 
 if TYPE_CHECKING:
     from .parameter import _TestParam
 
-__all__ = ["Problem", "problem", "group"]
+__all__ = ["Problem", "problem", "group", "ProblemOutputType", "ProblemParamSpec"]
 
 
-class Problem(Generic[Output]):
+class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
     """Stores tests for a single problem."""
 
     def __init__(
         self,
-        golden: Callable[..., Output],
+        golden: Callable[ProblemParamSpec, ProblemOutputType],
         name: str,
         config: AgaConfig,
         is_script: bool,
     ) -> None:
-        self._golden: Callable[..., Output] = golden
+        self._golden: Callable[..., ProblemOutputType] = golden
         self._name = name
         self._config = config
         self._ungrouped_prizes: list[Prize] = []
-        self._ungrouped_tests: list[_TestInputs[Output]] = []
-        self._groups: list[_TestInputGroup[Output]] = []
+        self._ungrouped_tests: list[_TestInputs[ProblemOutputType]] = []
+        self._groups: list[_TestInputGroup[ProblemOutputType]] = []
         self.is_script = is_script
 
     def add_test_case(self, param: _TestParam) -> None:
@@ -46,7 +50,7 @@ class Problem(Generic[Output]):
         Student solutions will be checked against the golden solution; i.e., this method
         does _not_ produce a test of the golden solution.
         """
-        case: _TestInputs[Output] = _TestInputs(
+        case: _TestInputs[ProblemOutputType] = _TestInputs(
             param, mock_input=self._config.problem.mock_input
         )
         self._ungrouped_tests.append(case)
@@ -55,7 +59,7 @@ class Problem(Generic[Output]):
         """Add a prize to the current group."""
         self._ungrouped_prizes.append(prize)
 
-    def add_group(self, grp: _TestInputGroup[Output]) -> None:
+    def add_group(self, grp: _TestInputGroup[ProblemOutputType]) -> None:
         """Add a group to the problem."""
         for case in self._ungrouped_tests:
             grp.add_test_case(case)
@@ -80,7 +84,9 @@ class Problem(Generic[Output]):
             grp.check_one(self._golden)
 
     def generate_test_suite(
-        self, under_test: Callable[..., Output], metadata: SubmissionMetadata
+        self,
+        under_test: Callable[ProblemParamSpec, ProblemOutputType],
+        metadata: SubmissionMetadata,
     ) -> tuple[AgaTestSuite, list[ScoredPrize]]:
         """Generate a `TestSuite` for the student submitted function.
 
@@ -90,7 +96,7 @@ class Problem(Generic[Output]):
 
         Parameters
         ----------
-        under_test : Callable[..., Output]
+        under_test : Callable[ProblemParamSpec, ProblemOutputType]
             The student submitted function.
         metadata : SubmissionMetadata
             The submission metadata.
@@ -133,14 +139,14 @@ class Problem(Generic[Output]):
         """Update any non-default items in self.config."""
         self._config.update_weak(config)
 
-    def _virtual_groups(self) -> list[_TestInputGroup[Output]]:
+    def _virtual_groups(self) -> list[_TestInputGroup[ProblemOutputType]]:
         """Get the list of groups, plus the current group under construction.
 
         We need to do it this way because while the problem is being read we don't know
         the configuration of the last test group yet.
         """
         if self._ungrouped_tests or self._ungrouped_prizes:
-            virtual_group: _TestInputGroup[Output] = _TestInputGroup()
+            virtual_group: _TestInputGroup[ProblemOutputType] = _TestInputGroup()
 
             for case in self._ungrouped_tests:
                 virtual_group.add_test_case(case)
@@ -153,7 +159,7 @@ class Problem(Generic[Output]):
         else:
             return self._groups
 
-    def __call__(self, *args, **kwargs) -> Output:  # type: ignore
+    def __call__(self, *args, **kwargs) -> ProblemOutputType:  # type: ignore
         """Enable the ability to call the golden solution as if the problem were it."""
         return self._golden(*args, **kwargs)
 
@@ -163,7 +169,10 @@ def problem(
     script: bool = False,
     check_stdout: Optional[bool] = None,
     mock_input: Optional[bool] = None,
-) -> Callable[[Callable[..., Output]], Problem[Output]]:
+) -> Callable[
+    [Callable[ProblemParamSpec, ProblemOutputType]],
+    Problem[ProblemParamSpec, ProblemOutputType],
+]:
     """Declare a function as the golden solution to a problem.
 
     This method should decorate a function which is known to produce the correct
@@ -189,7 +198,7 @@ def problem(
 
     Returns
     -------
-    Callable[[Callable[..., T]], Problem[T]]
+    Callable[[Callable[ProblemInput, T]], Problem[T]]
         A decorator which turns a golden solution into a problem.
     """
     config = AgaConfig()
@@ -202,7 +211,9 @@ def problem(
         config.problem.mock_input = mock_input
         config.problem.mock_input_overridden = True
 
-    def outer(func: Callable[..., Output]) -> Problem[Output]:
+    def outer(
+        func: Callable[ProblemParamSpec, ProblemOutputType]
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
         problem_name = name or func.__name__
 
         if script:
@@ -223,7 +234,10 @@ def group(
     weight: int = 1,
     value: float = 0.0,
     extra_credit: float = 0.0,
-) -> Callable[[Problem[Output]], Problem[Output]]:
+) -> Callable[
+    [Problem[ProblemParamSpec, ProblemOutputType]],
+    Problem[ProblemParamSpec, ProblemOutputType],
+]:
     """Declare a group of problems.
 
     Parameters
@@ -242,7 +256,9 @@ def group(
         A decorator which adds the group to a problem.
     """
 
-    def outer(prob: Problem[Output]) -> Problem[Output]:
+    def outer(
+        prob: Problem[ProblemParamSpec, ProblemOutputType]
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
         prob.add_group(_TestInputGroup(weight, value, extra_credit))
         return prob
 
