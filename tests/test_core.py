@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Any
+from typing import Dict, Any, Callable
 
 import pytest
 from aga import test_cases as _test_cases
@@ -121,7 +121,9 @@ class TestTestCases:
         _check_problem(add_three)
 
     @pytest.mark.parametrize("test_fn", [_test_cases.params, _test_cases_params])
-    def test_aga_params_with_param_obj(self, test_fn) -> None:
+    def test_aga_params_with_param_obj(
+        self, test_fn: Callable[..., Problem[int]]
+    ) -> None:
         """Test that aga_params can be used with param objects."""
 
         @test_fn([param(1, 2, c=3), param(4, 5, c=6)], aga_expect=[6, 15])
@@ -130,7 +132,7 @@ class TestTestCases:
             """Add three numbers."""
             return a + b + c
 
-        _check_problem(add_three)
+        _check_problem(add_three)  # type: ignore
 
     def test_aga_test_cases_no_flag(self) -> None:
         """Test that aga_test_cases without a combination flag."""
@@ -160,7 +162,9 @@ class TestTestCases:
     @pytest.mark.parametrize(
         "test_fn", [_test_cases.singular_params, _test_cases_singular_params]
     )
-    def test_aga_test_cases_singular_params(self, test_fn) -> None:
+    def test_aga_test_cases_singular_params(
+        self, test_fn: Callable[..., Problem[int]]
+    ) -> None:
         """Test that aga_test_cases with aga_params flag."""
 
         @test_fn(
@@ -172,7 +176,39 @@ class TestTestCases:
             """Test problem."""
             return x * x
 
-        _check_problem(test_problem)
+        _check_problem(test_problem)  # type: ignore
+
+    @pytest.mark.parametrize("test_fn", [_test_cases.product, _test_cases_product])
+    def test_aga_test_cases_product(self, test_fn: Callable[..., Problem[int]]) -> None:
+        """Test that aga_test_cases with aga_params flag."""
+
+        @test_fn(
+            [1, 2],
+            [3, 4],
+            aga_expect=[3, 4, 6, 8],
+        )
+        @problem()
+        def test_problem(x: int, y: int) -> int:
+            """Test problem."""
+            return x * y
+
+        _check_problem(test_problem)  # type: ignore
+
+    @pytest.mark.parametrize("test_fn", [_test_cases.zip, _test_cases_zip])
+    def test_aga_test_cases_zip(self, test_fn: Callable[..., Problem[int]]) -> None:
+        """Test that aga_test_cases with aga_params flag."""
+
+        @test_fn(
+            [1, 2],
+            [3, 4],
+            aga_expect=[3, 8],
+        )
+        @problem()
+        def test_problem(x: int, y: int) -> int:
+            """Test problem."""
+            return x * y
+
+        _check_problem(test_problem)  # type: ignore
 
     @pytest.mark.parametrize("flags", [{"aga_product": True, "aga_zip": True}, {}])
     def test_zip_or_product_flag_guard(self, flags: Dict[str, bool]) -> None:
@@ -189,6 +225,7 @@ class TestTestCases:
             {"aga_zip": True, "aga_params": True},
             {"aga_product": True, "aga_params": True},
             {"aga_product": True, "aga_zip": True},
+            {},
         ],
     )
     def test_aga_test_cases_multiple_flags_fail(self, flags: Dict[str, bool]) -> None:
