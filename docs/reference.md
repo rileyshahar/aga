@@ -12,6 +12,16 @@
    :members:
 ```
 
+## Core - Parameters
+
+```{eval-rst}
+.. autoclass:: aga.core.parameter._TestParam
+   :inherited-members:
+   :members:
+.. autoclass:: aga.core.parameter._TestParams
+   :members:
+```
+
 
 ## Prizes
 
