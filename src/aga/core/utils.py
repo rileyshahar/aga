@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import redirect_stdout
 from io import StringIO
-from typing import Any, Type, Sequence
+from typing import Any, Type, Sequence, Dict
 
 __all__ = (
     "CaptureOut",
@@ -12,6 +12,16 @@ __all__ = (
     "MethodCallerFactory",
     "initializer",
 )
+
+
+def _ensure_formatting_dot(s: str) -> str:
+    """Ensure that a string ends with a dot."""
+    if not s:
+        return ""
+
+    if s[0] != ".":
+        return "." + s
+    return s
 
 
 class CaptureOut:
@@ -55,9 +65,35 @@ class MethodCaller:
         self._args = args
         self._kwargs = kwargs
 
+    @property
+    def attr_name(self) -> str:
+        """Return the method attribute name."""
+        return self._attr_name
+
+    @property
+    def args(self) -> Sequence[Any]:
+        """Return the positional arguments."""
+        return self._args
+
+    @property
+    def kwargs(self) -> Dict[str, Any]:
+        """Return the keyword arguments."""
+        return self._kwargs
+
     def __call__(self, instance: Any, previous_result: Any = None) -> Any:
         """Call the method on the instance."""
-        return getattr(instance, self._attr_name)(*self._args, **self._kwargs)
+        return getattr(instance, self._attr_name)(*self.args, **self._kwargs)
+
+    def __str__(self) -> str:
+        """Return a string representation of the method call."""
+        arg_repr = f'{", ".join(map(str, self.args))}, ' if self.args else ""
+        kwargs = map(lambda k, v: f"{k}={v}", self._kwargs.items())  # type: ignore
+        kwargs_repr = f'{", ".join(kwargs)}, ' if self._kwargs else ""
+        return _ensure_formatting_dot(f"{self._attr_name}({arg_repr}{kwargs_repr})")
+
+    def __repr__(self) -> str:
+        """Return a string representation of the method call."""
+        return self.__str__()
 
 
 class MethodCallerFactory:
@@ -89,6 +125,16 @@ class PropertyGetter:
     def attr_names(self) -> Sequence[str]:
         """Return the attribute name."""
         return self._attr_names
+
+    def __str__(self) -> str:
+        return _ensure_formatting_dot(
+            ".".join(
+                name[1:] if name.startswith(".") else name for name in self.attr_names
+            )
+        )
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __call__(self, instance: Any, previous_result: Any = None) -> Any:
         if len(self.attr_names) == 0:

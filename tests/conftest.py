@@ -1133,8 +1133,6 @@ def fixture_test_pipeline_linked_list() -> Problem[[], LL]:
         pop(): 10,
     }
 
-    # pylint: disable=too-few-public-methods
-
     @test_case.pipeline(
         *actions.keys(),
         aga_expect_stdout="< 10 >\n< 20 10 >\n< 30 20 10 >\n",

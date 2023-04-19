@@ -12,7 +12,6 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
-    Type,
     Iterable,
 )
 from unittest import TestCase, TestSuite
@@ -27,6 +26,8 @@ from ..util import text_diff
 __all__ = ["TestMetadata", "SubmissionMetadata", "AgaTestCase", "AgaTestSuite"]
 
 Output = TypeVar("Output")
+
+NEW_LINE = "\n"
 
 
 @dataclass(frozen=True)
@@ -212,35 +213,165 @@ class _TestInputs(TestCase, Generic[Output]):
         """Set the description of the test case."""
         self.aga_kwargs.name = name
 
-    def _eval(
-        self, answer: Callable[..., Any] | Type[Any], check_output: bool = False
-    ) -> Tuple[None | str, Any]:
+    def _eval_mock_input(
+        self, answer: Callable[..., Output], check_output: bool = False
+    ) -> Tuple[str | None, Output]:
         """Evaluate func on the arguments."""
         # deepcopy in case the student submission mutates arguments; we don't want it to
         # mess with our copy of the arguments
-        with CaptureOut(check_output) as stdout:
-            if self.mock_input:
-                with patch(
-                    "builtins.input", generate_custom_input(deepcopy(self.args))
-                ) as _:
-                    result = answer()
-            elif self.aga_kwargs.is_pipeline:
-                result = [None]
-                if len(self.args) > 0:
-                    first_process = self.args[0]
-                    pipeline_processes = self.args
-
-                    if first_process is initializer:
-                        answer = first_process(answer)
-                        result.append(None)
-                        pipeline_processes = self.args[1:]
-
-                    for process in pipeline_processes:
-                        result.append(process(answer, result[-1]))
-            else:
-                result = answer(*deepcopy(self.args), **deepcopy(self.kwargs))
+        with CaptureOut(check_output) as stdout, patch(
+            "builtins.input", generate_custom_input(deepcopy(self.args))
+        ):
+            result = answer()
 
         return stdout.value, result
+
+    def _test_mock_input(
+        self,
+        golden: Callable[..., Output],
+        under_test: Callable[..., Output],
+        eq_fn: Callable[[_TestInputs[Output], Output, Output, TestMetadata, str], bool],
+        metadata: TestMetadata,
+    ) -> None:
+        golden_stdout, golden_result = self._eval_mock_input(
+            golden, metadata.check_stdout
+        )
+
+        under_test_stdout, under_test_result = self._eval_mock_input(
+            under_test, metadata.check_stdout
+        )
+
+        eq_fn(
+            self,
+            golden_result,
+            under_test_result,
+            metadata,
+            metadata.config.failure_msg,
+        )
+
+        self._assert_output_eq(golden_stdout, under_test_stdout, metadata)
+
+    def _eval_regular(
+        self, answer: Callable[..., Output], capture_output: bool
+    ) -> Tuple[str | None, Output]:
+        """Evaluate func on the arguments."""
+        with CaptureOut(capture_output) as stdout:
+            result = answer(*deepcopy(self.args), **deepcopy(self.kwargs))
+
+        return stdout.value, result
+
+    def _test_regular(
+        self,
+        golden: Callable[..., Output],
+        under_test: Callable[..., Output],
+        eq_fn: Callable[[_TestInputs[Output], Output, Output, TestMetadata, str], bool],
+        metadata: TestMetadata,
+    ) -> None:
+        golden_stdout, golden_result = self._eval_regular(golden, metadata.check_stdout)
+        under_test_stdout, under_test_result = self._eval_regular(
+            under_test, metadata.check_stdout
+        )
+
+        eq_fn(
+            self,
+            golden_result,
+            under_test_result,
+            metadata,
+            metadata.config.failure_msg,
+        )
+
+        self._assert_output_eq(golden_stdout, under_test_stdout, metadata)
+
+    def _eval_pipeline(
+        self, answer: Callable[..., Output], check_output: bool
+    ) -> Tuple[str | None, Sequence[Any]]:
+        with CaptureOut(check_output) as stdout:
+            results = [None]
+
+            if len(self.args) > 0:
+                first_process = self.args[0]
+                pipeline_processes = self.args
+
+                if first_process is initializer:
+                    answer = first_process(answer)
+                    results.append(None)
+                    pipeline_processes = self.args[1:]
+
+                for process in pipeline_processes:
+                    results.append(process(answer, results[-1]))
+
+        return stdout.value, results
+
+    def _test_pipeline(
+        self,
+        golden: Callable[..., Output],
+        under_test: Callable[..., Output],
+        eq_fn: Callable[[_TestInputs[Output], Output, Output, TestMetadata, str], bool],
+        metadata: TestMetadata,
+    ) -> None:
+        golden_stdout, golden_result = self._eval_pipeline(
+            golden, metadata.check_stdout
+        )
+        under_test_stdout, under_test_result = self._eval_pipeline(
+            under_test, metadata.check_stdout
+        )
+
+        if len(under_test_result) != len(golden_result):
+            raise AssertionError(
+                f"Expected {len(golden_result)} results, "
+                f"but got {len(under_test_result)}"
+            )
+
+        for i, (golden_res, under_test_res) in enumerate(
+            zip(golden_result[1:], under_test_result[1:])
+        ):
+            eq_fn(
+                self,
+                golden_res,
+                under_test_res,
+                metadata,
+                f"The first diff happens in {i}th process (`{self.args[i]}`) "
+                f"of the pipeline.\n"
+                "The output is {output} and the expected is {expected}\n"
+                f"Everything before the {i}th process (`{self.args[i]}`) "
+                f"of the pipeline is correct:\n"
+                f"{NEW_LINE.join(map(str, self.args[:i+1]))}\n\n"
+                f"{metadata.config.failure_msg}",
+            )
+
+        self._assert_output_eq(golden_stdout, under_test_stdout, metadata)
+
+    def _pick_test_fn(
+        self,
+    ) -> Callable[
+        [
+            Callable[..., Output],
+            Callable[..., Output],
+            Callable[[_TestInputs[Output], Output, Output, TestMetadata, str], bool],
+            TestMetadata,
+        ],
+        None,
+    ]:
+        if self.mock_input:
+            test_fn = self._test_mock_input
+        elif self.aga_kwargs.is_pipeline:
+            test_fn = self._test_pipeline
+        else:
+            test_fn = self._test_regular
+
+        return test_fn
+
+    def _pick_eval_fn(
+        self,
+    ) -> Callable[[Callable[..., Output], bool], Tuple[str, Any]]:
+        if self.mock_input:
+            test_fn: Any = self._eval_mock_input
+        elif self.aga_kwargs.is_pipeline:
+            test_fn = self._eval_pipeline
+        else:
+            test_fn = self._eval_regular
+
+        return test_fn  # type: ignore
 
     def check(
         self,
@@ -263,25 +394,18 @@ class _TestInputs(TestCase, Generic[Output]):
         else:
             check = type(self)._assert_eq
 
-        golden_stdout, golden_output = self._eval(golden, metadata.check_stdout)
-        under_test_stdout, under_test_output = self._eval(
-            under_test, metadata.check_stdout
-        )
+        test_fn = self._pick_test_fn()
 
-        type(self)._assert_eq(
-            self,
-            golden_stdout,
-            under_test_stdout,
+        test_fn(golden, under_test, check, metadata)
+
+    def _assert_output_eq(
+        self, expected: str | None, got: str | None, metadata: TestMetadata
+    ) -> None:
+        self._assert_eq(
+            expected or "",
+            got or "",
             metadata,
             metadata.config.stdout_differ_msg,
-        )
-
-        check(
-            self,
-            golden_output,
-            under_test_output,
-            metadata=metadata,
-            msg_format=metadata.config.failure_msg,
         )
 
     def _assert_eq(
@@ -372,7 +496,8 @@ class _TestInputs(TestCase, Generic[Output]):
 
     def _default_check(self, golden: Callable[..., Output]) -> None:
         """Check that the golden solution is correct."""
-        golden_stdout, golden_output = self._eval(golden, check_output=True)
+        eval_fn = self._pick_eval_fn()
+        golden_stdout, golden_output = eval_fn(golden, True)
 
         # compare output
         if self.aga_kwargs.expect is not None:
