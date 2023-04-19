@@ -2,10 +2,9 @@
 from aga import problem, test_case, test_cases
 
 
-@test_cases(
+@test_cases.zip(
     [1, 2, 3],
     [4, 5, 6],
-    aga_product=False,
     aga_expect=(x + y for x, y in zip([1, 2, 3], [4, 5, 6])),
 )
 @test_case(10, 20, aga_expect=30)

@@ -54,7 +54,7 @@ def _make_n_check(case, golden, student):
     for i in range(10):
         case.assertEqual(golden(i), student(i), f"Solutions differed on input {i}.")
 
-@test_cases([-3, -2, 16, 20], aga_override_check=_make_n_check)
+@test_cases(-3, -2, 16, 20, aga_override_check=_make_n_check)
 @test_case(0, aga_override_check=_make_n_check)
 @test_case(2, aga_override_check=_make_n_check)
 @problem()

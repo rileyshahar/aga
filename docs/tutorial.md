@@ -187,6 +187,8 @@ Score](score.md).
 
 ## Generating Test Cases
 
+You can check out `examples/inputs_for_test_cases.py` in the GitHub repo for more complete examples and comparisons.
+
 If we want many test cases, we probably don't want to enumerate all of them by
 hand. Aga therefore provides the [`test_cases`](reference.html#aga.test_cases)
 decorator, which makes it easy to collect python generators (lists, `range`,
@@ -197,7 +199,7 @@ Let's start by testing an arbitrary set of inputs:
 ```python
 from aga import problem, test_cases
 
-@test_cases([-3, -2, 0, 1, 2, 100])
+@test_cases(-3, -2, 0, 1, 2, 100)
 @problem()
 def square(x: int) -> int:
     """Square x."""
@@ -212,7 +214,7 @@ weight, rather than dividing the weight among the test cases.
 Similarly, we can generate tests for all inputs from -5 to 10:
 
 ```python
-@test_cases(range(-5, 11))
+@test_cases(*range(-5, 11))
 @problem()
 def square(x: int) -> int:
     """Square x."""
@@ -259,24 +261,61 @@ There are four ways you can specify a batch of test cases: `params`, `zip` and `
 
 - `aga_params` will only take one iterable object, and each element in the iterable object will be unfolded when applied to the function. The example above will generate 3 tests, each to be `difference(-3, 2)`, `difference(-2, 1)` and `difference(0, 0)`. In the case where you want to add keyword arguments, you can use the `param` directive. 
 
-```python
-from aga import problem, test_cases, param
-@test_cases([param(-3, y=2), param(-2, y=1), param(0, y=0)], aga_params=True)
-@problem()
-def difference(x: int, y: int) -> int:
-    """Compute x - y."""
-    return x - y
-```
+    ```python
+    from aga import problem, test_cases, param
+    @test_cases([param(-3, y=2), param(-2, y=1), param(0, y=0)], aga_params=True)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+    ```
+
+    which is equivalent to
+
+    ```python
+    from aga import problem, test_cases, param
+    @test_cases([(-3, 2), (-2, 1), (0, 0)], aga_params=True)
+    @problem()
+    def difference(x: int, y: int) -> int:
+        """Compute x - y."""
+        return x - y
+    ```
 
 - `<no-flag>` Note that this is different from the one above with `aga_params` flag. The example blow will generate 3 tests as well, but each to be `difference((-3, 2))`, `difference((-2, 1))` and `difference((0, 0))`.
 
 ```python
-@test_cases([(-3, 2), (-2, 1), (0, 0)])
+@test_cases((-3, 2), (-2, 1), (0, 0))
 @problem()
-def difference(t) -> int:
+def difference(tp) -> int:
     """Compute x - y."""
-    return t[0] - t[1]
+    x, y = tp
+    return x - y
 ```
+
+- `aga_singular_params` works similarly to `aga_params`. The following code is equivalent to `difference((-3, 2))`, `difference((-2, 1))` and `difference((0, 0))`. (Note that the `aga_params` flag is not needed.)
+
+```python
+from aga import problem, test_cases, param
+@test_cases([(-3, 2), (-2, 1), (0, 0)], aga_singular_params=True)
+@problem()
+def difference(tp: Tuple[int, int]) -> int:
+    """Compute x - y."""
+    x, y = tp
+    return x - y
+```
+  
+It comes useful when you have a iterable of things where each single thing is going to serve as a parameter. 
+    
+```python
+from aga import problem, test_cases, param
+@test_cases(range(5), aga_singular_params=True)
+@problem()
+def square(x: int) -> int:
+    """Compute x - y."""
+    return x * x
+```
+
+The `@test_cases(range(5), aga_singular_params=True)` is equivalent to expanding the generator in the no flag version `@test_cases(*range(5))`. Note that `@test_cases(range(5), aga_params=True)` is not valid. 
 
 - `aga_product` will take the cartesian product of all the arguments. In the above example, there will be 15 test cases, one for each combination of the arguments.
 
@@ -329,6 +368,12 @@ You will find typing all the `aga_product` etc. to be tedious. In that case, you
    def fn() -> None:
       # this is the same as @test_cases(..., aga_zip=True)
       ...
+  
+   @test_cases.singular_params(([-5, 0, 1, 3, 4], [-1, 0, 2]))
+   @problem()
+   def fn() -> None:
+      # this is the same as @test_cases(..., aga_singular_params=True)
+      ...
    ```
 
 - 
@@ -367,7 +412,7 @@ def square(x: int) -> int:
     return x * x
 ```
 
-`@test_cases([1, 2, 3], aga_expect=[1, 1, 4, 4, 9, 9])` since the numbers don't match. 
+`@test_cases(1, 2, 3, aga_expect=[1, 1, 4, 4, 9, 9])` since the numbers don't match. 
 
 ## Checking Scripts
 
