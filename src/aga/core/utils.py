@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from contextlib import redirect_stdout
 from io import StringIO
-from typing import Any, Type
-
+from typing import Any, Type, Sequence
 
 __all__ = (
     "CaptureOut",
@@ -83,23 +82,38 @@ class MethodCallerFactory:
 class PropertyGetter:
     """Get an attribute from an instance."""
 
-    def __init__(self, attr_name: str, *_: Any, **__: Any) -> None:
-        self._attr_name = attr_name
+    def __init__(self, *args: str, **__: Any) -> None:
+        self._attr_names = args
+
+    @property
+    def attr_names(self) -> Sequence[str]:
+        """Return the attribute name."""
+        return self._attr_names
 
     def __call__(self, instance: Any, previous_result: Any = None) -> Any:
-        return getattr(instance, self._attr_name)
+        if len(self.attr_names) == 0:
+            raise ValueError("No properties specified in PropertyGetter")
+
+        for i, attr_name in enumerate(self.attr_names):
+            properties = attr_name.split(".")
+
+            if len(properties) == 0:
+                raise ValueError(
+                    f"No properties specified in the {i}th attribute "
+                    f"name in the PropertyGetter: {self.attr_names}."
+                )
+
+            if properties[0] == "":
+                properties = properties[1:]
+
+            for property_name in properties:
+                instance = getattr(instance, property_name)
+
+        return instance
 
 
 class PropertyGetterFactory:
     """Factory for creating PropertyGetter instances."""
-
-    def __init__(self, attr_name: str) -> None:
-        self._attr_name = attr_name
-
-    @property
-    def attr_name(self) -> str:
-        """Return the property's name."""
-        return self._attr_name
 
     def __call__(
         self,
@@ -108,7 +122,7 @@ class PropertyGetterFactory:
         **kwargs: Any,
     ) -> PropertyGetter:
         """Create a PropertyGetter instance with the attribute name."""
-        return getter_class(self._attr_name, *args, **kwargs)
+        return getter_class(*args, **kwargs)
 
 
 # pylint: disable=too-few-public-methods

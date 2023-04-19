@@ -23,7 +23,7 @@ from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
 from aga.core import Problem, SubmissionMetadata
 from aga.core.suite import _TestInputs, TestMetadata
-from aga.core.utils import MethodCallerFactory, initializer
+from aga.core.utils import MethodCallerFactory, initializer, PropertyGetterFactory
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
 
@@ -1116,6 +1116,7 @@ def fixture_test_pipeline_linked_list() -> Problem[[], LL]:
     prepend = MethodCallerFactory("prepend")
     display = MethodCallerFactory("display")
     pop = MethodCallerFactory("pop")
+    get_prop = PropertyGetterFactory()
 
     actions = {
         initializer: None,
@@ -1125,6 +1126,8 @@ def fixture_test_pipeline_linked_list() -> Problem[[], LL]:
         display(): None,
         prepend(30): None,
         display(): None,
+        get_prop("first.value"): 30,
+        get_prop(".first", ".next", ".value"): 20,
         pop(): 30,
         pop(): 20,
         pop(): 10,
