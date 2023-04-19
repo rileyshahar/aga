@@ -2,18 +2,62 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Any, Callable, Iterable
+from itertools import chain, combinations
 
 import pytest
-from aga import test_cases as _test_cases, test_cases_params as _test_cases_params
+
+
+from aga import test_cases as _test_cases
+from aga import (
+    test_cases_zip as _test_cases_zip,
+    test_cases_product as _test_cases_product,
+    test_cases_params as _test_cases_params,
+    test_cases_singular_params as _test_cases_singular_params,
+)
 from aga import problem
-from aga.core import param
+from aga.core import param, Problem
+from aga.core.suite import _TestInputs
 from aga.cli.app import _check_problem
+from aga.core.utils import CaptureOut
 
 
-# pylint: disable=no-self-use
+def tester(*_: Any) -> None:
+    """Dummy Tester."""
+
+
+def powerset(iterable: Iterable[Any], min_length: int = 0) -> Iterable[Any]:
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(
+        combinations(s, r) for r in range(min_length, len(s) + 1)
+    )
+
+
 class TestTestCases:
     """Test the test_cases decorator."""
+
+    def test_test_input_with_arguments(self) -> None:
+        """Test that test_input can be used with arguments."""
+        test_param = param(
+            3,
+            4,
+            y=4,
+            aga_expect=True,
+            aga_expect_stdout="1",
+            aga_hidden=True,
+            aga_name="test",
+            aga_weight=True,
+            aga_value=True,
+            aga_extra_credit=True,
+            aga_override_check=tester,
+            aga_override_test=tester,
+            aga_description="test description",
+        )
+        test_input: _TestInputs[None] = _TestInputs(test_param, mock_input=True)
+        assert test_input.param
+        assert test_input.args == (3, 4)
+        assert test_input.kwargs == {"y": 4}
 
     def test_zip_arg_length_and_kwargs_length_not_match(self) -> None:
         """Test that the length of the zipped args and kwargs must match."""
@@ -87,10 +131,13 @@ class TestTestCases:
 
         _check_problem(add_three)
 
-    def test_aga_params_with_param_obj(self) -> None:
+    @pytest.mark.parametrize("test_fn", [_test_cases.params, _test_cases_params])
+    def test_aga_params_with_param_obj(
+        self, test_fn: Callable[..., Problem[Any, Any]]
+    ) -> None:
         """Test that aga_params can be used with param objects."""
 
-        @_test_cases_params([param(1, 2, c=3), param(4, 5, c=6)], aga_expect=[6, 15])
+        @test_fn([param(1, 2, c=3), param(4, 5, c=6)], aga_expect=[6, 15])
         @problem()
         def add_three(a: int, b: int, c: int) -> int:  # pylint: disable=C0103
             """Add three numbers."""
@@ -101,19 +148,99 @@ class TestTestCases:
     def test_aga_test_cases_no_flag(self) -> None:
         """Test that aga_test_cases without a combination flag."""
 
-        @_test_cases([1, 2])
+        @_test_cases(1, 2, aga_expect=[1, 4])
         @problem()
         def test_problem(x: int) -> int:
             """Test problem."""
-            return x
+            return x * x
+
+        _check_problem(test_problem)
+
+    def test_aga_test_cases_no_flag_error(self) -> None:
+        """Test that aga_test_cases without a combination flag."""
+
+        with pytest.raises(
+            ValueError,
+            match="all aga_ keyword args must have the same length as the test cases",
+        ):
+
+            @_test_cases([1, 2], aga_expect=[1, 4])
+            @problem()
+            def test_problem(x: int) -> int:
+                """Test problem."""
+                return x * x
+
+    @pytest.mark.parametrize(
+        "test_fn", [_test_cases.singular_params, _test_cases_singular_params]
+    )
+    def test_aga_test_cases_singular_params(
+        self, test_fn: Callable[..., Problem[Any, Any]]
+    ) -> None:
+        """Test that aga_test_cases with aga_params flag."""
+
+        @test_fn(
+            [1, 2],
+            aga_expect=[1, 4],
+        )
+        @problem()
+        def test_problem(x: int) -> int:
+            """Test problem."""
+            return x * x
+
+        _check_problem(test_problem)
+
+    @pytest.mark.parametrize("test_fn", [_test_cases.product, _test_cases_product])
+    def test_aga_test_cases_product(
+        self, test_fn: Callable[..., Problem[Any, Any]]
+    ) -> None:
+        """Test that aga_test_cases with aga_params flag."""
+
+        @test_fn(
+            [1, 2],
+            [3, 4],
+            aga_expect=[3, 4, 6, 8],
+        )
+        @problem()
+        def test_problem(x: int, y: int) -> int:
+            """Test problem."""
+            return x * y
+
+        _check_problem(test_problem)
+
+    @pytest.mark.parametrize("test_fn", [_test_cases.zip, _test_cases_zip])
+    def test_aga_test_cases_zip(
+        self, test_fn: Callable[..., Problem[Any, Any]]
+    ) -> None:
+        """Test that aga_test_cases with aga_params flag."""
+
+        @test_fn(
+            [1, 2],
+            [3, 4],
+            aga_expect=[3, 8],
+        )
+        @problem()
+        def test_problem(x: int, y: int) -> int:
+            """Test problem."""
+            return x * y
+
+        _check_problem(test_problem)
+
+    @pytest.mark.parametrize("flags", [{"aga_product": True, "aga_zip": True}, {}])
+    def test_zip_or_product_flag_guard(self, flags: Dict[str, bool]) -> None:
+        """Test that aga_zip and aga_product are mutually exclusive."""
+        with pytest.raises(
+            ValueError, match="exactly one of aga_zip or aga_product must be True"
+        ):
+            _test_cases.parse_zip_or_product(**flags)
 
     @pytest.mark.parametrize(
         "flags",
         [
-            {"aga_product": True, "aga_zip": True, "aga_params": True},
-            {"aga_zip": True, "aga_params": True},
-            {"aga_product": True, "aga_params": True},
-            {"aga_product": True, "aga_zip": True},
+            {flag: True for flag in flags}
+            for flags in powerset(
+                {"aga_product", "aga_zip", "aga_params", "aga_singular_params"},
+                min_length=2,
+            )
         ],
     )
     def test_aga_test_cases_multiple_flags_fail(self, flags: Dict[str, bool]) -> None:
@@ -121,7 +248,7 @@ class TestTestCases:
         with pytest.raises(
             ValueError,
             match="Exactly many of aga_product, aga_zip, or aga_params are True. "
-            "Only 1 or 0 of the flags is allowed. ",
+            "Only 0 or 1 of the flags is allowed. ",
         ):
 
             @_test_cases([1, 2], [3, 4], **flags)
@@ -134,7 +261,7 @@ class TestTestCases:
         """Test that aga_params can be used with kwargs."""
         with pytest.raises(ValueError, match="aga_params=True ignores non-aga kwargs"):
 
-            @_test_cases_params(
+            @_test_cases.params(
                 [param(1, 2, c=3), param(4, 5, c=6)], k=10, aga_expect=[6, 15]
             )
             @problem()
@@ -149,10 +276,29 @@ class TestTestCases:
             match="aga_params=True requires exactly one iterable of sets of parameters",
         ):
 
-            @_test_cases_params(
+            @_test_cases.params(
                 [param(1, 2, c=3)], [param(4, 5, c=6)], aga_expect=[6, 15]
             )
             @problem()
             def add_two(x: int, y: int) -> int:
                 """Add two numbers."""
                 return x + y
+
+    def test_capture_out_no_capture(self) -> None:
+        """Test that CaptureOut does not capture stdout when taking False."""
+        with CaptureOut(False) as stdout:
+            print("some stdout")
+
+        assert stdout.value is None
+
+    def test_capture_out_with_capture(self) -> None:
+        """Test that CaptureOut captures stdout when taking True."""
+        print_value = "some stdout here"
+        with CaptureOut(True) as stdout:
+            print(print_value, end="")
+
+        assert stdout.value == print_value
+
+    def test_pipeline(self, test_pipeline_linked_list: Problem[Any, Any]) -> None:
+        """Test that the pipeline decorator works."""
+        test_pipeline_linked_list.check()

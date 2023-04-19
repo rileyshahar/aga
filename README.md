@@ -45,7 +45,7 @@ In `square.py` (or any python file), write:
 ```python
 from aga import problem, test_case, test_cases
 
-@test_cases([-3, 100])
+@test_cases(-3, 100)
 @test_case(2, aga_expect=4)
 @test_case(-2, aga_expect=4)
 @problem()

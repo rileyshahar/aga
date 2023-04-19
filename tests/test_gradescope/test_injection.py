@@ -96,6 +96,32 @@ def test_injection_config(
     assert auto_injection_dir in injection_config.inject_dirs if auto_inject else True
 
 
+def test_bad_injection_config(
+    fake_aga_config: AgaConfig,
+    mocked_find_injection_dir: MagicMock,
+) -> None:
+    """Test that the injection config is valid."""
+    from aga.cli.app import _load_injection_config
+
+    with pytest.raises(ValueError, match="injection files or dirs are invalid"):
+        _load_injection_config(
+            fake_aga_config,
+            [pathlib.Path("not_exist.py")],
+            [],
+            "injection",
+            False,
+        )
+
+        with pytest.raises(ValueError, match="injection files or dirs are invalid"):
+            _load_injection_config(
+                fake_aga_config,
+                [],
+                [pathlib.Path("not_exist/")],
+                "injection",
+                False,
+            )
+
+
 def test_find_injection() -> None:
     from aga.config import _find_injection_dir
 

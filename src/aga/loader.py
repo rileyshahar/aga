@@ -116,7 +116,7 @@ def _load_source_from_file(path: str, name: str = "module") -> Any:
 def _load_attr_from_module(attr: str, module: ModuleType) -> Any:
     """Get a specific symbol from a module."""
     try:
-        return module.__getattribute__(attr)
+        return getattr(module, attr)
     except AttributeError as err:
         raise NoMatchingSymbol from err
 
@@ -130,14 +130,14 @@ def _load_from_module_by(
             yield item
 
 
-def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any]]:
+def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any, Any]]:
     """Return all problems in the module."""
     yield from _load_from_module_by(
         lambda i: isinstance(i, Problem), module  # type: ignore
     )
 
 
-def load_problems_from_path(path: str) -> Iterable[Problem[Any]]:
+def load_problems_from_path(path: str) -> Iterable[Problem[Any, Any]]:
     """Load all problems from the module at path."""
     mod = _load_source_from_file(path)
     yield from _load_problems_from_module(mod)
@@ -153,7 +153,6 @@ def _load_symbol_from_dir(path: str, symbol: str) -> Any:
     """Load a specific symbol from any of the source files in a directory."""
     matching_symbols = []
     for file in os.listdir(path):
-
         try:
             file_path = pathjoin(path, file)
             matching_symbols.append(load_symbol_from_path(file_path, symbol))
@@ -201,8 +200,8 @@ class _ProblemUnpickler(Unpickler):  # type: ignore
         return super().find_class(module, name)
 
 
-def load_problem(root: str, fname: str = "problem.pckl") -> Problem[Output]:
+def load_problem(root: str, fname: str = "problem.pckl") -> Problem[Any, Any]:
     """Load a problem from the gradescope environment."""
     with open(pathjoin(root, fname), "rb") as problem_pickled:
-        out: Problem[Output] = _ProblemUnpickler(problem_pickled).load()
+        out: Problem[Any, Any] = _ProblemUnpickler(problem_pickled).load()
     return out

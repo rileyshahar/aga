@@ -77,14 +77,18 @@ def diff_wrong(x: int, y: int) -> int:
     return x + y
 
 
-def test_square_wrong(square: Problem[int], metadata: SubmissionMetadata) -> None:
+def test_square_wrong(
+    square: Problem[[int], int], metadata: SubmissionMetadata
+) -> None:
     """Test that the tests fail for the incorrect implementation."""
     suite, _ = square.generate_test_suite(square_wrong, metadata)
     result = suite.run(TestCase().defaultTestResult())
     assert not result.wasSuccessful()
 
 
-def test_square_right(square: Problem[int], metadata: SubmissionMetadata) -> None:
+def test_square_right(
+    square: Problem[[int], int], metadata: SubmissionMetadata
+) -> None:
     """Test that the tests succeed for the correct implementation."""
     suite, _ = square.generate_test_suite(square_right, metadata)
     result = suite.run(TestCase().defaultTestResult())
@@ -166,7 +170,10 @@ def fixture_square_kwd_failure(
     metadata: SubmissionMetadata,
 ) -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc square kwd problem."""
-    suite, _ = square_one_tc_kwd.generate_test_suite(square_wrong, metadata)
+    suite, _ = square_one_tc_kwd.generate_test_suite(
+        square_wrong,  # type: ignore
+        metadata,
+    )
     result = suite.run(TestCase().defaultTestResult())
 
     return result.failures
@@ -209,7 +216,7 @@ def fixture_diff_kwd_failure(
     metadata: SubmissionMetadata,
 ) -> list[tuple[TestCase, str]]:
     """Generate a list of failures for the single tc diff kwd problem."""
-    suite, _ = diff_one_tc_kwd.generate_test_suite(diff_wrong, metadata)
+    suite, _ = diff_one_tc_kwd.generate_test_suite(diff_wrong, metadata)  # type: ignore
     result = suite.run(TestCase().defaultTestResult())
 
     return result.failures

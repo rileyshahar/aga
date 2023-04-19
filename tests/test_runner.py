@@ -1,12 +1,13 @@
 """Tests for the runner module."""
 from textwrap import dedent
+from typing import Callable
 
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput, load_and_run
 
 
 def test_square_output(
-    square: Problem[int],
+    square: Problem[[int], int],
     source_square: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -48,7 +49,9 @@ def test_square_output(
 
 
 def test_square_failure_output(
-    square: Problem[int], source_square_incorrect: str, metadata: SubmissionMetadata
+    square: Problem[[int], int],
+    source_square_incorrect: str,
+    metadata: SubmissionMetadata,
 ) -> None:
     """Test the output of an incorrect square problem."""
     output = load_and_run(square, source_square_incorrect, metadata)
@@ -97,7 +100,9 @@ def test_square_failure_output(
 
 
 def test_hello_world(
-    hello_world: Problem[None], source_hello_world: str, metadata: SubmissionMetadata
+    hello_world: Problem[[], None],
+    source_hello_world: str,
+    metadata: SubmissionMetadata,
 ) -> None:
     """Test the output of an incorrect hello world submission."""
     output = load_and_run(hello_world, source_hello_world, metadata)
@@ -129,7 +134,7 @@ Here's a detailed look at the difference between the strings. Lines starting wit
 
 
 def test_hello_world_failure(
-    hello_world: Problem[None],
+    hello_world: Problem[[], None],
     source_hello_world_incorrect: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -152,7 +157,7 @@ def test_hello_world_failure(
 
 
 def test_hello_world_script(
-    hello_world_script: Problem[None],
+    hello_world_script: Problem[[], None],
     source_hello_world_script: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -173,7 +178,7 @@ def test_hello_world_script(
 
 
 def test_hello_name(
-    hello_name: Problem[None], source_hello_name: str, metadata: SubmissionMetadata
+    hello_name: Problem[[], None], source_hello_name: str, metadata: SubmissionMetadata
 ) -> None:
     """Test the output of a correct hello name submission."""
     output = load_and_run(hello_name, source_hello_name, metadata)
@@ -233,7 +238,7 @@ Here's a detailed look at the difference between the strings. Lines starting wit
 
 
 def test_hello_name_incorrect(
-    hello_name: Problem[None],
+    hello_name: Problem[[], None],
     source_hello_name_incorrect: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -268,7 +273,7 @@ def test_hello_name_incorrect(
 
 
 def test_multiple_scripts(
-    hello_world_script: Problem[None], source_dir: str, metadata: SubmissionMetadata
+    hello_world_script: Problem[[], None], source_dir: str, metadata: SubmissionMetadata
 ) -> None:
     """Test the error message when multiple scripts are uploaded."""
     output = load_and_run(hello_world_script, source_dir, metadata)
@@ -282,7 +287,7 @@ def test_multiple_scripts(
 
 
 def test_no_scripts(
-    hello_world_script: Problem[None], tmpdir: str, metadata: SubmissionMetadata
+    hello_world_script: Problem[[], None], tmpdir: str, metadata: SubmissionMetadata
 ) -> None:
     """Test the error message when no scripts are uploaded."""
     output = load_and_run(hello_world_script, tmpdir, metadata)
@@ -296,7 +301,7 @@ def test_no_scripts(
 
 
 def test_square_prize(
-    square_prize: Problem[int],
+    square_prize: Problem[[], int],
     source_square: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -342,7 +347,7 @@ def test_square_prize(
 
 
 def test_square_prize_late(
-    square_prize: Problem[int],
+    square_prize: Problem[[int], int],
     source_square: str,
     metadata_late: SubmissionMetadata,
 ) -> None:
@@ -388,7 +393,7 @@ def test_square_prize_late(
 
 
 def test_square_prize_grouped_score(
-    square_prize_grouped: Problem[int],
+    square_prize_grouped: Problem[[int], int],
     source_square: str,
     metadata_late: SubmissionMetadata,
 ) -> None:
@@ -399,7 +404,7 @@ def test_square_prize_grouped_score(
 
 
 def test_square_custom_prize_score(
-    square_custom_prize: Problem[int],
+    square_custom_prize: Problem[[int], int],
     source_square: str,
     metadata_previous_submissions: SubmissionMetadata,
 ) -> None:
@@ -412,7 +417,7 @@ def test_square_custom_prize_score(
 
 
 def test_temp_right(
-    temp: Problem[float], source_temp_right: str, metadata: SubmissionMetadata
+    temp: Problem[[float], float], source_temp_right: str, metadata: SubmissionMetadata
 ) -> None:
     """Test that temp_right counts as corrrect."""
     output = load_and_run(temp, source_temp_right, metadata)
@@ -420,7 +425,9 @@ def test_temp_right(
 
 
 def test_temp_float_issue(
-    temp: Problem[float], source_temp_float_issue: str, metadata: SubmissionMetadata
+    temp: Problem[[float], float],
+    source_temp_float_issue: str,
+    metadata: SubmissionMetadata,
 ) -> None:
     """Test that temp_float_issue counts as corrrect."""
     output = load_and_run(temp, source_temp_float_issue, metadata)
@@ -428,7 +435,7 @@ def test_temp_float_issue(
 
 
 def test_temp_wrong(
-    temp: Problem[float], source_temp_wrong: str, metadata: SubmissionMetadata
+    temp: Problem[[float], float], source_temp_wrong: str, metadata: SubmissionMetadata
 ) -> None:
     """Test that temp_wrong is wrong."""
     output = load_and_run(temp, source_temp_wrong, metadata)
@@ -436,7 +443,7 @@ def test_temp_wrong(
 
 
 def test_make_n_adder_right(
-    higher_order: Problem[float],
+    higher_order: Problem[[int], Callable[[int], int]],
     source_make_n_adder_right: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -446,7 +453,7 @@ def test_make_n_adder_right(
 
 
 def test_make_n_adder_wrong(
-    higher_order: Problem[float],
+    higher_order: Problem[[int], Callable[[int], int]],
     source_make_n_adder_wrong: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -456,7 +463,7 @@ def test_make_n_adder_wrong(
 
 
 def test_make_n_adder_slightly_wrong(
-    higher_order: Problem[float],
+    higher_order: Problem[[int], Callable[[int], int]],
     source_make_n_adder_slightly_wrong: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -466,7 +473,7 @@ def test_make_n_adder_slightly_wrong(
 
 
 def test_make_n_adder_type_error(
-    higher_order: Problem[float],
+    higher_order: Problem[[int], Callable[[int], int]],
     source_make_n_adder_type_error: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -476,7 +483,7 @@ def test_make_n_adder_type_error(
 
 
 def test_is_even_lambda(
-    override_test: Problem[float],
+    override_test: Problem[[int], bool],
     source_is_even_lambda: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -486,7 +493,7 @@ def test_is_even_lambda(
 
 
 def test_is_even_def(
-    override_test: Problem[float],
+    override_test: Problem[[int], bool],
     source_is_even_def: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -496,7 +503,7 @@ def test_is_even_def(
 
 
 def test_disallow_lambda(
-    disallow_test: Problem[float],
+    disallow_test: Problem[[int], float],
     source_is_even_lambda: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -506,7 +513,7 @@ def test_disallow_lambda(
 
 
 def test_disallow_def(
-    disallow_test: Problem[float],
+    disallow_test: Problem[[int], float],
     source_is_even_def: str,
     metadata: SubmissionMetadata,
 ) -> None:
@@ -524,7 +531,7 @@ def test_disallow_def(
 
 
 def test_description_overriden(
-    override_description: Problem[int],
+    override_description: Problem[[int], bool],
     source_bad_override_description: str,
     metadata: SubmissionMetadata,
 ) -> None:

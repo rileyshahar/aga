@@ -1,5 +1,6 @@
 """Contains various fixtures, especially pre-written problems."""
 # pylint: disable=too-many-lines
+from __future__ import annotations
 
 import ast
 import inspect
@@ -20,9 +21,13 @@ import aga
 from aga import group, problem, test_case, test_cases
 from aga.checks import Disallow
 from aga.config import INJECTION_MODULE_FLAG, AgaConfig, load_config_from_path
-from aga.core import Problem, SubmissionMetadata, _TestInputs
+from aga.core import Problem, SubmissionMetadata
+from aga.core.suite import _TestInputs, TestMetadata
+from aga.core.utils import MethodCallerFactory, initializer, PropertyGetterFactory
 from aga.runner import TcOutput
 from aga.score import correct_and_on_time, prize
+
+# from aga.utils.attrs import MethodCaller
 
 SOURCES = {
     "square_problem": """
@@ -164,7 +169,7 @@ def _make_source_fixture(source: str, name: str) -> None:
     setattr(module, name, inner)
 
 
-for (_name, _source) in SOURCES.items():
+for _name, _source in SOURCES.items():
     _make_source_fixture(_source, _name)
 
 
@@ -250,7 +255,7 @@ def valid_problem(request):
 
 
 @pytest.fixture(name="square")
-def fixture_square() -> Problem[int]:
+def fixture_square() -> Problem[[int], int]:
     """Generate a problem which tests a square function."""
 
     @test_case(4)
@@ -265,7 +270,7 @@ def fixture_square() -> Problem[int]:
 
 
 @pytest.fixture(name="temp")
-def fixture_temp() -> Problem[float]:
+def fixture_temp() -> Problem[[float], float]:
     """Generate a problem which tests a temp function which returns float."""
 
     @test_case(4.0)
@@ -280,7 +285,7 @@ def fixture_temp() -> Problem[float]:
 
 
 @pytest.fixture(name="square_custom_name")
-def fixture_square_custom_name() -> Problem[int]:
+def fixture_square_custom_name() -> Problem[[int], int]:
     """Generate a problem which tests a square function.
 
     This fixture uses the `aga_name` argument to `test_case` to generate a test case
@@ -299,7 +304,7 @@ def fixture_square_custom_name() -> Problem[int]:
 
 
 @pytest.fixture(name="times")
-def fixture_times() -> Problem[int]:
+def fixture_times() -> Problem[[int, int], int]:
     """Generate a problem which tests a times function."""
 
     @test_case(4, 6)
@@ -314,7 +319,7 @@ def fixture_times() -> Problem[int]:
 
 
 @pytest.fixture(name="diff")
-def fixture_diff() -> Problem[int]:
+def fixture_diff() -> Problem[[int, int], int]:
     """Generate a problem which tests a difference function."""
 
     @test_case(17, 10)
@@ -329,7 +334,7 @@ def fixture_diff() -> Problem[int]:
 
 
 @pytest.fixture(name="str_len")
-def fixture_str_len() -> Problem[int]:
+def fixture_str_len() -> Problem[[str], int]:
     """Generate a problem which tests a str length function."""
 
     @test_case("hello, world")
@@ -345,7 +350,7 @@ def fixture_str_len() -> Problem[int]:
 
 
 @pytest.fixture(name="palindrome")
-def fixture_palindrome() -> Problem[bool]:
+def fixture_palindrome() -> Problem[[str], bool]:
     """Generate a problem which tests a string palindrome function.
 
     This problem uses the `name` argument to `problem` to declare a different name from
@@ -366,7 +371,7 @@ def fixture_palindrome() -> Problem[bool]:
 
 
 @pytest.fixture(name="kwd")
-def fixture_kwd() -> Problem[str]:
+def fixture_kwd() -> Problem[[str], str]:
     """Generate a problem which tests a string identity function.
 
     The special part of this function is that it takes an argument via keyword arg, not
@@ -387,7 +392,7 @@ def fixture_kwd() -> Problem[str]:
 
 
 @pytest.fixture(name="pos_and_kwd")
-def fixture_pos_and_kwd() -> Problem[int]:
+def fixture_pos_and_kwd() -> Problem[[int, int], int]:
     """Generate a problem which tests a diff function.
 
     The special part of this function is that it takes arguments via both positional and
@@ -408,13 +413,13 @@ def fixture_pos_and_kwd() -> Problem[int]:
 
 
 @pytest.fixture(name="diff_bad_gt")
-def fixture_diff_bad_gt(diff: Problem[int]) -> Problem[int]:
+def fixture_diff_bad_gt(diff: Problem[[int, int], int]) -> Problem[[int, int], int]:
     """Generate an implementation of difference with an incorrect golden test."""
     return test_case(3, 1, aga_expect=1)(diff)
 
 
 @pytest.fixture(name="diff_bad_impl")
-def fixture_diff_bad_impl() -> Problem[int]:
+def fixture_diff_bad_impl() -> Problem[[int, int], int]:
     """Generate a difference problem with an incorrect implementation."""
 
     @test_case(17, 10)
@@ -429,7 +434,7 @@ def fixture_diff_bad_impl() -> Problem[int]:
 
 
 @pytest.fixture(name="square_simple_weighted")
-def fixture_square_simple_weighted() -> Problem[int]:
+def fixture_square_simple_weighted() -> Problem[[int], int]:
     """Generate a problem which tests a square function, with simple manual weights."""
 
     @test_case(-2, aga_weight=2)
@@ -446,7 +451,7 @@ def fixture_square_simple_weighted() -> Problem[int]:
 
 
 @pytest.fixture(name="square_grouped")
-def fixture_square_grouped() -> Problem[int]:
+def fixture_square_grouped() -> Problem[[int], int]:
     """Generate a problem which tests a square function, with grouped weights."""
     # problem has score 20
     # groups get assigned scores 6, 12, 2
@@ -470,7 +475,7 @@ def fixture_square_grouped() -> Problem[int]:
 
 
 @pytest.fixture(name="square_generated_cases")
-def fixture_square_generated_cases() -> Problem[int]:
+def fixture_square_generated_cases() -> Problem[[int], int]:
     """Generate a problem which tests a square function using generated test cases."""
 
     @test_cases(range(-2, 3), aga_product=True)
@@ -483,7 +488,7 @@ def fixture_square_generated_cases() -> Problem[int]:
 
 
 @pytest.fixture(name="diff_generated")
-def fixture_diff_generator() -> Problem[int]:
+def fixture_diff_generator() -> Problem[[int, int], int]:
     """Generate a problem which tests a diff function.
 
     This function has generator-created test cases for two positional arguments.
@@ -499,7 +504,7 @@ def fixture_diff_generator() -> Problem[int]:
 
 
 @pytest.fixture(name="pos_zip")
-def fixture_pos_zip() -> Problem[int]:
+def fixture_pos_zip() -> Problem[[int, int], int]:
     """Generate a problem which tests zip combinator."""
 
     @test_cases([-1, 1], [1, 3], aga_zip=True, aga_hidden=[True] * 2)
@@ -512,7 +517,7 @@ def fixture_pos_zip() -> Problem[int]:
 
 
 @pytest.fixture(name="pos_zip_with_singleton_aga_args")
-def fixture_pos_zip_with_singleton_aga_args() -> Problem[int]:
+def fixture_pos_zip_with_singleton_aga_args() -> Problem[[int, int], int]:
     """Generate a problem which tests zip combinator and singleton aga_ kwargs input."""
 
     @test_cases([-1, 1], [1, 3], aga_zip=True, aga_hidden=True)
@@ -525,7 +530,7 @@ def fixture_pos_zip_with_singleton_aga_args() -> Problem[int]:
 
 
 @pytest.fixture(name="aga_args_in_product")
-def fixture_aga_args_in_product() -> Problem[int]:
+def fixture_aga_args_in_product() -> Problem[[int, int], int]:
     """Generate a problem which tests product combinator."""
 
     @test_cases(range(-1, 2), range(1, 3), aga_hidden=[True] * 6, aga_product=True)
@@ -538,7 +543,7 @@ def fixture_aga_args_in_product() -> Problem[int]:
 
 
 @pytest.fixture(name="aga_args_with_kwargs_in_product")
-def fixture_aga_args_with_kwargs_in_product() -> Problem[int]:
+def fixture_aga_args_with_kwargs_in_product() -> Problem[[int, int], int]:
     """Generate a problem which tests product combinator with mixed args and kwargs."""
 
     @test_cases(range(-1, 2), y=range(1, 3), aga_hidden=[True] * 6, aga_product=True)
@@ -551,7 +556,7 @@ def fixture_aga_args_with_kwargs_in_product() -> Problem[int]:
 
 
 @pytest.fixture(name="aga_args_singleton")
-def fixture_aga_args_singleton() -> Problem[int]:
+def fixture_aga_args_singleton() -> Problem[[int, int], int]:
     """Generate a problem which tests product combinator with singleton aga_ kwargs."""
 
     @test_cases(range(-1, 2), range(1, 3), aga_hidden=True, aga_product=True)
@@ -564,7 +569,7 @@ def fixture_aga_args_singleton() -> Problem[int]:
 
 
 @pytest.fixture(name="aga_args_with_kwargs_in_product_singleton")
-def fixture_aga_args_with_kwargs_in_product_singleton() -> Problem[int]:
+def fixture_aga_args_with_kwargs_in_product_singleton() -> Problem[[int, int], int]:
     """Generate a problem which tests product with mixed args and kwargs."""
 
     @test_cases(range(-1, 2), y=range(1, 3), aga_hidden=True, aga_product=True)
@@ -577,7 +582,7 @@ def fixture_aga_args_with_kwargs_in_product_singleton() -> Problem[int]:
 
 
 @pytest.fixture(name="pos_and_kwd_generated")
-def fixture_pos_and_kwd_generated() -> Problem[int]:
+def fixture_pos_and_kwd_generated() -> Problem[[int, int], int]:
     """Generate a problem which tests a diff function.
 
     This function has generator-created test cases for both positional and keyword
@@ -594,7 +599,7 @@ def fixture_pos_and_kwd_generated() -> Problem[int]:
 
 
 @pytest.fixture(name="pos_and_kwd_zip")
-def fixture_pos_and_kwd_zip() -> Problem[int]:
+def fixture_pos_and_kwd_zip() -> Problem[[int, int], int]:
     """Generate a problem which tests a diff function.
 
     This function has generator-created test cases for both positional and keyword
@@ -611,7 +616,7 @@ def fixture_pos_and_kwd_zip() -> Problem[int]:
 
 
 @pytest.fixture(name="pos_and_kwd_generator_function")
-def fixture_pos_and_kwd_generator_function() -> Problem[int]:
+def fixture_pos_and_kwd_generator_function() -> Problem[[int, int], int]:
     """Generate a problem which tests a diff function.
 
     This function has generator-created test cases for both positional and keyword
@@ -632,7 +637,7 @@ def fixture_pos_and_kwd_generator_function() -> Problem[int]:
 
 
 @pytest.fixture(name="hello_world")
-def fixture_hello_world() -> Problem[None]:
+def fixture_hello_world() -> Problem[[], None]:
     """Generate a problem which tests stdout."""
 
     @test_case()
@@ -645,7 +650,7 @@ def fixture_hello_world() -> Problem[None]:
 
 
 @pytest.fixture(name="hello_world_script")
-def fixture_hello_world_script() -> Problem[None]:
+def fixture_hello_world_script() -> Problem[[], None]:
     """Generate a problem which tests a hello world script."""
 
     @test_case()
@@ -658,7 +663,7 @@ def fixture_hello_world_script() -> Problem[None]:
 
 
 @pytest.fixture(name="hello_name")
-def fixture_hello_name() -> Problem[None]:
+def fixture_hello_name() -> Problem[[], None]:
     """Generate a problem which tests a script with input."""
 
     @test_case("Alice", "Bob")
@@ -676,7 +681,7 @@ def fixture_hello_name() -> Problem[None]:
 
 
 @pytest.fixture(name="square_prize")
-def fixture_square_prize() -> Problem[int]:
+def fixture_square_prize() -> Problem[[int], int]:
     """Generate a problem with a prize."""
 
     @test_case(0)
@@ -691,7 +696,7 @@ def fixture_square_prize() -> Problem[int]:
 
 
 @pytest.fixture(name="square_prize_grouped")
-def fixture_square_prize_grouped() -> Problem[int]:
+def fixture_square_prize_grouped() -> Problem[[int], int]:
     """Generate a problem with a prize in a config group."""
 
     @group(weight=3)
@@ -708,7 +713,7 @@ def fixture_square_prize_grouped() -> Problem[int]:
 
 
 @pytest.fixture(name="square_ec")
-def fixture_square_ec() -> Problem[int]:
+def fixture_square_ec() -> Problem[[int], int]:
     """Generate a problem with a square extra credit problem."""
 
     @test_case(0, aga_extra_credit=1.5)
@@ -722,7 +727,7 @@ def fixture_square_ec() -> Problem[int]:
 
 
 @pytest.fixture(name="square_custom_prize")
-def fixture_square_custom_prize() -> Problem[int]:
+def fixture_square_custom_prize() -> Problem[[int], int]:
     """Generate a problem with a custom prize function."""
 
     def our_prize(
@@ -764,7 +769,7 @@ def fixture_square_custom_prize() -> Problem[int]:
 
 
 @pytest.fixture(name="aga_expect_stdout")
-def fixture_aga_expect_stdout() -> Problem[None]:
+def fixture_aga_expect_stdout() -> Problem[[], None]:
     """Generate a problem which tests stdout."""
 
     @test_case(aga_expect_stdout="Hello, world!\n")
@@ -778,7 +783,7 @@ def fixture_aga_expect_stdout() -> Problem[None]:
 
 
 @pytest.fixture(name="script_aga_expect_stdout_with_input")
-def fixture_script_aga_expect_stdout_with_input() -> Problem[None]:
+def fixture_script_aga_expect_stdout_with_input() -> Problem[[], None]:
     """Generate a problem which tests stdout with input."""
 
     @test_case("Bob", aga_expect_stdout=["Hi? ", "Hello, this is Bob."])
@@ -793,7 +798,7 @@ def fixture_script_aga_expect_stdout_with_input() -> Problem[None]:
 
 
 @pytest.fixture(name="function_aga_expect_stdout_with_input")
-def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
+def fixture_function_aga_expect_stdout_with_input() -> Problem[[str], None]:
     """Generate a problem which tests stdout with input."""
 
     @test_case("Bob", aga_expect_stdout=["Hello, this is Bob."])
@@ -807,10 +812,16 @@ def fixture_function_aga_expect_stdout_with_input() -> Problem[None]:
 
 
 @pytest.fixture(name="higher_order")
-def fixture_higher_order() -> Problem[Callable[[int], int]]:
+def fixture_higher_order() -> Problem[[int], Callable[[int], int]]:
     """Generate a problem which tests a higher-order function."""
 
-    def _make_n_check(case, golden, student):  # type: ignore
+    def _make_n_check(
+        case: TestCase,
+        golden: Callable[[int], int],
+        student: Callable[[int], int],
+        metadata: TestMetadata,  # pylint: disable=W0613
+        msg_format: str,  # pylint: disable=W0613
+    ) -> None:
         # here `golden` and `student` are the inner functions returned by the
         # submissions, so they have type int -> int`
         for i in range(10):
@@ -830,7 +841,7 @@ def fixture_higher_order() -> Problem[Callable[[int], int]]:
 
 
 @pytest.fixture(name="override_test")
-def fixture_override_test() -> Problem[bool]:
+def fixture_override_test() -> Problem[[int], bool]:
     """Generate a problem which tests `aga_override_test`."""
 
     def _my_func_checker(aga_hook, golden, student):  # type: ignore
@@ -848,7 +859,7 @@ def fixture_override_test() -> Problem[bool]:
 
 
 @pytest.fixture(name="disallow_test")
-def fixture_disallow_test() -> Problem[bool]:
+def fixture_disallow_test() -> Problem[[int], bool]:
     """Generate a problem which tests `Disallow`."""
 
     @test_case(10, aga_override_test=Disallow(nodes=[ast.FunctionDef]).to_test())
@@ -860,7 +871,7 @@ def fixture_disallow_test() -> Problem[bool]:
 
 
 @pytest.fixture(name="override_test_with_expect")
-def test_override_test_with_expect() -> Problem[bool]:
+def test_override_test_with_expect() -> Problem[[int], bool]:
     """Generate a problem which tests `aga_override_test`."""
 
     def dummy_tester(
@@ -882,7 +893,7 @@ def test_override_test_with_expect() -> Problem[bool]:
 
 
 @pytest.fixture(name="override_check_with_expect")
-def test_override_check_with_expect() -> Problem[bool]:
+def test_override_check_with_expect() -> Problem[[int], bool]:
     """Generate a problem which tests `aga_override_check`."""
 
     def dummy_comparing(test_input: TestCase, golden: bool, student: bool) -> None:
@@ -908,7 +919,58 @@ def test_override_check_with_expect() -> Problem[bool]:
         lazy_fixture("override_check_with_expect"),
     ]
 )
-def overrided_problem(request):  # type: ignore
+def overridden_problem(request):  # type: ignore
+    """Make a collection of problems with overridden tests/checks."""
+    return request.param
+
+
+@pytest.fixture(name="invalid_override_test_with_expect")
+def test_invalid_override_test_with_expect() -> Problem[[int], bool]:
+    """Generate a invalid problem which tests `aga_override_test`."""
+
+    def dummy_tester(
+        test_input: _TestInputs[bool],
+        golden: Callable[[int], bool],
+        student: Callable[[int], bool],
+    ) -> None:
+        """Be a dummy tester."""
+        test_input.assertEqual(golden(*test_input.args), student(*test_input.args))
+
+    @test_case(10, aga_override_test=dummy_tester, aga_expect=False)
+    @test_case(3, aga_override_test=dummy_tester, aga_expect=True)
+    @problem()
+    def is_even(x: int) -> bool:
+        """Return True if x is even."""
+        return x % 2 == 0
+
+    return is_even
+
+
+@pytest.fixture(name="invalid_override_check_with_expect")
+def test_invalid_override_check_with_expect() -> Problem[[int], bool]:
+    """Generate a problem which tests `aga_override_check`."""
+
+    def dummy_comparing(test_input: TestCase, golden: bool, student: bool) -> None:
+        """Be a dummy comparing function."""
+        test_input.assertEqual(golden, student)
+
+    @test_case(10, aga_override_check=dummy_comparing, aga_expect=False)
+    @test_case(3, aga_override_check=dummy_comparing, aga_expect=True)
+    @problem()
+    def is_even(x: int) -> bool:
+        """Return True if x is even."""
+        return x % 2 == 0
+
+    return is_even
+
+
+@pytest.fixture(
+    params=[
+        lazy_fixture("invalid_override_test_with_expect"),
+        lazy_fixture("invalid_override_check_with_expect"),
+    ]
+)
+def invalid_overridden_problem(request):  # type: ignore
     """Make a collection of problems with overridden tests/checks."""
     return request.param
 
@@ -980,7 +1042,7 @@ def fixture_injection_tear_down() -> Generator[None, None, None]:
 
 
 @pytest.fixture(name="override_description")
-def fixture_override_description() -> Problem[bool]:
+def fixture_override_description() -> Problem[[int], bool]:
     """Generate a problem which tests `aga_description` and overrides."""
 
     def override(
@@ -1003,3 +1065,81 @@ def fixture_override_description() -> Problem[bool]:
         return x % 2 == 0
 
     return is_even
+
+
+# pylint: disable=too-few-public-methods
+class Node:
+    """A node in a linked list."""
+
+    def __init__(self, value: int, next_node: Node | None = None) -> None:
+        self.value = value
+        self.next = next_node
+
+
+class LL:
+    """A linked list for testing."""
+
+    def __init__(self) -> None:
+        self.first: Node | None = None
+
+    def __repr__(self) -> str:
+        """Return a string representation of the list."""
+        return f"< {self._chain_nodes(self.first)}>"
+
+    def _chain_nodes(self, node: Node | None) -> str:
+        if node is None:
+            return ""
+        else:
+            return f"{node.value} {self._chain_nodes(node.next)}"
+
+    def display(self) -> None:
+        """Print the list."""
+        print(self)
+
+    def prepend(self, value: int) -> None:
+        """Add a new element to the front of the list."""
+        self.first = Node(value, self.first)
+
+    def pop(self) -> int:
+        """Remove the first element from the list and return it."""
+        if self.first is None:
+            raise IndexError("Cannot pop from an empty list")
+
+        value = self.first.value
+        self.first = self.first.next
+        return value
+
+
+@pytest.fixture(name="test_pipeline_linked_list")
+def fixture_test_pipeline_linked_list() -> Problem[[], LL]:
+    """Generate a problem problem using pipeline."""
+    prepend = MethodCallerFactory("prepend")
+    display = MethodCallerFactory("display")
+    pop = MethodCallerFactory("pop")
+    get_prop = PropertyGetterFactory()
+
+    actions = {
+        initializer: None,
+        prepend(10): None,
+        display(): None,
+        prepend(20): None,
+        display(): None,
+        prepend(30): None,
+        display(): None,
+        get_prop("first.value"): 30,
+        get_prop(".first", ".next", ".value"): 20,
+        pop(): 30,
+        pop(): 20,
+        pop(): 10,
+    }
+
+    @test_case.pipeline(
+        *actions.keys(),
+        aga_expect_stdout="< 10 >\n< 20 10 >\n< 30 20 10 >\n",
+        aga_expect=list(actions.values()),
+    )
+    @problem()
+    class _LL(LL):
+        pass
+
+    return _LL  # type: ignore

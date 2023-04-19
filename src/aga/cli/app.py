@@ -1,12 +1,12 @@
 """The main command-line typer application."""
 import pathlib
 from datetime import datetime
-from typing import Iterable, Optional, Tuple, List
+from typing import Iterable, Optional, Tuple, List, Any
 
 import typer
 
 from ..config import AgaConfig, load_config_from_path
-from ..core import Output, Problem, SubmissionMetadata
+from ..core import Problem, SubmissionMetadata
 from ..gradescope import into_gradescope_zip
 from ..loader import load_problems_from_path
 from ..runner import load_and_run
@@ -29,7 +29,7 @@ def complete_frontend(incomplete: str) -> Iterable[Tuple[str, str]]:
             yield frontend
 
 
-def _gen_gradescope(problem: Problem[Output], path: Optional[str] = None) -> None:
+def _gen_gradescope(problem: Problem[Any, Any], path: Optional[str] = None) -> None:
     """Generate a Gradescope autograder zip."""
     zip_path = into_gradescope_zip(problem, path=path)
     typer.echo(zip_path)
@@ -59,7 +59,7 @@ def _load_injection_config(
         config.injection.find_auto_injection()
 
     if not config.injection.is_valid:
-        raise ValueError("injection files/dirs are invalid")
+        raise ValueError("injection files or dirs are invalid")
 
     config.injection.create_injection_module(injection_module)
     config.injection.inject()
@@ -67,7 +67,7 @@ def _load_injection_config(
     return config
 
 
-def _load_problem(path: str, config: AgaConfig) -> Problem[Output]:
+def _load_problem(path: str, config: AgaConfig) -> Problem[Any, Any]:
     """Load a problem from the top-level directory."""
     problems = list(load_problems_from_path(path))
 
@@ -95,7 +95,7 @@ def _handle_invalid_frontend(frontend: str) -> None:
     raise typer.Exit(1)
 
 
-def _check_problem(problem: Problem[Output]) -> None:
+def _check_problem(problem: Problem[Any, Any]) -> None:
     """Check that problem is valid."""
     try:
         problem.check()

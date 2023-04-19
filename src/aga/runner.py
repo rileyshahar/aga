@@ -9,11 +9,12 @@ submission and then runs it.
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 from unittest import TestResult
 
 from .config import AgaConfig
-from .core import AgaTestCase, AgaTestSuite, Output, Problem, SubmissionMetadata
+from .core import AgaTestCase, AgaTestSuite, Problem, SubmissionMetadata
+from .core.problem import ProblemParamSpec, ProblemOutputType
 from .loader import (
     MultipleScripts,
     NoMatchingSymbol,
@@ -25,6 +26,8 @@ from .loader import (
 )
 from .score import ScoredPrize
 from .util import limited_traceback
+
+Output = TypeVar("Output")
 
 
 @dataclass
@@ -253,14 +256,14 @@ def _run(
 
 
 def load_and_run(
-    problem: Problem[Output],
+    problem: Problem[ProblemParamSpec, ProblemOutputType],
     path: str,
     metadata: SubmissionMetadata,
 ) -> ProblemOutput:
     """Load the submission and then run the suite, returning the output.
 
     The path can be either a directory, which will be searched without recurring into
-    subdirctories, or a single file. This method handles errors from missing or invalid
+    subdirectories, or a single file. This method handles errors from missing or invalid
     submissions.
     """
     try:
@@ -309,19 +312,23 @@ def _submission_syntax_error_msg(cause: SyntaxError, config: AgaConfig) -> str:
     return config.loader.import_error_msg.format(message=str(cause))
 
 
-def _no_matches_error_msg(problem: Problem[Output]) -> str:
+def _no_matches_error_msg(problem: Problem[ProblemParamSpec, ProblemOutputType]) -> str:
     return problem.config().loader.no_match_msg.format(name=problem.expected_symbol())
 
 
-def _too_many_matches_error_msg(problem: Problem[Output]) -> str:
+def _too_many_matches_error_msg(
+    problem: Problem[ProblemParamSpec, ProblemOutputType]
+) -> str:
     return problem.config().loader.too_many_matches_msg.format(
         name=problem.expected_symbol()
     )
 
 
-def _no_script_error_msg(problem: Problem[Output]) -> str:
+def _no_script_error_msg(problem: Problem[ProblemParamSpec, ProblemOutputType]) -> str:
     return problem.config().loader.no_script_error_msg
 
 
-def _multiple_scripts_error_msg(problem: Problem[Output]) -> str:
+def _multiple_scripts_error_msg(
+    problem: Problem[ProblemParamSpec, ProblemOutputType]
+) -> str:
     return problem.config().loader.multiple_scripts_error_msg

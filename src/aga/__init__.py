@@ -15,6 +15,7 @@ from .core import (
     test_cases_params,
     test_cases_product,
     test_cases_zip,
+    test_cases_singular_params,
 )
 
 __all__ = (
@@ -25,6 +26,7 @@ __all__ = (
     "test_cases_params",
     "test_cases_product",
     "test_cases_zip",
+    "test_cases_singular_params",
     "group",
 )
 __version__ = version(__name__)  # type: ignore
