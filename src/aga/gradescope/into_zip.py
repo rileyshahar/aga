@@ -11,6 +11,8 @@ from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import Iterable, Optional, TypeVar
 from zipfile import ZipFile
+from sys import version_info
+
 
 from dill import dump  # type: ignore
 
@@ -33,7 +35,7 @@ class InvalidProblem(BaseException):
     """The Problem failed some golden tests."""
 
 
-def _handle_aga_zipping(zip_file: ZipFile, temp_working_dir_path: str):
+def _handle_aga_zipping(zip_file: ZipFile, temp_working_dir_path: str) -> None:
     for src_path, resource_name in _copy_package_to(
         temp_working_dir_path, files("aga")
     ):
@@ -41,12 +43,10 @@ def _handle_aga_zipping(zip_file: ZipFile, temp_working_dir_path: str):
 
 
 def _get_setup_shell_by_version() -> str:
-    from sys import version_info
-
     return f"setup-{version_info.major}{version_info.minor}.sh"
 
 
-def _handle_gs_utils_zipping(zip_file: ZipFile, temp_working_dir_path: str):
+def _handle_gs_utils_zipping(zip_file: ZipFile, temp_working_dir_path: str) -> None:
     # copy the setup shell script according to the python version the user is using
     path = _manual_copy_resource_to(
         temp_working_dir_path, _get_setup_shell_by_version()
@@ -61,7 +61,7 @@ def _handle_gs_utils_zipping(zip_file: ZipFile, temp_working_dir_path: str):
 
 def _handle_problem_zipping(
     zip_file: ZipFile, temp_working_dir: str, problem: Problem[Output]
-):
+) -> None:
     path = _dump_problem_into_dir(problem, temp_working_dir)
     zip_file.write(path, arcname="problem.pckl")
 

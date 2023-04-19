@@ -3,11 +3,12 @@
 import nox
 from nox import Session
 from nox_poetry import session as nox_session
+from sys import version_info
 
 # default nox sessions (overridden with -s)
 nox.options.sessions = ("lint", "test")
 
-PYTHON_VERSIONS = "3.10"
+PYTHON_VERSIONS = f"{version_info.major}.{version_info.minor}"
 SRC_LOCATIONS = ["src", "tests"]
 
 TEST_DEPS = ("pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock")

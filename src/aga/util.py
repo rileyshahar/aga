@@ -19,7 +19,7 @@ def limited_traceback(traceback) -> str:  # type: ignore
     # this is a hack, but the idea is that if the file path has `aga` or `unittest` in
     # it, it's probably part of our infrastructure, rather than the student submission.
     out = ""
-    for (frame, formatted_frame) in zip(stack_summary, stack_summary.format()):
+    for frame, formatted_frame in zip(stack_summary, stack_summary.format()):
         if "aga" in frame.filename or "unittest" in frame.filename:
             # reset output, we don't want any earlier lines bc student code hasn't been
             # called yet

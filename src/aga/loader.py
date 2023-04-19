@@ -116,7 +116,7 @@ def _load_source_from_file(path: str, name: str = "module") -> Any:
 def _load_attr_from_module(attr: str, module: ModuleType) -> Any:
     """Get a specific symbol from a module."""
     try:
-        return module.__getattribute__(attr)
+        return getattr(module, attr)
     except AttributeError as err:
         raise NoMatchingSymbol from err
 
@@ -153,7 +153,6 @@ def _load_symbol_from_dir(path: str, symbol: str) -> Any:
     """Load a specific symbol from any of the source files in a directory."""
     matching_symbols = []
     for file in os.listdir(path):
-
         try:
             file_path = pathjoin(path, file)
             matching_symbols.append(load_symbol_from_path(file_path, symbol))

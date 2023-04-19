@@ -17,7 +17,6 @@ def tester(*_: Any) -> None:
     """Dummy Tester."""
 
 
-# pylint: disable=no-self-use
 class TestTestCases:
     """Test the test_cases decorator."""
 

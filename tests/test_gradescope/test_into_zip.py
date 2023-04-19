@@ -104,7 +104,7 @@ def test_into_gradescope_zip_run_autograder(
     with ZipFile(zip_path) as zip_f:
         with zip_f.open(file, "r") as zip_byte_stream:
             with TextIOWrapper(zip_byte_stream) as zipped_file:
-                with files(GS_UTILS_RESOURCE_DIR).joinpath(file).open() as src:  # type: ignore
+                with files(GS_UTILS_RESOURCE_DIR).joinpath(file).open() as src:
                     assert zipped_file.read() == src.read()
 
 

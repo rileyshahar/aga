@@ -1,7 +1,6 @@
 """Test Suite for the aga.core module."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
@@ -14,6 +13,7 @@ from typing import (
     Tuple,
     TypeVar,
     Type,
+    Iterable,
 )
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
