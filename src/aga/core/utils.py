@@ -10,6 +10,8 @@ __all__ = (
     "CaptureOut",
     "MethodCaller",
     "MethodCallerFactory",
+    "PropertyGetter",
+    "PropertyGetterFactory",
     "initializer",
 )
 
@@ -127,6 +129,7 @@ class PropertyGetter:
         return self._attr_names
 
     def __str__(self) -> str:
+        """Return a string representation of the property getter."""
         return _ensure_formatting_dot(
             ".".join(
                 name[1:] if name.startswith(".") else name for name in self.attr_names
@@ -134,9 +137,11 @@ class PropertyGetter:
         )
 
     def __repr__(self) -> str:
+        """Return a string representation of the property getter."""
         return self.__str__()
 
     def __call__(self, instance: Any, previous_result: Any = None) -> Any:
+        """Get the attribute from the instance."""
         if len(self.attr_names) == 0:
             raise ValueError("No properties specified in PropertyGetter")
 

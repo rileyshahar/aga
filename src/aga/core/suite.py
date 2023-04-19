@@ -289,16 +289,14 @@ class _TestInputs(TestCase, Generic[Output]):
             results = [None]
 
             if len(self.args) > 0:
-                first_process = self.args[0]
                 pipeline_processes = self.args
 
-                if first_process is initializer:
-                    answer = first_process(answer)
-                    results.append(None)
-                    pipeline_processes = self.args[1:]
-
                 for process in pipeline_processes:
-                    results.append(process(answer, results[-1]))
+                    if process is initializer:
+                        answer = process(answer)
+                        results.append(None)
+                    else:
+                        results.append(process(answer, results[-1]))
 
         return stdout.value, results
 

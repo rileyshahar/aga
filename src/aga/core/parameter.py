@@ -11,14 +11,13 @@ from typing import (
     Tuple,
     ClassVar,
     TYPE_CHECKING,
-    TypeVar,
     Callable,
     TypedDict,
     cast,
+    overload,
+    Sequence,
 )
 from enum import Enum
-
-Output = TypeVar("Output")
 
 
 if TYPE_CHECKING:
@@ -210,7 +209,30 @@ class _TestParam(AgaKeywordContainer):
 
     pipeline: ClassVar[partial[_TestParam]]
 
-    def __init__(self, *args: Any, **kwargs: Any):
+    @overload
+    def __init__(
+        self,
+        *args: Any,
+        aga_expect: Any = None,
+        aga_expect_stdout: str | Sequence[str] | None = None,
+        aga_hidden: bool = False,
+        aga_name: str | None = None,
+        aga_description: str | None = None,
+        aga_weight: int = 1,
+        aga_value: float = 0.0,
+        aga_extra_credit: float = 0.0,
+        aga_override_check: Callable[..., Any] | None = None,
+        aga_override_test: Callable[..., Any] | None = None,
+        aga_is_pipeline: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        ...
+
+    @overload
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        ...
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         r"""Declare a specific test case/param for some problem.
 
         Parameters
@@ -361,6 +383,34 @@ class _TestParams:
     zip: ClassVar[partial[_TestParams]]
     product: ClassVar[partial[_TestParams]]
     singular_params: ClassVar[partial[_TestParams]]
+
+    # pylint: disable=too-many-locals
+    @overload
+    def __init__(
+        self,
+        *args: Any,
+        aga_expect: Any = None,
+        aga_expect_stdout: str | Sequence[str] | None = None,
+        aga_hidden: bool = False,
+        aga_name: str | None = None,
+        aga_description: str | None = None,
+        aga_weight: int = 1,
+        aga_value: float = 0.0,
+        aga_extra_credit: float = 0.0,
+        aga_override_check: Callable[..., Any] | None = None,
+        aga_override_test: Callable[..., Any] | None = None,
+        aga_is_pipeline: bool = False,
+        aga_product: bool = False,
+        aga_zip: bool = False,
+        aga_params: bool = False,
+        aga_singular_params: bool = False,
+        **kwargs: Any,
+    ):
+        ...
+
+    @overload
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        ...
 
     def __init__(
         self,
