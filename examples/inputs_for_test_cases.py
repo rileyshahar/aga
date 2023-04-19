@@ -30,9 +30,13 @@ def iterable_mode(a: int) -> int:
 
 
 # test_cases
-@test_cases((-3, 2), (-2, 1), (0, 0))
+@test_cases(
+    (-3, 2),
+    (-2, 1),
+    (0, 0),
+)
 @problem()
-def difference(tp) -> int:
+def difference(tp: Tuple[int, int]) -> int:
     """Compute x - y."""
     x, y = tp
     return x - y
@@ -40,21 +44,27 @@ def difference(tp) -> int:
 
 @test_cases(1, 2, 3)
 @problem()
-def square(x) -> int:
+def square(x: int) -> int:
     """Compute x - y."""
-    return x ** 2
+    return x**2
 
 
 # notice the * before the range
 @test_cases(*range(10))
 @problem()
-def square(x) -> int:
+def square(x: int) -> int:
     """Compute x - y."""
-    return x ** 2
+    return x**2
 
 
 # test_cases.params
-@test_cases.params([param(-3, y=2), param(-2, y=1), param(0, y=0)])
+@test_cases.params(
+    [
+        param(-3, y=2),
+        param(-2, y=1),
+        param(0, y=0),
+    ]
+)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""
@@ -62,7 +72,14 @@ def difference(x: int, y: int) -> int:
 
 
 # the following is equivalent to the above
-@test_cases([(-3, 2), (-2, 1), (0, 0)], aga_params=True)
+@test_cases(
+    [
+        (-3, 2),
+        (-2, 1),
+        (0, 0),
+    ],
+    aga_params=True,
+)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""
@@ -79,14 +96,22 @@ def difference(x: int, y: int) -> int:
 
 
 # test_cases.singular_params
-@test_cases.singular_params(range(10))
+@test_cases.singular_params(
+    range(10),
+)
 @problem()
 def square(x: int) -> int:
     """Compute x - y."""
-    return x ** 2
+    return x**2
 
 
-@test_cases.singular_params([ (1, 2, 3), (3, 4), (5, 6, 7, 8) ])
+@test_cases.singular_params(
+    [
+        (1, 2, 3),
+        (3, 4),
+        (5, 6, 7, 8),
+    ]
+)
 @problem()
 def square(num_seq: Tuple[int]) -> int:
     """Compute x - y."""
@@ -94,7 +119,10 @@ def square(num_seq: Tuple[int]) -> int:
 
 
 # test_cases.product
-@test_cases.product([-5, 0, 1, 3, 4], [-1, 0, 2])
+@test_cases.product(
+    [-5, 0, 1, 3, 4],
+    [-1, 0, 2],
+)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""
@@ -102,7 +130,10 @@ def difference(x: int, y: int) -> int:
 
 
 # test_cases.zip
-@test_cases.zip([-5, 0, 1, 3, 4], [-1, 0, 2])
+@test_cases.zip(
+    [-5, 0, 1, 3, 4],
+    [-1, 0, 2],
+)
 @problem()
 def difference(x: int, y: int) -> int:
     """Compute x - y."""

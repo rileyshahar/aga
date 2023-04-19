@@ -6,10 +6,12 @@ from typing import Dict, Any
 
 import pytest
 from aga import test_cases as _test_cases
-from aga import (test_cases_zip as _test_cases_zip,
-                test_cases_product as _test_cases_product,
-                 test_cases_params as _test_cases_params,
-                 test_cases_singular_params as _test_cases_singular_params)
+from aga import (
+    test_cases_zip as _test_cases_zip,
+    test_cases_product as _test_cases_product,
+    test_cases_params as _test_cases_params,
+    test_cases_singular_params as _test_cases_singular_params,
+)
 from aga import problem
 from aga.core import param, Problem
 from aga.core.suite import _TestInputs
@@ -118,7 +120,7 @@ class TestTestCases:
 
         _check_problem(add_three)
 
-    @pytest.mark.parametrize('test_fn', [_test_cases.params, _test_cases_params])
+    @pytest.mark.parametrize("test_fn", [_test_cases.params, _test_cases_params])
     def test_aga_params_with_param_obj(self, test_fn) -> None:
         """Test that aga_params can be used with param objects."""
 
@@ -155,7 +157,9 @@ class TestTestCases:
                 """Test problem."""
                 return x * x
 
-    @pytest.mark.parametrize("test_fn", [_test_cases.singular_params, _test_cases_singular_params])
+    @pytest.mark.parametrize(
+        "test_fn", [_test_cases.singular_params, _test_cases_singular_params]
+    )
     def test_aga_test_cases_singular_params(self, test_fn) -> None:
         """Test that aga_test_cases with aga_params flag."""
 
