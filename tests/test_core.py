@@ -6,6 +6,10 @@ from typing import Dict, Any
 
 import pytest
 from aga import test_cases as _test_cases
+from aga import (test_cases_zip as _test_cases_zip,
+                test_cases_product as _test_cases_product,
+                 test_cases_params as _test_cases_params,
+                 test_cases_singular_params as _test_cases_singular_params)
 from aga import problem
 from aga.core import param, Problem
 from aga.core.suite import _TestInputs
@@ -114,10 +118,11 @@ class TestTestCases:
 
         _check_problem(add_three)
 
-    def test_aga_params_with_param_obj(self) -> None:
+    @pytest.mark.parametrize('test_fn', [_test_cases.params, _test_cases_params])
+    def test_aga_params_with_param_obj(self, test_fn) -> None:
         """Test that aga_params can be used with param objects."""
 
-        @_test_cases.params([param(1, 2, c=3), param(4, 5, c=6)], aga_expect=[6, 15])
+        @test_fn([param(1, 2, c=3), param(4, 5, c=6)], aga_expect=[6, 15])
         @problem()
         def add_three(a: int, b: int, c: int) -> int:  # pylint: disable=C0103
             """Add three numbers."""
@@ -128,11 +133,42 @@ class TestTestCases:
     def test_aga_test_cases_no_flag(self) -> None:
         """Test that aga_test_cases without a combination flag."""
 
-        @_test_cases([1, 2])
+        @_test_cases(1, 2, aga_expect=[1, 4])
         @problem()
         def test_problem(x: int) -> int:
             """Test problem."""
-            return x
+            return x * x
+
+        _check_problem(test_problem)
+
+    def test_aga_test_cases_no_flag_error(self) -> None:
+        """Test that aga_test_cases without a combination flag."""
+
+        with pytest.raises(
+            ValueError,
+            match="all aga_ keyword args must have the same length as the test cases",
+        ):
+
+            @_test_cases([1, 2], aga_expect=[1, 4])
+            @problem()
+            def test_problem(x: int) -> int:
+                """Test problem."""
+                return x * x
+
+    @pytest.mark.parametrize("test_fn", [_test_cases.singular_params, _test_cases_singular_params])
+    def test_aga_test_cases_singular_params(self, test_fn) -> None:
+        """Test that aga_test_cases with aga_params flag."""
+
+        @test_fn(
+            [1, 2],
+            aga_expect=[1, 4],
+        )
+        @problem()
+        def test_problem(x: int) -> int:
+            """Test problem."""
+            return x * x
+
+        _check_problem(test_problem)
 
     @pytest.mark.parametrize("flags", [{"aga_product": True, "aga_zip": True}, {}])
     def test_zip_or_product_flag_guard(self, flags: Dict[str, bool]) -> None:
