@@ -4,6 +4,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
+from types import FunctionType
 from typing import (
     Any,
     Callable,
@@ -18,7 +19,7 @@ from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
 from .parameter import _TestParam, AgaKeywordContainer
-from .utils import CaptureOut, initializer
+from .utils import CaptureOut, initializer, Initializer
 from ..config import AgaConfig, AgaTestConfig
 from ..score import Prize, ScoredPrize, ScoreInfo, compute_scores
 from ..util import text_diff
@@ -27,7 +28,7 @@ __all__ = ["TestMetadata", "SubmissionMetadata", "AgaTestCase", "AgaTestSuite"]
 
 Output = TypeVar("Output")
 
-NEW_LINE = "\n"
+_NEW_LINE = "\n"
 
 
 @dataclass(frozen=True)
@@ -285,20 +286,29 @@ class _TestInputs(TestCase, Generic[Output]):
     def _eval_pipeline(
         self, answer: Callable[..., Output], check_output: bool
     ) -> Tuple[str | None, Sequence[Any]]:
+        self.description = ""
+        temp_name = initializer.DEFAULT_NEW_INSTANCE_NAME
+        if isinstance(answer, (type, FunctionType)):
+            temp_name = answer.__name__
+
         with CaptureOut(check_output) as stdout:
             results = [None]
 
             if len(self.args) > 0:
-                first_process = self.args[0]
                 pipeline_processes = self.args
 
-                if first_process is initializer:
-                    answer = first_process(answer)
-                    results.append(None)
-                    pipeline_processes = self.args[1:]
-
                 for process in pipeline_processes:
-                    results.append(process(answer, results[-1]))
+                    if isinstance(process, Initializer):
+                        answer = process(answer)
+                        results.append(None)
+                        self.description += (
+                            f"{process.DEFAULT_NEW_INSTANCE_NAME} = "
+                            f"{temp_name}{process}\n"
+                        )
+                        temp_name = process.DEFAULT_NEW_INSTANCE_NAME
+                    else:
+                        results.append(process(answer, results[-1]))
+                        self.description += f"{temp_name}{process}\n"
 
         return stdout.value, results
 
@@ -335,7 +345,7 @@ class _TestInputs(TestCase, Generic[Output]):
                 "The output is {output} and the expected is {expected}\n"
                 f"Everything before the {i}th process (`{self.args[i]}`) "
                 f"of the pipeline is correct:\n"
-                f"{NEW_LINE.join(map(str, self.args[:i+1]))}\n\n"
+                f"{_NEW_LINE.join(map(str, self.args[:i + 1]))}\n\n"
                 f"{metadata.config.failure_msg}",
             )
 

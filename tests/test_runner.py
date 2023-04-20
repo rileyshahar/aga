@@ -1,6 +1,6 @@
 """Tests for the runner module."""
 from textwrap import dedent
-from typing import Callable
+from typing import Callable, Any
 
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput, load_and_run
@@ -576,3 +576,29 @@ def test_description_overriden(
     )
 
     assert len(output.tests) == 3
+
+
+def test_description_pipeline_simple(
+    test_pipeline_simple_obj: Problem[[], Any],
+    source_test_pipeline_simple_obj: str,
+    metadata: SubmissionMetadata,
+) -> None:
+    """Test that overrides the description."""
+    output = load_and_run(
+        test_pipeline_simple_obj, source_test_pipeline_simple_obj, metadata
+    )
+
+    assert (
+        TcOutput(
+            score=20.0,
+            max_score=20.0,
+            name="Test on .__call__(),.x,.y,.adder(30, ).",
+            description="instance = TestObj.__call__()\n"
+            "instance.x\n"
+            "instance.y\n"
+            "instance.adder(30, )\n",
+            error_description=None,
+            hidden=False,
+        )
+        in output.tests
+    )

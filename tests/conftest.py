@@ -148,6 +148,15 @@ def is_even(x):
         return False
     return x % 2 == 0
 """,
+    "test_pipeline_simple_obj": """
+class TestObj:
+    def __init__(self):
+        self.x = 10
+        self.y = 20
+
+    def adder(self, x: int) -> int:
+        return self.x + self.y + x
+""",
 }
 
 
@@ -1143,3 +1152,38 @@ def fixture_test_pipeline_linked_list() -> Problem[[], LL]:
         pass
 
     return _LL  # type: ignore
+
+
+class _TestObj:
+    """A test object for testing."""
+
+    def __init__(self) -> None:
+        self.x = 10
+        self.y = 20
+
+    def adder(self, x: int) -> int:
+        """Add x to self.x and self.y."""
+        return self.x + self.y + x
+
+
+@pytest.fixture(name="test_pipeline_simple_obj")
+def fixture_test_pipeline_simple_obj() -> Problem[[], _TestObj]:
+    """Generate a problem problem using pipeline."""
+    getter = PropertyGetterFactory()
+    adder = MethodCallerFactory("adder")
+    actions_and_res = {
+        initializer: None,
+        getter("x"): 10,
+        getter("y"): 20,
+        adder(30): 60,
+    }
+
+    @test_case.pipeline(
+        *actions_and_res.keys(),
+        aga_expect=list(actions_and_res.values()),
+    )
+    @problem()
+    class TestObj(_TestObj):
+        """A test object for testing."""
+
+    return TestObj  # type: ignore
