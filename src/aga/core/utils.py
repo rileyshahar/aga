@@ -12,15 +12,13 @@ __all__ = (
     "MethodCallerFactory",
     "PropertyGetter",
     "PropertyGetterFactory",
+    "Initializer",
     "initializer",
 )
 
 
 def _ensure_formatting_dot(s: str) -> str:
     """Ensure that a string ends with a dot."""
-    if not s:
-        return ""
-
     if s[0] != ".":
         return "." + s
     return s
@@ -84,14 +82,14 @@ class MethodCaller:
 
     def __call__(self, instance: Any, previous_result: Any = None) -> Any:
         """Call the method on the instance."""
-        return getattr(instance, self._attr_name)(*self.args, **self._kwargs)
+        return getattr(instance, self.attr_name)(*self.args, **self.kwargs)
 
     def __str__(self) -> str:
         """Return a string representation of the method call."""
         arg_repr = f'{", ".join(map(repr, self.args))}, ' if self.args else ""
-        kwargs = (f"{k}={repr(v)}" for k, v in self._kwargs.items())  # type: ignore
-        kwargs_repr = f'{", ".join(kwargs)}, ' if self._kwargs else ""
-        return _ensure_formatting_dot(f"{self._attr_name}({arg_repr}{kwargs_repr})")
+        kwargs = (f"{k}={repr(v)}" for k, v in self.kwargs.items())  # type: ignore
+        kwargs_repr = f'{", ".join(kwargs)}, ' if self.kwargs else ""
+        return _ensure_formatting_dot(f"{self.attr_name}({arg_repr}{kwargs_repr})")
 
     def __repr__(self) -> str:
         """Return a string representation of the method call."""
@@ -120,7 +118,7 @@ class MethodCallerFactory:
 class PropertyGetter:
     """Get an attribute from an instance."""
 
-    def __init__(self, *args: str, **__: Any) -> None:
+    def __init__(self, *args: str) -> None:
         self._attr_names = args
 
     @property
@@ -148,16 +146,19 @@ class PropertyGetter:
         for i, attr_name in enumerate(self.attr_names):
             properties = attr_name.split(".")
 
-            if len(properties) == 0:
-                raise ValueError(
-                    f"No properties specified in the {i}th attribute "
-                    f"name in the PropertyGetter: {self.attr_names}."
-                )
-
             if properties[0] == "":
                 properties = properties[1:]
 
+            if len(properties) == 0:
+                raise ValueError(
+                    f"No properties specified in the {i}th attribute "
+                    f"name in the PropertyGetter. "
+                    f"All attributes specified: {self.attr_names}"
+                )
+
             for property_name in properties:
+                if property_name == "":
+                    raise ValueError(f"Double . in {self.attr_names}")
                 instance = getattr(instance, property_name)
 
         return instance
@@ -179,6 +180,8 @@ class PropertyGetterFactory:
 # pylint: disable=too-few-public-methods
 class Initializer(MethodCaller):
     """Call the __init__ method on an instance."""
+
+    DEFAULT_NEW_INSTANCE_NAME = "instance"
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__("__call__", *args, **kwargs)

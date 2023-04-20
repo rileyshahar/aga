@@ -504,11 +504,12 @@ class _TestParams:
     def parse_singular_params(*args: Iterable[Any], **kwargs: Any) -> List[_TestParam]:
         """Parse the parameters for param sequence."""
         if kwargs:
-            raise ValueError("aga_params=True ignores non-aga kwargs")
+            raise ValueError("aga_singular_params=True ignores non-aga kwargs")
 
         if len(args) != 1:
             raise ValueError(
-                "aga_singular=True requires exactly one iterable of sets of parameters"
+                "aga_singular_params=True requires "
+                "exactly one iterable of sets of parameters"
             )
 
         return list(
