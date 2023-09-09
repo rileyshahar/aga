@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Dict, Any, Callable, Iterable
 from itertools import chain, combinations
+from typing import Any, Callable, Dict, Iterable
 
 import pytest
 
-
-from aga import test_cases as _test_cases
-from aga import (
-    test_cases_zip as _test_cases_zip,
-    test_cases_product as _test_cases_product,
-    test_cases_params as _test_cases_params,
-    test_cases_singular_params as _test_cases_singular_params,
-)
 from aga import problem
-from aga.core import param, Problem
-from aga.core.suite import _TestInputs
+from aga import test_cases as _test_cases
+from aga import test_cases_params as _test_cases_params
+from aga import test_cases_product as _test_cases_product
+from aga import test_cases_singular_params as _test_cases_singular_params
+from aga import test_cases_zip as _test_cases_zip
 from aga.cli.app import _check_problem
+from aga.core import Problem, param
+from aga.core.suite import _TestInputs
 from aga.core.utils import CaptureOut
 
 

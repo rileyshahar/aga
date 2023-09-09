@@ -8,7 +8,6 @@ from aga import problem
 from aga import test_case as case
 from aga.core import Problem, test_case
 
-
 AnyProblem = Problem[Any, Any]
 
 

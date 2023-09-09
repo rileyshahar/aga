@@ -14,7 +14,7 @@ from unittest import TestResult
 
 from .config import AgaConfig
 from .core import AgaTestCase, AgaTestSuite, Problem, SubmissionMetadata
-from .core.problem import ProblemParamSpec, ProblemOutputType
+from .core.problem import ProblemOutputType, ProblemParamSpec
 from .loader import (
     MultipleScripts,
     NoMatchingSymbol,

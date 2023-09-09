@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pathlib
 from types import ModuleType
-from typing import Iterable, Generator
+from typing import Generator, Iterable
 from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 
-from aga.config import AgaConfig, INJECTION_MODULE_FLAG
+from aga.config import INJECTION_MODULE_FLAG, AgaConfig
 
 
 @pytest.fixture()
@@ -145,8 +145,8 @@ def test_injecting_from_files() -> None:
 
 
 def test_duplicated_injection(injection_tear_down: None) -> None:
-    from aga.cli.app import _load_injection_config
     import aga
+    from aga.cli.app import _load_injection_config
 
     _load_injection_config(
         AgaConfig(),

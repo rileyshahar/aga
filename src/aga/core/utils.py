@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import redirect_stdout
 from io import StringIO
-from typing import Any, Type, Sequence, Dict
+from typing import Any, Dict, Sequence, Type
 
 __all__ = (
     "CaptureOut",

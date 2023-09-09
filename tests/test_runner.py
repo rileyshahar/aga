@@ -1,6 +1,6 @@
 """Tests for the runner module."""
 from textwrap import dedent
-from typing import Callable, Any
+from typing import Any, Callable
 
 from aga.core import Problem, SubmissionMetadata
 from aga.runner import TcOutput, load_and_run

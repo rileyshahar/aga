@@ -9,3 +9,6 @@ poetry.lock
 .coverage
 coverage.xml
 tmp/
+.vscode/
+venv
+.DS_Store

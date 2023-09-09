@@ -5,24 +5,15 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 from types import FunctionType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Iterable,
-)
+from typing import Any, Callable, Dict, Generic, Iterable, Sequence, Tuple, TypeVar
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
-from .parameter import _TestParam, AgaKeywordContainer
-from .utils import CaptureOut, initializer, Initializer
 from ..config import AgaConfig, AgaTestConfig
 from ..score import Prize, ScoredPrize, ScoreInfo, compute_scores
 from ..util import text_diff
+from .parameter import AgaKeywordContainer, _TestParam
+from .utils import CaptureOut, Initializer, initializer
 
 __all__ = ["TestMetadata", "SubmissionMetadata", "AgaTestCase", "AgaTestSuite"]
 

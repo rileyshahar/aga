@@ -1,19 +1,11 @@
 """Problem and utilities."""
 from __future__ import annotations
 
-from typing import (
-    Callable,
-    Generic,
-    Optional,
-    TYPE_CHECKING,
-    TypeVar,
-    ParamSpec,
-)
+from typing import TYPE_CHECKING, Callable, Generic, Optional, ParamSpec, TypeVar
 
-from .suite import _TestInputs, _TestInputGroup, AgaTestSuite, SubmissionMetadata
 from ..config import AgaConfig
 from ..score import Prize, ScoredPrize, compute_scores
-
+from .suite import AgaTestSuite, SubmissionMetadata, _TestInputGroup, _TestInputs
 
 # pylint: disable=invalid-name
 ProblemParamSpec = ParamSpec("ProblemParamSpec")
