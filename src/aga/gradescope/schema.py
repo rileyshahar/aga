@@ -5,13 +5,14 @@ complete rewrite.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, TextIO
+from typing import Literal, Optional, TextIO
 
 from dataclasses_json import dataclass_json
 
 from ..runner import ProblemOutput, TcOutput
 
 
+# pylint: disable=R0902
 @dataclass_json
 @dataclass
 class GradescopeTestJson:
@@ -35,6 +36,7 @@ class GradescopeTestJson:
 
     score: Optional[float] = None
     max_score: Optional[float] = None
+    status: Optional[Literal["passed", "failed"]] = None
     name: Optional[str] = None
     number: Optional[float] = None
     output: Optional[str] = None
@@ -47,6 +49,7 @@ class GradescopeTestJson:
         return cls(
             score=output.score,
             max_score=output.max_score,
+            status=output.status,
             name=output.name,
             output=output.rich_output,
             visibility="hidden" if output.hidden else "visible",
