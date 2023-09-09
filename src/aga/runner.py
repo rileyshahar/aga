@@ -54,7 +54,7 @@ class TcOutput:
     score: float
     max_score: float
     name: str
-    status: None | Literal["passed", "failed"]
+    status: None | Literal["passed", "failed"] = None
     hidden: bool = False
     description: Optional[str] = None
     error_description: Optional[str] = None

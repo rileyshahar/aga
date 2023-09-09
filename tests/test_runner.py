@@ -61,6 +61,7 @@ def test_square_failure_output(
             score=0,
             max_score=20 / 3,
             name="Test on 4.",
+            status="failed",
             error_description="Your submission didn't give the output we expected. "
             "We checked it with 4 and got 0, but we expected 16.",
             hidden=False,
@@ -72,6 +73,7 @@ def test_square_failure_output(
             score=0,
             max_score=20 / 3,
             name="Test on 2.",
+            status="failed",
             error_description="Your submission didn't give the output we expected. "
             "We checked it with 2 and got 0, but we expected 4.",
             hidden=False,
@@ -83,6 +85,7 @@ def test_square_failure_output(
             score=0,
             max_score=20 / 3,
             name="Test on -2.",
+            status="failed",
             error_description="Your submission didn't give the output we expected. "
             "We checked it with -2 and got 0, but we expected 4.",
             hidden=True,
@@ -145,6 +148,7 @@ def test_hello_world_failure(
         TcOutput(
             score=0.0,
             max_score=20.0,
+            status="failed",
             name="Test on .",
             error_description=HELLO_WORLD_FAILURE_OUT,
             hidden=False,
@@ -249,6 +253,7 @@ def test_hello_name_incorrect(
         TcOutput(
             score=0.0,
             max_score=10.0,
+            status="failed",
             name="Test on 'world','me'.",
             error_description=HELLO_NAME_FAILURE_OUT_ME,
             hidden=False,
@@ -259,6 +264,7 @@ def test_hello_name_incorrect(
         TcOutput(
             score=0.0,
             max_score=10.0,
+            status="failed",
             name="Test on 'Alice','Bob'.",
             error_description=HELLO_NAME_FAILURE_OUT_ALICE,
             hidden=False,
@@ -543,6 +549,7 @@ def test_description_overriden(
         TcOutput(
             score=0,
             max_score=20 / 3,
+            status="failed",
             name="Test on 10.",
             description="This is a custom description.",
             error_description="True != False",
