@@ -73,6 +73,8 @@ class ScoredPrize:
     max_score: float
 
 
+# This is an external API and users need all these arguments.
+# pylint: disable=too-many-arguments
 def prize(
     criteria: PrizeCriteria,
     name: str = "Prize",
