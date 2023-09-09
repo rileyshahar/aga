@@ -12,6 +12,7 @@ from dataclasses_json import dataclass_json
 from ..runner import ProblemOutput, TcOutput
 
 
+# pylint: disable=R0902
 @dataclass_json
 @dataclass
 class GradescopeTestJson:
