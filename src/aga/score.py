@@ -62,6 +62,7 @@ class Prize:
     name: str
     criteria: PrizeCriteria
     score_info: ScoreInfo
+    hidden: bool
 
 
 @dataclass(frozen=True)
@@ -72,12 +73,15 @@ class ScoredPrize:
     max_score: float
 
 
+# This is an external API and users need all these arguments.
+# pylint: disable=too-many-arguments
 def prize(
     criteria: PrizeCriteria,
     name: str = "Prize",
     weight: int = 1,
     value: float = 0.0,
     extra_credit: float = 0.0,
+    hidden: bool = False,
 ) -> Callable[
     [Problem[ProblemParamSpec, ProblemOutputType]],
     Problem[ProblemParamSpec, ProblemOutputType],
@@ -98,13 +102,15 @@ def prize(
         The prize's absolute score. See :ref:`Determining Score` for details.
     extra_credit : int
         The prize's extra credit. See :ref:`Determining Score` for details.
+    hidden : bool
+        Whether the prize should be hidden from the student.
 
     Returns
     -------
     Callable[[Problem[T]], Problem[T]]
         A decorator which adds the prize to a problem.
     """
-    to_add = Prize(name, criteria, ScoreInfo(weight, value, extra_credit))
+    to_add = Prize(name, criteria, ScoreInfo(weight, value, extra_credit), hidden)
 
     def inner(
         problem: Problem[ProblemParamSpec, ProblemOutputType]

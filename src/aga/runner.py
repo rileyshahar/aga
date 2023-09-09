@@ -217,6 +217,7 @@ class _AgaTestResult(TestResult):
                 max_score=prize.max_score,
                 name=prize.prize.name,
                 description=message,
+                hidden=prize.prize.hidden,
             )
 
             # don't append to self._tests immediately so the next prizes don't see this
