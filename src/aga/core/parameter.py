@@ -2,26 +2,25 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from enum import Enum
 from functools import partial
 from itertools import product
 from typing import (
+    TYPE_CHECKING,
     Any,
+    Callable,
+    ClassVar,
     Dict,
     List,
+    Sequence,
     Tuple,
-    ClassVar,
-    TYPE_CHECKING,
-    Callable,
     TypedDict,
     cast,
     overload,
-    Sequence,
 )
-from enum import Enum
-
 
 if TYPE_CHECKING:
-    from .problem import Problem, ProblemParamSpec, ProblemOutputType
+    from .problem import Problem, ProblemOutputType, ProblemParamSpec
 
 
 # pylint: disable=C0103

@@ -8,7 +8,7 @@ from importlib.resources import files
 from inspect import getmembers, getsource, ismodule
 from io import TextIOWrapper
 from os.path import join as pathjoin
-from typing import Iterable, Tuple, Any
+from typing import Any, Iterable, Tuple
 from zipfile import ZipFile
 
 import pytest
@@ -18,7 +18,7 @@ import aga  # for source inspection
 from aga.config import INJECTION_MODULE_FLAG
 from aga.core import Problem
 from aga.gradescope import InvalidProblem, into_gradescope_zip
-from aga.gradescope.into_zip import _get_setup_shell_by_version, GS_UTILS_RESOURCE_DIR
+from aga.gradescope.into_zip import GS_UTILS_RESOURCE_DIR, _get_setup_shell_by_version
 
 AnyProblem = Problem[Any, Any]
 

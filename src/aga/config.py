@@ -6,10 +6,10 @@ import pathlib
 from dataclasses import MISSING, dataclass, field, fields
 from importlib.resources import files
 from types import ModuleType
-from typing import Any, Set, Optional, Iterable
+from typing import Any, Iterable, Optional, Set
 
 import toml
-from dacite import from_dict, Config  # type: ignore
+from dacite import Config, from_dict  # type: ignore
 
 
 def _default_value(path: list[str]) -> Any:
@@ -35,8 +35,9 @@ INJECTION_MODULE_FLAG = "__aga_injection_module__"
 
 
 def _create_injection_module(module_name: str = "injection") -> ModuleType:
-    import aga  # pylint: disable=import-outside-toplevel, cyclic-import
     import sys  # pylint: disable=import-outside-toplevel
+
+    import aga  # pylint: disable=import-outside-toplevel, cyclic-import
 
     module_full_name = f"aga.{module_name}"
 

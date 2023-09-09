@@ -1,7 +1,7 @@
 """The main command-line typer application."""
 import pathlib
 from datetime import datetime
-from typing import Iterable, Optional, Tuple, List, Any
+from typing import Any, Iterable, List, Optional, Tuple
 
 import typer
 

@@ -1,5 +1,6 @@
 """Additional checks and filters for problems."""
 from __future__ import annotations
+
 import ast
 import inspect
 from typing import Any, Callable, Iterable, Optional, TypeVar, Union

@@ -1,6 +1,7 @@
 """Test the aga.core.utils module."""
 
 import pytest
+
 from aga.core.utils import CaptureOut, MethodCallerFactory, PropertyGetterFactory
 
 

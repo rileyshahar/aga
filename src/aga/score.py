@@ -1,12 +1,13 @@
 """Utilities for easily computing problem score."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
-    from .core.problem import ProblemOutputType, ProblemParamSpec
     from .core import Problem, SubmissionMetadata
+    from .core.problem import ProblemOutputType, ProblemParamSpec
     from .runner import TcOutput
 
 

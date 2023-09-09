@@ -8,18 +8,15 @@ from importlib.resources import files
 from os import makedirs
 from os.path import join as pathjoin
 from shutil import copyfileobj
+from sys import version_info
 from tempfile import TemporaryDirectory
 from typing import Iterable, Optional
 from zipfile import ZipFile
-from sys import version_info
-
 
 from dill import dump  # type: ignore
 
 from ..core import Problem
-
-from ..core.problem import ProblemParamSpec, ProblemOutputType
-
+from ..core.problem import ProblemOutputType, ProblemParamSpec
 
 # don't zip resources because we handle them manually
 _ZIP_IGNORES = ("__pycache__", "resources")
