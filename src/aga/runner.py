@@ -9,12 +9,12 @@ submission and then runs it.
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional, TypeVar
+from typing import Any, Literal, Optional, TypeVar
 from unittest import TestResult
 
 from .config import AgaConfig
 from .core import AgaTestCase, AgaTestSuite, Problem, SubmissionMetadata
-from .core.problem import ProblemParamSpec, ProblemOutputType
+from .core.problem import ProblemOutputType, ProblemParamSpec
 from .loader import (
     MultipleScripts,
     NoMatchingSymbol,
@@ -54,6 +54,7 @@ class TcOutput:
     score: float
     max_score: float
     name: str
+    status: None | Literal["passed", "failed"]
     hidden: bool = False
     description: Optional[str] = None
     error_description: Optional[str] = None
@@ -87,8 +88,11 @@ class TcOutput:
         return TcOutput.format_rich_output(self.description, self.error_description)
 
     def is_correct(self) -> bool:
-        """Check whether the problem recieved full credit."""
-        return self.score == self.max_score
+        """Check whether the problem received full credit."""
+        if self.status is None:
+            return self.score == self.max_score
+        else:
+            return self.status == "passed"
 
 
 @dataclass
@@ -142,6 +146,7 @@ class _AgaTestResult(TestResult):
         return TcOutput(
             name=test.name,
             description=test.description,
+            status=None,
             max_score=metadata.max_score,
             score=metadata.max_score,
             hidden=metadata.hidden,
@@ -152,6 +157,7 @@ class _AgaTestResult(TestResult):
         data = self._test_data(test)
         data.error_description = str(err[1])
         data.score = 0.0
+        data.status = "failed"
 
         return data
 
@@ -164,6 +170,7 @@ class _AgaTestResult(TestResult):
             traceback=limited_traceback(err[2]),
         )
         data.score = 0.0
+        data.status = "failed"
 
         return data
 
