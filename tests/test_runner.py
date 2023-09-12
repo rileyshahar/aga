@@ -20,6 +20,7 @@ def test_square_output(
             max_score=20 / 3,
             name="Test on 4.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -30,6 +31,7 @@ def test_square_output(
             max_score=20 / 3,
             name="Test on 2.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -40,6 +42,7 @@ def test_square_output(
             max_score=20 / 3,
             name="Test on -2.",
             error_description=None,
+            status="passed",
             hidden=True,
         )
         in output.tests
@@ -116,6 +119,7 @@ def test_hello_world(
             max_score=20.0,
             name="Test on .",
             error_description=None,
+            status="passed",
             hidden=False,
         )
     ]
@@ -174,6 +178,7 @@ def test_hello_world_script(
             max_score=20.0,
             name="Test on .",
             error_description=None,
+            status="passed",
             hidden=False,
         )
     ]
@@ -193,6 +198,7 @@ def test_hello_name(
             max_score=10.0,
             name="Test on 'world','me'.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -203,6 +209,7 @@ def test_hello_name(
             max_score=10.0,
             name="Test on 'Alice','Bob'.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -320,6 +327,7 @@ def test_square_prize(
             max_score=20.0 / 3,
             name="Test on 0.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -330,6 +338,7 @@ def test_square_prize(
             max_score=20.0 / 3,
             name="Test on 2.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -366,6 +375,7 @@ def test_square_prize_late(
             max_score=20.0 / 3,
             name="Test on 0.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -376,6 +386,7 @@ def test_square_prize_late(
             max_score=20.0 / 3,
             name="Test on 2.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -565,6 +576,7 @@ def test_description_overriden(
             name="30 is a special number",
             description="This is a custom description.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -577,6 +589,7 @@ def test_description_overriden(
             name="Test on 20.",
             description="This is a pre-defined description.",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
@@ -605,6 +618,7 @@ def test_description_pipeline_simple(
             "instance.y\n"
             "instance.adder(30, )\n",
             error_description=None,
+            status="passed",
             hidden=False,
         )
         in output.tests
