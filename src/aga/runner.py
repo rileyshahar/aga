@@ -211,7 +211,9 @@ class _AgaTestResult(TestResult):
                 self._tests, self._metadata
             )
             score = scalar * prize.max_score
-            status = "failed" if score == 0.0 else "passed"
+            status: Literal["passed", "failed"] = (
+                "failed" if (score < prize.max_score) else "passed"
+            )
             prize_out = TcOutput(
                 score=score,
                 max_score=prize.max_score,
