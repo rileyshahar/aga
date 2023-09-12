@@ -146,7 +146,7 @@ class _AgaTestResult(TestResult):
         return TcOutput(
             name=test.name,
             description=test.description,
-            status=None,
+            status="passed",
             max_score=metadata.max_score,
             score=metadata.max_score,
             hidden=metadata.hidden,
