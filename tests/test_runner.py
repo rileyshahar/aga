@@ -260,8 +260,8 @@ def test_hello_name_incorrect(
         TcOutput(
             score=0.0,
             max_score=10.0,
-            status="failed",
             name="Test on 'world','me'.",
+            status="failed",
             error_description=HELLO_NAME_FAILURE_OUT_ME,
             hidden=False,
         )
@@ -271,8 +271,8 @@ def test_hello_name_incorrect(
         TcOutput(
             score=0.0,
             max_score=10.0,
-            status="failed",
             name="Test on 'Alice','Bob'.",
+            status="failed",
             error_description=HELLO_NAME_FAILURE_OUT_ALICE,
             hidden=False,
         )
@@ -326,8 +326,8 @@ def test_square_prize(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 0.",
-            error_description=None,
             status="passed",
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -336,9 +336,9 @@ def test_square_prize(
         TcOutput(
             score=20.0 / 3,
             max_score=20.0 / 3,
+            status="passed",
             name="Test on 2.",
             error_description=None,
-            status="passed",
             hidden=False,
         )
         in output.tests
@@ -348,6 +348,7 @@ def test_square_prize(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Prize: correct and on time",
+            status="passed",
             description=(
                 "Good work! You earned these points since all tests passed and "
                 "you turned in the assignment on time."
@@ -374,8 +375,8 @@ def test_square_prize_late(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 0.",
-            error_description=None,
             status="passed",
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -385,8 +386,8 @@ def test_square_prize_late(
             score=20.0 / 3,
             max_score=20.0 / 3,
             name="Test on 2.",
-            error_description=None,
             status="passed",
+            error_description=None,
             hidden=False,
         )
         in output.tests
@@ -396,6 +397,7 @@ def test_square_prize_late(
             score=0.0 / 3,
             max_score=20.0 / 3,
             name="Prize: correct and on time",
+            status="failed",
             description=(
                 "To earn these points next time, "
                 "make sure to turn the assignment in on time."

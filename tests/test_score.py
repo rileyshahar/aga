@@ -45,7 +45,7 @@ def test_correct_and_on_time(metadata: SubmissionMetadata) -> None:
 def test_correct_and_on_time_false(metadata: SubmissionMetadata) -> None:
     """Test that correct_and_on_time works when wrong."""
     assert correct_and_on_time(
-        [TcOutput(score=0.0, max_score=1.0, name="Example")], metadata
+        [TcOutput(score=0.0, max_score=1.0, name="Example", status="failed")], metadata
     ) == (0.0, "To earn these points, make sure all tests pass.")
 
 
@@ -53,7 +53,8 @@ def test_correct_and_on_time_both_false(metadata_late: SubmissionMetadata) -> No
     """Test that correct_and_on_time works when wrong and late."""
     # pylint: disable=unsubscriptable-object
     assert correct_and_on_time(
-        [TcOutput(score=0.0, max_score=1.0, name="Example")], metadata_late
+        [TcOutput(score=0.0, max_score=1.0, name="Example", status="failed")],
+        metadata_late,
     ) == (
         0.0,
         "To earn these points next time, "

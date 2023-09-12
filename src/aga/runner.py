@@ -42,6 +42,8 @@ class TcOutput:
         The max score for the test.
     name : str
         The test's name.
+    status : Literal["passed", "failed"]
+        Whether the test passed or failed.
     description : Optional[str]
         Human-readable text description of the test. Some frontends distinguish
         between no output and empty output, i.e. in terms of showing UI elements.
@@ -54,7 +56,7 @@ class TcOutput:
     score: float
     max_score: float
     name: str
-    status: None | Literal["passed", "failed"] = None
+    status: Literal["passed", "failed"]
     hidden: bool = False
     description: Optional[str] = None
     error_description: Optional[str] = None
@@ -89,10 +91,7 @@ class TcOutput:
 
     def is_correct(self) -> bool:
         """Check whether the problem received full credit."""
-        if self.status is None:
-            return self.score == self.max_score
-        else:
-            return self.status == "passed"
+        return self.status == "passed"
 
 
 @dataclass
@@ -212,11 +211,13 @@ class _AgaTestResult(TestResult):
                 self._tests, self._metadata
             )
             score = scalar * prize.max_score
+            status = "failed" if score == 0.0 else "passed"
             prize_out = TcOutput(
                 score=score,
                 max_score=prize.max_score,
                 name=prize.prize.name,
                 description=message,
+                status=status,
                 hidden=prize.prize.hidden,
             )
 
