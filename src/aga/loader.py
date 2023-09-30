@@ -132,8 +132,11 @@ def _load_from_module_by(
 
 def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any, Any]]:
     """Return all problems in the module."""
-    yield from _load_from_module_by(
-        lambda i: isinstance(i, Problem), module  # type: ignore
+    yield from (
+        prob.update_env_from(module)
+        for prob in _load_from_module_by(
+            lambda i: isinstance(i, Problem), module  # type: ignore
+        )
     )
 
 
