@@ -121,3 +121,28 @@ def my_check(case, golden, student):
 The `case` exposes `args` arguments and `kwargs` variables which are passed from `test_case` decorator. For example, `test_case(3, 4, z = 10)` will create a case with `args = (3, 4)` and `kwargs = {"z": 10}`. All the `aga_*` kwargs will be strip away in the building process. 
 
 The `case` also exposes `name` and `description` variables which are the name of the test case and the description of the test case. Changing those variables is equivalent to changing `aga_name` and `aga_description` but this means you can set it dynamically during the testing. 
+
+
+## Capture Environment Values 
+
+Sometimes a piece of assignment file includes multiple classes, and even though only one class is eventually tested, the other parts of students' answers can be crucial. For example, consider the following file. You can specify in the `envs` argument of `problem` decorator to capture the `GasStation` class, and in the override check function, you can reference the `GasStation` class in the student's answer. 
+
+```python
+from aga import problem, test_case
+
+def override_check(case, golden, student):
+    # use case.env.GasStation to reference student's GasStation class implementation
+    ...
+
+
+@test_case(aga_override_check=override_check)
+@problem(envs=['GasStation'])
+class Car:
+    # uses gas station somewhere in the code
+    ...
+
+class GasStation:
+    ...
+```
+
+Essentially, `envs` argument takes in an iterable of strings, and aga will search the corresponding fields in the students' submitted module (file). 
