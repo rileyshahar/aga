@@ -1,10 +1,20 @@
 """Problem and utilities."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, Optional, ParamSpec, TypeVar
+from types import ModuleType
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Generic,
+    Optional,
+    ParamSpec,
+    TypeVar,
+    Iterable,
+)
 
 from ..config import AgaConfig
 from ..score import Prize, ScoredPrize, compute_scores
+from .environment import Environment
 from .suite import AgaTestSuite, SubmissionMetadata, _TestInputGroup, _TestInputs
 
 # pylint: disable=invalid-name
@@ -18,22 +28,26 @@ if TYPE_CHECKING:
 __all__ = ["Problem", "problem", "group", "ProblemOutputType", "ProblemParamSpec"]
 
 
+# pylint: disable=R0902
 class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
     """Stores tests for a single problem."""
 
+    # pylint: disable=R0913
     def __init__(
         self,
         golden: Callable[ProblemParamSpec, ProblemOutputType],
         name: str,
         config: AgaConfig,
         is_script: bool,
+        env_targets: Iterable[str] = (),
     ) -> None:
-        self._golden: Callable[..., ProblemOutputType] = golden
+        self._golden: Callable[ProblemParamSpec, ProblemOutputType] = golden
         self._name = name
         self._config = config
         self._ungrouped_prizes: list[Prize] = []
         self._ungrouped_tests: list[_TestInputs[ProblemOutputType]] = []
         self._groups: list[_TestInputGroup[ProblemOutputType]] = []
+        self._environment: Environment = Environment(env_targets)
         self.is_script = is_script
 
     def add_test_case(self, param: _TestParam) -> None:
@@ -43,7 +57,7 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
         does _not_ produce a test of the golden solution.
         """
         case: _TestInputs[ProblemOutputType] = _TestInputs(
-            param, mock_input=self._config.problem.mock_input
+            param, mock_input=self._config.problem.mock_input, env=self.environment
         )
         self._ungrouped_tests.append(case)
 
@@ -119,9 +133,26 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
 
         return ret_suite, ret_prizes
 
+    @property
+    def golden(self) -> Callable[ProblemParamSpec, ProblemOutputType]:
+        """The gold solution property."""
+        return self._golden
+
     def name(self) -> str:
         """Get the problem's name."""
         return self._name
+
+    @property
+    def environment(self) -> Environment:
+        """The environment values captured from the problem module."""
+        return self._environment
+
+    def update_env_from(
+        self, mod: ModuleType
+    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
+        """Update the environment values from a given module."""
+        self.environment.update_from_module(mod)
+        return self
 
     def expected_symbol(self) -> str:
         """Get the name of the symbol that should be tested against."""
@@ -151,7 +182,9 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
         else:
             return self._groups
 
-    def __call__(self, *args, **kwargs) -> ProblemOutputType:  # type: ignore
+    def __call__(
+        self, *args: ProblemParamSpec.args, **kwargs: ProblemParamSpec.kwargs
+    ) -> ProblemOutputType:  # type: ignore
         """Enable the ability to call the golden solution as if the problem were it."""
         return self._golden(*args, **kwargs)
 
@@ -161,6 +194,7 @@ def problem(
     script: bool = False,
     check_stdout: Optional[bool] = None,
     mock_input: Optional[bool] = None,
+    envs: Iterable[str] = (),
 ) -> Callable[
     [Callable[ProblemParamSpec, ProblemOutputType]],
     Problem[ProblemParamSpec, ProblemOutputType],
@@ -187,6 +221,8 @@ def problem(
         Overrides the `problem.mock_input` configuration option. If True, test cases for
         this problem will be interpreted as mocked outputs of `builtins.input`, rather
         than inputs to the function.
+    envs : Iterable[str]
+        The environment values to be captured
 
     Returns
     -------
@@ -217,7 +253,7 @@ def problem(
                 config.problem.mock_input = True
                 config.problem.mock_input_overridden = True
 
-        return Problem(func, problem_name, config, script)
+        return Problem(func, problem_name, config, script, env_targets=envs)
 
     return outer
 
