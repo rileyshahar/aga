@@ -228,7 +228,6 @@ def problem(
     -------
     Callable[[Callable[ProblemInput, T]], Problem[T]]
         A decorator which turns a golden solution into a problem.
-        :param envs:
     """
     config = AgaConfig()
 
