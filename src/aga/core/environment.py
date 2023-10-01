@@ -21,3 +21,10 @@ class Environment(dict[str, Any]):
                     f"The variable `{value_name} does not exist in the module {mod}"
                 )
             self[value_name] = getattr(mod, value_name)
+
+    def __getattr__(self, item: str) -> Any:
+        """Get the value of an environment variable."""
+        try:
+            return self[item]
+        except KeyError as e:
+            raise AttributeError(e) from e
