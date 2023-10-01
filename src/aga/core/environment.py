@@ -22,8 +22,9 @@ class Environment(dict[str, Any]):
                 )
             self[value_name] = getattr(mod, value_name)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
+        """Get the value of an environment variable."""
         try:
             return self[item]
-        except AttributeError:
-            return super().__getattr__(item)
+        except KeyError as e:
+            raise AttributeError(e) from e
