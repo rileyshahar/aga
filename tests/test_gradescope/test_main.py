@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 from aga import problem as agaproblem
 from aga.core import Problem
 from aga.gradescope.main import gradescope_main
+from aga.loader import ContextMissing
 from aga.runner import TcOutput
 
 AnyProblem = Problem[Any, Any]
@@ -653,10 +654,11 @@ def test_loading_missing_context_from_submission(
     tmp_path: Path,
     example_metadata_file: str,
 ) -> None:
-    get_gs_json(
-        test_context_loading,
-        source_test_no_context_values,
-        mocker,
-        tmp_path,
-        example_metadata_file,
-    )
+    with pytest.raises(ContextMissing):
+        get_gs_json(
+            test_context_loading,
+            source_test_no_context_values,
+            mocker,
+            tmp_path,
+            example_metadata_file,
+        )

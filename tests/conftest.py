@@ -166,7 +166,7 @@ class Car:
 """,
     "test_no_context_values": """
 class Car:
-    def __init__(self, tank: GasTank):
+    def __init__(self, tank):
         self.tank = tank
 """,
 }

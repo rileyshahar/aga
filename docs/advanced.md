@@ -146,3 +146,5 @@ class GasStation:
 ```
 
 Essentially, `ctx` argument takes in an iterable of strings, and aga will search the corresponding fields in the students' submitted module (file). 
+
+Note that `ctx` is should not be modified during overriden check functions, since the changes will persist to all the following test cases, which might not be the intended behavior.
