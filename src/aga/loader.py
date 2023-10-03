@@ -48,6 +48,10 @@ class ContextMissing(InvalidSubmissionError):
     """The submission file does not contain the values required by the environment."""
 
 
+class AmbiguousContext(InvalidSubmissionError):
+    """The submission file contains multiple values for the same environment variable."""
+
+
 def _get_spec_from_path(path: str, name: str) -> ModuleSpec:
     """Get the spec of the module at path."""
     spec = importlib.util.spec_from_file_location(name, path)

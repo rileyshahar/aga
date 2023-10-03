@@ -644,3 +644,19 @@ def test_loading_context_from_submission(
         tmp_path,
         example_metadata_file,
     )
+
+
+def test_loading_missing_context_from_submission(
+    test_context_loading: AnyProblem,
+    source_test_no_context_values: Any,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    get_gs_json(
+        test_context_loading,
+        source_test_no_context_values,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )

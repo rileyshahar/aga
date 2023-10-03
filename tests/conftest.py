@@ -165,6 +165,11 @@ class Car:
     def __init__(self, tank: GasTank):
         self.tank = tank
 """,
+    "test_no_context_values": """
+class Car:
+    def __init__(self, tank: GasTank):
+        self.tank = tank
+""",
 }
 
 
