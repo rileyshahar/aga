@@ -14,8 +14,8 @@ class SubmissionContext(dict[str, Any]):
 
     def update_from_path(self, path: str) -> None:
         """Update environment values from a given module."""
-        # pylint: disable=import-outside-toplevel
-        # to avoid circular imports
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        # to avoid circular imports, I place the import here
         from ..loader import load_symbol_from_path
 
         for symbol in self.keys():
