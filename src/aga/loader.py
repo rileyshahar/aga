@@ -44,6 +44,10 @@ class MultipleScripts(InvalidSubmissionError):
     """Too many scripts were found."""
 
 
+class EnvironmentContextError(InvalidSubmissionError):
+    """The submission file does not contain the values required by the environment."""
+
+
 def _get_spec_from_path(path: str, name: str) -> ModuleSpec:
     """Get the spec of the module at path."""
     spec = importlib.util.spec_from_file_location(name, path)
@@ -132,11 +136,8 @@ def _load_from_module_by(
 
 def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any, Any]]:
     """Return all problems in the module."""
-    yield from (
-        prob.update_env_from(module)
-        for prob in _load_from_module_by(
-            lambda i: isinstance(i, Problem), module  # type: ignore
-        )
+    yield from _load_from_module_by(
+        lambda i: isinstance(i, Problem), module  # type: ignore
     )
 
 
