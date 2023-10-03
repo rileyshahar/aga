@@ -44,7 +44,7 @@ class MultipleScripts(InvalidSubmissionError):
     """Too many scripts were found."""
 
 
-class EnvironmentContextError(InvalidSubmissionError):
+class ContextMissing(InvalidSubmissionError):
     """The submission file does not contain the values required by the environment."""
 
 

@@ -7,10 +7,13 @@ provides the `run` method, which does so.
 For convenience, it also provides the `load_and_run` method, which loads a student
 submission and then runs it.
 """
-
+import os.path
 from dataclasses import dataclass
+from os.path import isdir
 from typing import Any, Literal, Optional, TypeVar
 from unittest import TestResult
+
+import typer
 
 from .config import AgaConfig
 from .core import AgaTestCase, AgaTestSuite, Problem, SubmissionMetadata
@@ -24,7 +27,7 @@ from .loader import (
     load_script_from_path,
     load_symbol_from_path,
     _load_source_from_file,
-    EnvironmentContextError,
+    ContextMissing,
 )
 from .score import ScoredPrize
 from .util import limited_traceback
@@ -279,6 +282,8 @@ def load_and_run(
     try:
         if not problem.is_script:
             under_test = load_symbol_from_path(path, problem.expected_symbol())
+            problem.submission_context.update_from_path(path)
+
         else:
             under_test = load_script_from_path(path)
     except SubmissionSyntaxError as err:
@@ -313,12 +318,6 @@ def load_and_run(
             tests=[],
             score=0.0,
         )
-
-    try:
-        submission_mod = _load_source_from_file(path)
-        problem.update_env_from(submission_mod)
-    except Exception as e:
-        raise EnvironmentContextError from e
 
     suite, prizes = problem.generate_test_suite(under_test, metadata)
     return _run(suite, prizes, metadata)
