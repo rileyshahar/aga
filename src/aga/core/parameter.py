@@ -208,6 +208,7 @@ class _TestParam(AgaKeywordContainer):
 
     pipeline: ClassVar[partial[_TestParam]]
 
+    # pylint: disable=too-many-arguments
     @overload
     def __init__(
         self,
@@ -383,7 +384,7 @@ class _TestParams:
     product: ClassVar[partial[_TestParams]]
     singular_params: ClassVar[partial[_TestParams]]
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, too-many-arguments
     @overload
     def __init__(
         self,

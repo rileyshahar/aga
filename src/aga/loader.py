@@ -49,7 +49,7 @@ class ContextMissing(InvalidSubmissionError):
 
 
 class AmbiguousContext(InvalidSubmissionError):
-    """The submission file contains multiple values for the same environment variable."""
+    """The submission files have  multiple values for the same environment variable."""
 
 
 def _get_spec_from_path(path: str, name: str) -> ModuleSpec:

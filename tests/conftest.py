@@ -10,7 +10,7 @@ from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Callable, Generator, Iterable, Iterator, List, Any
+from typing import Callable, Generator, Iterable, Iterator, List, Any, Type
 from unittest import TestCase
 
 import pytest
@@ -160,7 +160,6 @@ class TestObj:
     "test_context_loading": """
 class GasTank:
     pass
-    
 class Car:
     def __init__(self, tank: GasTank):
         self.tank = tank
@@ -1206,20 +1205,31 @@ def fixture_test_pipeline_simple_obj() -> Problem[[], _TestObj]:
 def fixture_test_context_loading() -> Problem[[], Any]:
     """Generate a test requiring context values."""
 
-    def override_test(test_case, golden, student):
+    def override_test(
+        tc: _TestInputs[Car], golden: Type[Car], student: Type[Car]
+    ) -> None:
         """Check if test_case's context has GasTank."""
         # GasTank should be run without problem
-        test_case.ctx.GasTank()
+        assert tc.ctx is not None
+        tank = tc.ctx["GasTank"]
+        golden_car = golden(tank)
+        student_car = student(tank)
+        assert golden_car.tank == student_car.tank
+
+    class GasTank:
+        """A gas tank needed by the Car."""
 
     @test_case(aga_override_test=override_test)
     @problem(ctx=["GasTank"])
     class Car:
         """A car with a gas tank."""
 
-        def __int__(self, tank):
+        def __init__(self, tank: GasTank) -> None:
             """Initialize the car."""
-            self.gas_tank = tank
+            self.tank = tank
 
-    assert Car.submission_context.GasTank is None
+    # pylint: disable=no-member
+    # since Car is transformed into a Problem by the decorator
+    assert Car.submission_context.GasTank is None  # type: ignore
 
-    return Car
+    return Car  # type: ignore
