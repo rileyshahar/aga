@@ -157,6 +157,10 @@ def _load_symbol_from_dir(path: str, symbol: str) -> Any:
     """Load a specific symbol from any of the source files in a directory."""
     matching_symbols = []
     for file in os.listdir(path):
+        # ignore the pycache folder to avoid duplicated symbols
+        if file == "__pycache__":
+            continue
+
         try:
             file_path = pathjoin(path, file)
             matching_symbols.append(load_symbol_from_path(file_path, symbol))
@@ -164,9 +168,9 @@ def _load_symbol_from_dir(path: str, symbol: str) -> Any:
             pass
 
     if len(matching_symbols) > 1:
-        raise TooManyMatchingSymbols
+        raise TooManyMatchingSymbols(f"Multiple matching symbols {symbol} found.")
     if len(matching_symbols) == 0:
-        raise NoMatchingSymbol
+        raise NoMatchingSymbol(f"No matching symbol {symbol} found.")
     return matching_symbols[0]
 
 

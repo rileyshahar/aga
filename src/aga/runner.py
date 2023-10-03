@@ -282,8 +282,6 @@ def load_and_run(
     try:
         if not problem.is_script:
             under_test = load_symbol_from_path(path, problem.expected_symbol())
-            problem.submission_context.update_from_path(path)
-
         else:
             under_test = load_script_from_path(path)
     except SubmissionSyntaxError as err:
@@ -318,6 +316,11 @@ def load_and_run(
             tests=[],
             score=0.0,
         )
+
+    if not problem.is_script:
+        # If the submission is a module, we need to update the required context
+        # with the values from the submission.
+        problem.submission_context.update_from_path(path)
 
     suite, prizes = problem.generate_test_suite(under_test, metadata)
     return _run(suite, prizes, metadata)

@@ -10,7 +10,7 @@ from importlib.resources import files
 from os.path import join as pathjoin
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Callable, Generator, Iterable, Iterator, List
+from typing import Callable, Generator, Iterable, Iterator, List, Any
 from unittest import TestCase
 
 import pytest
@@ -156,6 +156,14 @@ class TestObj:
 
     def adder(self, x: int) -> int:
         return self.x + self.y + x
+""",
+    "test_context_loading": """
+class GasTank:
+    pass
+    
+class Car:
+    def __init__(self, tank: GasTank):
+        self.tank = tank
 """,
 }
 
@@ -1187,3 +1195,26 @@ def fixture_test_pipeline_simple_obj() -> Problem[[], _TestObj]:
         """A test object for testing."""
 
     return TestObj  # type: ignore
+
+
+@pytest.fixture(name="test_context_loading")
+def fixture_test_context_loading() -> Problem[[], Any]:
+    """Generate a test requiring context values."""
+
+    def override_test(test_case, golden, student):
+        """Check if test_case's context has GasTank."""
+        # GasTank should be run without problem
+        test_case.ctx.GasTank()
+
+    @test_case(aga_override_test=override_test)
+    @problem(ctx=["GasTank"])
+    class Car:
+        """A car with a gas tank."""
+
+        def __int__(self, tank):
+            """Initialize the car."""
+            self.gas_tank = tank
+
+    assert Car.submission_context.GasTank is None
+
+    return Car

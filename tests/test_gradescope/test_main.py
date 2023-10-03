@@ -628,3 +628,19 @@ def test_json_override_name(gs_json_bad_override_description: Any, target: str) 
             gs_json_bad_override_description["tests"],
         )
     )
+
+
+def test_loading_context_from_submission(
+    test_context_loading: AnyProblem,
+    source_test_context_loading: Any,
+    mocker: MockerFixture,
+    tmp_path: Path,
+    example_metadata_file: str,
+) -> None:
+    get_gs_json(
+        test_context_loading,
+        source_test_context_loading,
+        mocker,
+        tmp_path,
+        example_metadata_file,
+    )
