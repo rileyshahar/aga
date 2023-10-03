@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Generic, Iterable, Sequence, Tuple, Type
 from unittest import TestCase, TestSuite
 from unittest.mock import patch
 
-from aga.core.environment import Environment
+from aga.core.context import SubmissionContext
 
 from ..config import AgaConfig, AgaTestConfig
 from ..score import Prize, ScoredPrize, ScoreInfo, compute_scores
@@ -154,11 +154,11 @@ class _TestInputs(TestCase, Generic[Output]):
         self,
         aga_param: _TestParam,
         mock_input: bool,
-        env: Environment | None = None,
+        ctx: SubmissionContext | None = None,
     ) -> None:
         super().__init__()
         self._mock_input = mock_input
-        self.env = env
+        self.ctx = ctx
         self._param: _TestParam = aga_param
         self.score_info = ScoreInfo(
             self.aga_kwargs.weight, self.aga_kwargs.value, self.aga_kwargs.extra_credit

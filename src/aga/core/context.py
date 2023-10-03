@@ -1,11 +1,10 @@
 """Environment value wrapper."""
 from __future__ import annotations
 
-import types
 from typing import Iterable, Any
 
 
-class Environment(dict[str, Any]):
+class SubmissionContext(dict[str, Any]):
     """Environment value wrapper."""
 
     def __init__(self, env_targets: Iterable[str]) -> None:
@@ -13,14 +12,14 @@ class Environment(dict[str, Any]):
         for target in env_targets:
             self[target] = None
 
-    def update_from_module(self, mod: types.ModuleType) -> None:
+    def update_from_path(self, path: str) -> None:
         """Update environment values from a given module."""
-        for value_name in self.keys():
-            if value_name not in vars(mod):
-                raise ValueError(
-                    f"The variable `{value_name} does not exist in the module {mod}"
-                )
-            self[value_name] = getattr(mod, value_name)
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        # to avoid circular imports, I place the import here
+        from ..loader import load_symbol_from_path
+
+        for symbol in self.keys():
+            self[symbol] = load_symbol_from_path(path, symbol)
 
     def __getattr__(self, item: str) -> Any:
         """Get the value of an environment variable."""

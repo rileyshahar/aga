@@ -23,6 +23,8 @@ def _default_value(path: list[str]) -> Any:
 
 def _from_default(path: list[str]) -> Any:
     """Given a path of config names, construct a field which inherits the default."""
+    # pylint: disable=invalid-field-call
+    # this is necessary for the default_factory
     return field(default_factory=lambda: _default_value(path))  # type: ignore
 
 

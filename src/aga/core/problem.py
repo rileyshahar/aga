@@ -1,7 +1,6 @@
 """Problem and utilities."""
 from __future__ import annotations
 
-from types import ModuleType
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -14,7 +13,7 @@ from typing import (
 
 from ..config import AgaConfig
 from ..score import Prize, ScoredPrize, compute_scores
-from .environment import Environment
+from .context import SubmissionContext
 from .suite import AgaTestSuite, SubmissionMetadata, _TestInputGroup, _TestInputs
 
 # pylint: disable=invalid-name
@@ -39,7 +38,7 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
         name: str,
         config: AgaConfig,
         is_script: bool,
-        env_targets: Iterable[str] = (),
+        ctx_targets: Iterable[str] = (),
     ) -> None:
         self._golden: Callable[ProblemParamSpec, ProblemOutputType] = golden
         self._name = name
@@ -47,7 +46,7 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
         self._ungrouped_prizes: list[Prize] = []
         self._ungrouped_tests: list[_TestInputs[ProblemOutputType]] = []
         self._groups: list[_TestInputGroup[ProblemOutputType]] = []
-        self._environment: Environment = Environment(env_targets)
+        self._submission_context: SubmissionContext = SubmissionContext(ctx_targets)
         self.is_script = is_script
 
     def add_test_case(self, param: _TestParam) -> None:
@@ -57,7 +56,9 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
         does _not_ produce a test of the golden solution.
         """
         case: _TestInputs[ProblemOutputType] = _TestInputs(
-            param, mock_input=self._config.problem.mock_input, env=self.environment
+            param,
+            mock_input=self._config.problem.mock_input,
+            ctx=self.submission_context,
         )
         self._ungrouped_tests.append(case)
 
@@ -143,16 +144,9 @@ class Problem(Generic[ProblemParamSpec, ProblemOutputType]):
         return self._name
 
     @property
-    def environment(self) -> Environment:
+    def submission_context(self) -> SubmissionContext:
         """The environment values captured from the problem module."""
-        return self._environment
-
-    def update_env_from(
-        self, mod: ModuleType
-    ) -> Problem[ProblemParamSpec, ProblemOutputType]:
-        """Update the environment values from a given module."""
-        self.environment.update_from_module(mod)
-        return self
+        return self._submission_context
 
     def expected_symbol(self) -> str:
         """Get the name of the symbol that should be tested against."""
@@ -194,7 +188,7 @@ def problem(
     script: bool = False,
     check_stdout: Optional[bool] = None,
     mock_input: Optional[bool] = None,
-    envs: Iterable[str] = (),
+    ctx: Iterable[str] = (),
 ) -> Callable[
     [Callable[ProblemParamSpec, ProblemOutputType]],
     Problem[ProblemParamSpec, ProblemOutputType],
@@ -221,8 +215,8 @@ def problem(
         Overrides the `problem.mock_input` configuration option. If True, test cases for
         this problem will be interpreted as mocked outputs of `builtins.input`, rather
         than inputs to the function.
-    envs : Iterable[str]
-        The environment values to be captured
+    ctx: Iterable[str]
+        The context values required in the submission and will be captured
 
     Returns
     -------
@@ -253,7 +247,7 @@ def problem(
                 config.problem.mock_input = True
                 config.problem.mock_input_overridden = True
 
-        return Problem(func, problem_name, config, script, env_targets=envs)
+        return Problem(func, problem_name, config, script, ctx)
 
     return outer
 

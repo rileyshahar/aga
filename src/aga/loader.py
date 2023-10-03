@@ -44,6 +44,14 @@ class MultipleScripts(InvalidSubmissionError):
     """Too many scripts were found."""
 
 
+class ContextMissing(InvalidSubmissionError):
+    """The submission file does not contain the values required by the environment."""
+
+
+class AmbiguousContext(InvalidSubmissionError):
+    """The submission files have  multiple values for the same environment variable."""
+
+
 def _get_spec_from_path(path: str, name: str) -> ModuleSpec:
     """Get the spec of the module at path."""
     spec = importlib.util.spec_from_file_location(name, path)
@@ -132,11 +140,8 @@ def _load_from_module_by(
 
 def _load_problems_from_module(module: ModuleType) -> Iterable[Problem[Any, Any]]:
     """Return all problems in the module."""
-    yield from (
-        prob.update_env_from(module)
-        for prob in _load_from_module_by(
-            lambda i: isinstance(i, Problem), module  # type: ignore
-        )
+    yield from _load_from_module_by(
+        lambda i: isinstance(i, Problem), module  # type: ignore
     )
 
 
@@ -156,6 +161,10 @@ def _load_symbol_from_dir(path: str, symbol: str) -> Any:
     """Load a specific symbol from any of the source files in a directory."""
     matching_symbols = []
     for file in os.listdir(path):
+        # ignore the pycache folder to avoid duplicated symbols
+        if file == "__pycache__":
+            continue
+
         try:
             file_path = pathjoin(path, file)
             matching_symbols.append(load_symbol_from_path(file_path, symbol))
@@ -163,9 +172,9 @@ def _load_symbol_from_dir(path: str, symbol: str) -> Any:
             pass
 
     if len(matching_symbols) > 1:
-        raise TooManyMatchingSymbols
+        raise TooManyMatchingSymbols(f"Multiple matching symbols {symbol} found.")
     if len(matching_symbols) == 0:
-        raise NoMatchingSymbol
+        raise NoMatchingSymbol(f"No matching symbol {symbol} found.")
     return matching_symbols[0]
 
 

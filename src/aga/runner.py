@@ -7,7 +7,6 @@ provides the `run` method, which does so.
 For convenience, it also provides the `load_and_run` method, which loads a student
 submission and then runs it.
 """
-
 from dataclasses import dataclass
 from typing import Any, Literal, Optional, TypeVar
 from unittest import TestResult
@@ -23,6 +22,8 @@ from .loader import (
     TooManyMatchingSymbols,
     load_script_from_path,
     load_symbol_from_path,
+    ContextMissing,
+    AmbiguousContext,
 )
 from .score import ScoredPrize
 from .util import limited_traceback
@@ -311,6 +312,20 @@ def load_and_run(
             tests=[],
             score=0.0,
         )
+
+    if not problem.is_script:
+        # If the submission is a module, we need to update the required context
+        # with the values from the submission.
+        try:
+            problem.submission_context.update_from_path(path)
+        except NoMatchingSymbol as e:
+            raise ContextMissing(
+                "The submission does not include some required context"
+            ) from e
+        except TooManyMatchingSymbols as e:
+            raise AmbiguousContext(
+                "The submission includes multiple values for the same context"
+            ) from e
 
     suite, prizes = problem.generate_test_suite(under_test, metadata)
     return _run(suite, prizes, metadata)
