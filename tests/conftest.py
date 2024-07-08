@@ -645,8 +645,7 @@ def fixture_pos_and_kwd_generator_function() -> Problem[[int, int], int]:
     """
 
     def generator() -> Iterator[int]:
-        for i in range(-1, 2):
-            yield i
+        yield from range(-1, 2)
 
     @test_cases(generator(), y=generator(), aga_product=True)
     @problem()
