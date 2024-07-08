@@ -21,8 +21,8 @@ setup(
         "dill >= 0.3.4",
         "gradescope-utils >= 0.4.0",
         "typer >= 0.4.0",
-        "dacite >= ^1.6.0",
-        "toml >= ^0.10.2",
-        "types-toml >= ^0.10.8",
+        "dacite >= 1.6.0, < 2.0.0",
+        "toml >= 0.10.2, < 0.11.0",
+        "types-toml >= 0.10.8, < 0.11.0",
     ],
 )
